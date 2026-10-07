@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --moc-ivory: #fbf7ed;
+  --moc-cream: #f4eddc;
+  --moc-green-deep: #123f2b;
+  --moc-green: #176b49;
+  --moc-green-soft: #e3f1e8;
+  --moc-gold: #d9bd75;
+  --moc-gold-deep: #9a7833;
+  --moc-muted: #5f6d64;
+  --moc-border: #dce5dd;
+  --background: var(--moc-ivory);
+  --foreground: var(--moc-green-deep);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.75), transparent 44%), var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--moc-green);
+  color: white;
+}
