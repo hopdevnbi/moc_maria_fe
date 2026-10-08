@@ -2,7 +2,8 @@
 
 ## Current
 - Phase 01 Foundation: DONE
-- Next phase: 02 Auth / RBAC / Customer / Staff Identity
+- Phase 02 Auth UI: committed at 34204a4; frontend quality PASS
+- Phase 03: backend branch foundation in progress; frontend catalog/schedule UI pending
 - Phase 01 implementation commit: 59da268
 
 ## Phase 01 completed
