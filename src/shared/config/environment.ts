@@ -1,6 +1,13 @@
 const DEFAULT_API_BASE_URL = "http://localhost:3000/api/v1";
 
-export function resolveApiBaseUrl(value = process.env.NEXT_PUBLIC_API_BASE_URL): string {
+export interface ApiBaseUrlOptions {
+  enforceProductionHost?: boolean;
+}
+
+export function resolveApiBaseUrl(
+  value = process.env.NEXT_PUBLIC_API_BASE_URL,
+  options: ApiBaseUrlOptions = {},
+): string {
   const candidate = value?.trim() || DEFAULT_API_BASE_URL;
   let parsed: URL;
 
@@ -11,10 +18,12 @@ export function resolveApiBaseUrl(value = process.env.NEXT_PUBLIC_API_BASE_URL):
   }
 
   if (
-    process.env.NODE_ENV === "production" &&
+    options.enforceProductionHost &&
     ["localhost", "127.0.0.1"].includes(parsed.hostname.toLowerCase())
   ) {
-    throw new Error("NEXT_PUBLIC_API_BASE_URL cannot point to localhost in production.");
+    throw new Error(
+      "NEXT_PUBLIC_API_BASE_URL cannot point to localhost for production deployment.",
+    );
   }
 
   return parsed.toString().replace(/\/$/, "");

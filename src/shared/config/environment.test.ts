@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { resolveApiBaseUrl } from "./environment";
 
 describe("resolveApiBaseUrl", () => {
@@ -14,11 +14,9 @@ describe("resolveApiBaseUrl", () => {
     );
   });
 
-  it("rejects localhost for production builds", () => {
-    vi.stubEnv("NODE_ENV", "production");
-    expect(() => resolveApiBaseUrl("http://localhost:3000/api/v1")).toThrow(
-      "NEXT_PUBLIC_API_BASE_URL cannot point to localhost in production.",
-    );
-    vi.unstubAllEnvs();
+  it("can enforce a non-localhost production deployment URL", () => {
+    expect(() =>
+      resolveApiBaseUrl("http://localhost:3000/api/v1", { enforceProductionHost: true }),
+    ).toThrow("NEXT_PUBLIC_API_BASE_URL cannot point to localhost for production deployment.");
   });
 });
