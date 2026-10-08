@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Be_Vietnam_Pro, Cormorant_Garamond } from "next/font/google";
+import { Be_Vietnam_Pro, Noto_Serif } from "next/font/google";
 import { AppProviders } from "@/app/providers/AppProviders";
 import "./globals.css";
 
@@ -11,9 +11,9 @@ const sans = Be_Vietnam_Pro({
   display: "swap",
 });
 
-const serif = Cormorant_Garamond({
+const serif = Noto_Serif({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600"],
+  weight: ["500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-wellness-serif",
   display: "swap",
