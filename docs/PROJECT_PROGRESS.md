@@ -1,20 +1,31 @@
 # Mộc Maria Project Progress - Frontend
 
 ## Current
-- Phase: 01 Foundation
-- Status: IN_PROGRESS
+- Phase 01 Foundation: DONE
+- Next phase: 02 Auth / RBAC / Customer / Staff Identity
+- Phase 01 implementation commit: 59da268
 
-## P01 frontend
-- [x] P01-T01 Acutis frontend audit
-- [x] P01-T02 Repository created/cloned
-- [x] P01-T05 Next.js foundation
-- [x] P01-T06 Tracking files
-- [x] P01-T07 Repo hygiene
-- [x] P01-T09 APP_ID / CHAT_TENANT / QUEUE_SOURCE constants
-- [ ] P01 final validation/commit
+## Phase 01 completed
+- [x] Next.js 16 + React 19 + TypeScript foundation
+- [x] Tailwind CSS 4 design tokens
+- [x] TanStack Query provider
+- [x] React Hook Form + Zod dependencies
+- [x] Environment resolver and MOC_MARIA integration constants
+- [x] Root layout and SEO metadata foundation
+- [x] Loading / route error / not-found boundaries
+- [x] Branded homepage foundation
+- [x] Dockerfile authored
+- [x] GitHub quality workflow
+- [x] Secret scan clean
+- [x] Production dependency audit: 0 vulnerabilities
 
-## Validation so far
-- Typecheck: PASS
-- Tests: PASS (3)
+## Phase 01 validation
+- Install: PASS
+- Format: PASS
 - Lint: PASS
-- Next production build: PASS
+- Typecheck: PASS
+- Tests: PASS
+- Next.js production build: PASS
+- Production homepage smoke: HTTP 200, Mộc Maria brand rendered
+- Production dependency audit: PASS, 0 vulnerabilities
+- Docker image execution: not run because Docker CLI is not installed on this workstation.
