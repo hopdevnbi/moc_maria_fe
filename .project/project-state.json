@@ -1,7 +1,7 @@
 {
   "project": "moc-maria",
   "currentPhase": 3,
-  "currentTask": "P03-T01",
+  "currentTask": "P03-T26",
   "phaseStatus": "IN_PROGRESS",
   "blockers": [],
   "completedPhases": [
@@ -49,12 +49,32 @@
   "production": {
     "apiUrl": "https://api.mocmaria.com/api/v1",
     "backend": "HEALTHY_AUTH_SMOKE_PASS",
-    "frontendIntegration": "ENVIRONMENT_CONFIGURED_VALIDATION_IN_PROGRESS",
+    "frontendIntegration": "AUTH_BROWSER_PASS_CATALOG_ADMIN_RELEASE_PENDING",
     "remaining": [
-      "Browser auth verification",
-      "Catalog and KTV public UI",
-      "Applicant/training/admin UI",
-      "Booking/chat/reviews/media/SEO"
+      "Provider skills/areas/schedules/quality eligibility",
+      "Booking and quotes",
+      "Tenant chat and verified reviews",
+      "Media CDN and SEO",
+      "Complete profile/role/admin integration"
     ]
+  },
+  "catalogProviderIntegration": {
+    "status": "UI_BUILD_PASS_BROWSER_PUBLIC_RESPONSIVE_PASS",
+    "backendCommit": "ffc89b3",
+    "pages": [
+      "/dich-vu",
+      "/dich-vu/[slug]",
+      "/bang-gia",
+      "/chuyen-vien",
+      "/chuyen-vien/[id]",
+      "/tro-thanh-ktv",
+      "/ktv/ho-so",
+      "/ktv/dao-tao",
+      "/quan-tri",
+      "/quan-tri/dich-vu",
+      "/quan-tri/co-so",
+      "/quan-tri/ktv"
+    ],
+    "release": "PENDING"
   }
 }

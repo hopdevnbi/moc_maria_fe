@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest, parseApiResponse } from "../auth-api";
 import type { AuthResponse, AuthStatus, AuthUser } from "../auth.types";
 import {
@@ -19,16 +20,24 @@ function jsonInit(method: string, body: unknown): RequestInit {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
+  const authenticatedId = useRef<string | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const refreshPromise = useRef<Promise<AuthResponse | null> | null>(null);
 
-  const applyAuth = useCallback((auth: AuthResponse | null) => {
-    setAccessToken(auth?.accessToken ?? null);
-    setUser(auth?.user ?? null);
-    setStatus(auth ? "authenticated" : "anonymous");
-  }, []);
+  const applyAuth = useCallback(
+    (auth: AuthResponse | null) => {
+      const nextId = auth?.user.id ?? null;
+      if (authenticatedId.current !== nextId) queryClient.clear();
+      authenticatedId.current = nextId;
+      setAccessToken(auth?.accessToken ?? null);
+      setUser(auth?.user ?? null);
+      setStatus(auth ? "authenticated" : "anonymous");
+    },
+    [queryClient],
+  );
 
   const refresh = useCallback(async (): Promise<AuthResponse | null> => {
     if (refreshPromise.current) return refreshPromise.current;
@@ -80,12 +89,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [applyAuth]);
 
   const logoutAll = useCallback(async (): Promise<void> => {
-    if (accessToken) {
-      const response = await apiRequest("/auth/logout-all", { method: "POST" }, accessToken);
+    let token = accessToken ?? (await refresh())?.accessToken;
+    if (token) {
+      let response = await apiRequest("/auth/logout-all", { method: "POST" }, token);
+      if (response.status === 401) {
+        token = (await refresh())?.accessToken;
+        if (!token) {
+          applyAuth(null);
+          return;
+        }
+        response = await apiRequest("/auth/logout-all", { method: "POST" }, token);
+      }
       await parseApiResponse<void>(response);
     }
     applyAuth(null);
-  }, [accessToken, applyAuth]);
+  }, [accessToken, applyAuth, refresh]);
 
   const authFetch = useCallback(
     async <T,>(path: string, init: RequestInit = {}): Promise<T> => {

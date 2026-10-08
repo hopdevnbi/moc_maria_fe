@@ -37,3 +37,14 @@
 - Production fallback uses HTTPS API rather than localhost; public API URL rejects embedded credentials and unsafe schemes. Logout checks server response before clearing local state.
 - Dedicated managed FE worktree and codex/platform-integration branch preserve the primary checkout for other AI work. Existing homepage/logo/typography retained.
 - Full UI/API and browser verification pending; product phases 03–08 remain open.
+
+## Marketplace and existing API integration — 2026-10-08
+- Retained existing brand/logo/fonts, premium homepage imagery and botanical borders. Homepage now reads actual catalog/provider APIs, includes quick search, application/training introduction and truthful FAQ. No fabricated catalog, prices, staff, certificates or reviews.
+- Public catalog/list/detail, price table, provider list/detail; real API loading/empty/error states and native server rendering.
+- Applicant self-application/status and own training/certificates integrated; internal certificates distinguished from governmental licences. No self-approval/certification actions.
+- Permission-guarded admin UI for categories/services/variant price/edit, branches/resources/hours/exceptions/service mappings, applications/training/enrollment/assessment/certificate issue/revoke. Broader booking/chat/reviews/media administration remains open.
+- Private React Query state keyed by user and cleared on logout/account switch; authenticated API requests are no-store. Account page links actual areas; logout-all refreshes expired access token and handles failures visibly.
+- Avatar accepts reviewed local media only until dedicated CDN pipeline is ready.
+- Validation: format/lint/typecheck, 4 existing unit tests and Next production build PASS. Public catalog mobile at 390px shows no horizontal overflow; anonymous admin route redirects to sign-in with returnTo. Full private admin browser flow and deployment verification remain pending.
+- Backend companion source ffc89b3; 17 unit and 20 isolated PostgreSQL integration checks PASS. No production fixture seed/reset.
+- All product phases 03–08 remain open.

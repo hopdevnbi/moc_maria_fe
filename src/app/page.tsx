@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   ArrowDown,
   ArrowRight,
@@ -9,43 +10,20 @@ import {
   Leaf,
   Menu,
   Sprout,
-  Waves,
 } from "lucide-react";
 import { AccountNav } from "@/features/auth/components/AccountNav";
+import { CardSkeleton } from "@/features/marketplace/components";
+import { ServiceResults } from "@/features/marketplace/catalog";
+import { ProviderResults } from "@/features/marketplace/providers";
 import "./home.css";
 
 const FACEBOOK_URL = "https://www.facebook.com/mocmariads";
 const navigation = [
   { href: "#ve-moc", label: "Về Mộc Maria" },
-  { href: "#dich-vu", label: "Dịch vụ" },
-  { href: "#khong-gian", label: "Không gian" },
+  { href: "/dich-vu", label: "Dịch vụ" },
+  { href: "/chuyen-vien", label: "Chuyên viên" },
+  { href: "/bang-gia", label: "Bảng giá" },
   { href: "#lien-he", label: "Liên hệ" },
-];
-const services = [
-  {
-    number: "01",
-    icon: Sprout,
-    title: "Chăm sóc cổ vai gáy",
-    tag: "THẢ LỎNG & NGHỈ NGƠI",
-    description:
-      "Dành thời gian thả lỏng vùng cổ, vai và lưng sau những giờ làm việc dài. Để cơ thể được nghỉ ngơi theo cách thật nhẹ nhàng.",
-  },
-  {
-    number: "02",
-    icon: Waves,
-    title: "Thư giãn toàn thân",
-    tag: "CÂN BẰNG & THƯ GIÃN",
-    description:
-      "Tạm gác những bận rộn, lắng nghe cơ thể và tận hưởng một khoảng thời gian chăm sóc dành riêng cho chính mình.",
-  },
-  {
-    number: "03",
-    icon: Flower2,
-    title: "Chăm sóc da",
-    tag: "NÂNG NIU & CHĂM SÓC",
-    description:
-      "Một chút nâng niu cho làn da, một chút bình yên cho tâm trí. Khám phá trải nghiệm chăm sóc phù hợp với nhu cầu của bạn.",
-  },
 ];
 
 function Brand({ light = false }: { light?: boolean }) {
@@ -121,15 +99,10 @@ export default function Home() {
               tâm trí và tìm lại sự cân bằng từ bên trong.
             </p>
             <div className="moc-hero-actions">
-              <a
-                href={FACEBOOK_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="moc-button"
-              >
-                Hẹn một khoảng thư giãn
+              <Link href="/dich-vu" className="moc-button">
+                Đặt lịch chăm sóc
                 <ArrowUpRight size={18} />
-              </a>
+              </Link>
               <a href="#dich-vu" className="moc-text-link">
                 Khám phá dịch vụ
                 <ArrowDown size={15} />
@@ -198,21 +171,74 @@ export default function Home() {
               Hãy để Mộc cùng bạn tìm trải nghiệm phù hợp.
             </p>
           </div>
-          <div className="moc-service-list">
-            {services.map(({ number, icon: Icon, title, description, tag }) => (
-              <article className="moc-service" key={number}>
-                <div className="moc-service-top">
-                  <span>{number}</span>
-                  <Icon size={35} strokeWidth={1.1} aria-hidden="true" />
-                </div>
-                <p className="moc-service-tag">{tag}</p>
-                <h3>{title}</h3>
-                <p className="moc-service-description">{description}</p>
-                <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer">
-                  <span>Tìm hiểu & tư vấn</span>
-                  <ArrowUpRight size={20} aria-hidden="true" />
-                  <span className="sr-only"> về {title.toLocaleLowerCase("vi")}</span>
-                </a>
+          <form action="/dich-vu" className="market-search">
+            <label>
+              Bạn muốn chăm sóc điều gì?
+              <input name="q" placeholder="Tìm gói chăm sóc phù hợp..." maxLength={160} />
+            </label>
+            <button type="submit" className="market-button">
+              Tìm trải nghiệm
+              <ArrowUpRight size={17} />
+            </button>
+          </form>
+          <Suspense fallback={<CardSkeleton />}>
+            <ServiceResults preview />
+          </Suspense>
+          <div className="mt-8">
+            <Link href="/dich-vu" className="moc-text-link">
+              Khám phá tất cả dịch vụ
+              <ArrowUpRight size={16} />
+            </Link>
+          </div>
+        </section>
+        <section className="moc-container market-section" aria-labelledby="providers-title">
+          <div className="market-section-heading">
+            <div>
+              <p className="moc-eyebrow">NHỮNG NGƯỜI ĐỒNG HÀNH</p>
+              <h2 id="providers-title">Tận tâm trong từng trải nghiệm.</h2>
+            </div>
+            <Link href="/chuyen-vien">
+              Gặp gỡ chuyên viên
+              <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <Suspense fallback={<CardSkeleton />}>
+            <ProviderResults preview />
+          </Suspense>
+        </section>
+        <section className="moc-container market-section" aria-labelledby="journey-title">
+          <div className="market-section-heading">
+            <div>
+              <p className="moc-eyebrow">HÀNH TRÌNH CHĂM SÓC</p>
+              <h2 id="journey-title">An tâm từ bước đầu tiên.</h2>
+            </div>
+          </div>
+          <div className="market-steps">
+            {[
+              {
+                title: "Chọn trải nghiệm",
+                description:
+                  "Xem gói chăm sóc, thời lượng và giá niêm yết phù hợp với nhu cầu của bạn.",
+              },
+              {
+                title: "Tìm người đồng hành",
+                description: "Tìm hiểu hồ sơ, chuyên môn và khu vực phục vụ của chuyên viên.",
+              },
+              {
+                title: "Xác nhận rõ ràng",
+                description:
+                  "Kiểm tra thời gian, địa điểm và báo giá. Mọi phụ phí cần được bạn chấp thuận.",
+              },
+              {
+                title: "Dành thời gian cho mình",
+                description:
+                  "Thả lỏng và chia sẻ trải nghiệm của bạn sau buổi chăm sóc đã hoàn thành.",
+              },
+            ].map((step, index) => (
+              <article className="market-step" key={step.title}>
+                <span>0{index + 1}</span>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
               </article>
             ))}
           </div>
@@ -248,6 +274,65 @@ export default function Home() {
                 <span>Mộc trong không gian. Tâm trong chăm sóc.</span>
               </div>
             </div>
+          </div>
+        </section>
+        <section className="moc-container market-section" aria-labelledby="academy-title">
+          <div className="market-panel market-two-column">
+            <div>
+              <p className="moc-eyebrow">ĐỒNG HÀNH CÙNG MỘC</p>
+              <h2 id="academy-title">
+                Từ đôi tay tận tâm,
+                <br />
+                đến hành trình vững vàng.
+              </h2>
+              <p>
+                Mộc tìm kiếm những người muốn đồng hành trong việc chăm sóc khách hàng. Gửi hồ sơ,
+                tham gia đào tạo và theo dõi kết quả đánh giá trong tài khoản của bạn.
+              </p>
+            </div>
+            <div>
+              <p className="market-notice">
+                Đào tạo và chứng nhận nội bộ là một phần của quá trình xét duyệt chuyên viên. Hồ sơ
+                chỉ được công bố khi được phê duyệt và đáp ứng điều kiện phục vụ.
+              </p>
+              <Link href="/tro-thanh-ktv" className="market-button">
+                Trở thành KTV Mộc Maria
+                <ArrowUpRight size={17} />
+              </Link>
+            </div>
+          </div>
+        </section>
+        <section className="moc-container market-section" aria-labelledby="faq-title">
+          <div className="market-section-heading">
+            <div>
+              <p className="moc-eyebrow">MỘC LẮNG NGHE BẠN</p>
+              <h2 id="faq-title">Một vài điều bạn muốn biết.</h2>
+            </div>
+          </div>
+          <div className="market-faq">
+            {[
+              {
+                q: "Tôi xem giá dịch vụ ở đâu?",
+                a: "Mỗi gói được công bố cùng thời lượng và giá niêm yết trong danh mục Dịch vụ và Bảng giá. Những thông tin chưa được công bố sẽ được ghi rõ là đang cập nhật.",
+              },
+              {
+                q: "Chuyên viên được xét duyệt như thế nào?",
+                a: "Hồ sơ cần được Mộc phê duyệt và có chứng nhận đào tạo nội bộ hợp lệ. Các điều kiện phục vụ còn được xét theo từng dịch vụ và lịch làm việc.",
+              },
+              {
+                q: "Chứng nhận nội bộ có phải giấy phép hành nghề?",
+                a: "Không. Chứng nhận nội bộ xác nhận kết quả đào tạo tại Mộc Maria, không thay thế giấy phép hành nghề chuyên ngành do cơ quan có thẩm quyền cấp.",
+              },
+              {
+                q: "Làm thế nào để ứng tuyển KTV?",
+                a: "Tạo tài khoản, gửi hồ sơ qua mục Trở thành KTV và theo dõi tiến trình xét duyệt, các khóa học được chỉ định trong khu vực KTV của bạn.",
+              },
+            ].map((faq) => (
+              <details key={faq.q}>
+                <summary>{faq.q}</summary>
+                <p>{faq.a}</p>
+              </details>
+            ))}
           </div>
         </section>
         <section id="lien-he" className="moc-contact moc-container" aria-labelledby="contact-title">
