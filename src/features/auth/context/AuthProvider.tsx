@@ -74,7 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async (): Promise<void> => {
-    await apiRequest("/auth/logout", { method: "POST" });
+    const response = await apiRequest("/auth/logout", { method: "POST" });
+    await parseApiResponse<void>(response);
     applyAuth(null);
   }, [applyAuth]);
 

@@ -30,3 +30,10 @@
 - Production homepage smoke: HTTP 200, Mộc Maria brand rendered
 - Production dependency audit: PASS, 0 vulnerabilities
 - Docker image execution: not run because Docker CLI is not installed on this workstation.
+
+## Production API integration — 2026-10-08
+- Backend HTTPS API deployed with verified database TLS and production auth smoke PASS.
+- Vercel production NEXT_PUBLIC_API_BASE_URL configured to https://api.mocmaria.com/api/v1. No secrets are exposed in public environment.
+- Production fallback uses HTTPS API rather than localhost; public API URL rejects embedded credentials and unsafe schemes. Logout checks server response before clearing local state.
+- Dedicated managed FE worktree and codex/platform-integration branch preserve the primary checkout for other AI work. Existing homepage/logo/typography retained.
+- Full UI/API and browser verification pending; product phases 03–08 remain open.

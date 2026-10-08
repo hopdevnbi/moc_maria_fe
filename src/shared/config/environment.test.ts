@@ -14,6 +14,11 @@ describe("resolveApiBaseUrl", () => {
     );
   });
 
+  it("rejects credentials and unsupported schemes in a public API URL", () => {
+    expect(() => resolveApiBaseUrl("https://user:secret@api.mocmaria.com")).toThrow();
+    expect(() => resolveApiBaseUrl("javascript:alert(1)")).toThrow();
+  });
+
   it("can enforce a non-localhost production deployment URL", () => {
     expect(() =>
       resolveApiBaseUrl("http://localhost:3000/api/v1", { enforceProductionHost: true }),

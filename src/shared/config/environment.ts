@@ -1,4 +1,7 @@
-const DEFAULT_API_BASE_URL = "http://localhost:3000/api/v1";
+const DEFAULT_API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://api.mocmaria.com/api/v1"
+    : "http://localhost:3000/api/v1";
 
 export interface ApiBaseUrlOptions {
   enforceProductionHost?: boolean;
@@ -15,6 +18,13 @@ export function resolveApiBaseUrl(
     parsed = new URL(candidate);
   } catch {
     throw new Error("NEXT_PUBLIC_API_BASE_URL must be an absolute URL.");
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password) {
+    throw new Error("API URL must use HTTP(S) without embedded credentials.");
+  }
+  if (process.env.NODE_ENV === "production" && parsed.protocol !== "https:") {
+    throw new Error("Production API must use HTTPS.");
   }
 
   if (
