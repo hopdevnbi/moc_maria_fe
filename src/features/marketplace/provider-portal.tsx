@@ -18,6 +18,7 @@ import { applicationLabels } from "./format";
 import type { Application, Training } from "./types";
 import { ProviderReadinessPanel } from "./provider-readiness";
 import { AdminForm } from "./admin-form";
+import { OwnProviderPlanning } from "./provider-planning";
 
 function useApplication() {
   const { user, authFetch } = useAuth();
@@ -146,6 +147,7 @@ function ApplicationSummary({ application }: { application: Application }) {
           Hồ sơ được duyệt chưa tự động mở nhận lịch. Điều kiện chuyên môn, khu vực và lịch phục vụ
           cần được xác minh riêng.
         </p>
+        <OwnProviderPlanning />
       </aside>
     </div>
   );

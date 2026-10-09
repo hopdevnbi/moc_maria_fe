@@ -7,6 +7,7 @@ import { EmptyState } from "./components";
 import { applicationLabels, enrollmentLabels } from "./format";
 import type { Application, Course, Training } from "./types";
 import { ProviderReadinessPanel } from "./provider-readiness";
+import { AdminProviderPlanning } from "./provider-planning";
 
 const transitions: Record<string, string[]> = {
   APPLIED: ["REVIEWING", "REJECTED"],
@@ -130,6 +131,11 @@ function ApplicationReview({
     <>
       <h2 className="market-subtitle">Hồ sơ của {application.publicName}</h2>
       <ProviderReadinessPanel applicationId={application.id} canVerify={canReview} />
+      <AdminProviderPlanning
+        applicationId={application.id}
+        applicationUserId={application.userId}
+        canReview={canReview}
+      />
       <div className="market-two-column">
         <article className="market-panel">
           <dl className="market-definition">
