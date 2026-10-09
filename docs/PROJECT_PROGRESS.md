@@ -1,10 +1,11 @@
 # Mộc Maria Project Progress - Frontend
 
-## Current
-- Phase 01 Foundation: DONE
-- Phase 02 Auth UI: committed at 34204a4; frontend quality PASS
-- Phase 03: backend branch foundation in progress; frontend catalog/schedule UI pending
-- Phase 01 implementation commit: 59da268
+## Current — audited 2026-10-09
+- Phase 01/02 foundation closed; Phase 03 IN_PROGRESS, P03-T26. MVP not operational.
+- Production API/database/TLS and Vercel frontend healthy. Catalog/providers currently empty.
+- Catalog/branch/applicant/training/admin foundation deployed; isolated private browser QA PASS. Booking/chat/reviews/media/queue and full schedule/eligibility remain missing.
+- Detailed current status: [CURRENT_PROGRESS_2026-10-09.md](CURRENT_PROGRESS_2026-10-09.md). Sections below preserve historical evidence; old pending labels may be superseded.
+- Latest validation: BE 17 unit + 20 isolated integrations; FE quality + 4 unit + 22-route build PASS. Small QA fixes/helper remain uncommitted and undeployed.
 
 ## Phase 01 completed
 - [x] Next.js 16 + React 19 + TypeScript foundation

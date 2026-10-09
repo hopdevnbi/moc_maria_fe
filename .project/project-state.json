@@ -49,7 +49,7 @@
   "production": {
     "apiUrl": "https://api.mocmaria.com/api/v1",
     "backend": "HEALTHY_AUTH_SMOKE_PASS",
-    "frontendIntegration": "AUTH_BROWSER_PASS_CATALOG_ADMIN_RELEASE_PENDING",
+    "frontendIntegration": "LIVE_AUTH_AND_PUBLIC_API_PASS_PRIVATE_QA_ISOLATED_PASS",
     "remaining": [
       "Provider skills/areas/schedules/quality eligibility",
       "Booking and quotes",
@@ -59,7 +59,7 @@
     ]
   },
   "catalogProviderIntegration": {
-    "status": "UI_BUILD_PASS_BROWSER_PUBLIC_RESPONSIVE_PASS",
+    "status": "DEPLOYED_PRIVATE_BROWSER_QA_PASS_SMALL_FIXES_PENDING",
     "backendCommit": "ffc89b3",
     "pages": [
       "/dich-vu",
@@ -75,6 +75,10 @@
       "/quan-tri/co-so",
       "/quan-tri/ktv"
     ],
-    "release": "PENDING"
-  }
+    "release": "DEPLOYED_99612D5_FFC89B3",
+    "businessData": "PUBLIC_SERVICES_AND_PROVIDERS_EMPTY"
+  },
+  "lastAuditedAt": "2026-10-09",
+  "mvpStatus": "IN_PROGRESS_NOT_OPERATIONAL",
+  "statusReport": "docs/CURRENT_PROGRESS_2026-10-09.md"
 }
