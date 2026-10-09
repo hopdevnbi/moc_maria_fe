@@ -5,6 +5,7 @@ import { usePrivateData, usePrivateMutation, mutationMessage } from "./private-a
 import { EmptyState } from "./components";
 import { formatPrice } from "./format";
 import type { Category, Service, Variant } from "./types";
+import { BookingSettingsAdmin } from "./booking-settings";
 
 export function CatalogAdmin() {
   const categories = usePrivateData<Category[]>("/admin/service-categories");
@@ -397,6 +398,7 @@ function VariantEditor({ serviceId, variant }: { serviceId: string; variant?: Va
           {mutation.isPending ? "Đang lưu..." : "Lưu gói & giá"}
         </button>
       </form>
+      {variant && <BookingSettingsAdmin variantId={variant.id} />}
     </details>
   );
 }
