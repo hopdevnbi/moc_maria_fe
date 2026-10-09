@@ -31,6 +31,9 @@ export interface ServiceItem {
   variants: Variant[];
   isDemo?: boolean;
   imageUrl?: string;
+  imageSrcSet?: string;
+  imageAlt?: string;
+  photoSourceFile?: string;
   tag?: string;
   demoProviderIds?: string[];
 }

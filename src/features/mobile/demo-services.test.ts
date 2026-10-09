@@ -11,7 +11,11 @@ describe("demo massage service catalog", () => {
       expect(item.isDemo).toBe(true);
       expect(item.service.isPublished).toBe(false);
       expect(item.service.slug.endsWith("-demo")).toBe(true);
-      expect(item.imageUrl.startsWith("/demo/services/")).toBe(true);
+      expect(
+        item.imageUrl.startsWith(
+          "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/",
+        ),
+      ).toBe(true);
       expect(item.variants.length).toBeGreaterThanOrEqual(2);
       expect(item.variants.every((v) => v.isActive && Number(v.priceVnd) > 0)).toBe(true);
     }

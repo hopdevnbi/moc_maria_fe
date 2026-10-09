@@ -29,6 +29,7 @@ import { formatPrice } from "@/features/marketplace/format";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { bookingHref } from "./links";
 import "./mobile.css";
+import { useCatalogRealtime } from "./useCatalogRealtime";
 
 type Focus = "providers" | "services";
 type Props = {
@@ -191,14 +192,23 @@ export function ServiceTile({ item }: { item: ServiceItem }) {
     <article className={"mm-service-card" + (item.isDemo ? " mm-demo-service-card" : "")}>
       <div className={"mm-service-decor" + (item.imageUrl ? " mm-service-photo" : "")}>
         {item.imageUrl ? (
-          <Image
-            src={item.imageUrl}
-            alt={"Hình minh họa " + item.service.name}
-            width={680}
-            height={400}
-            sizes="(max-width: 700px) 95px, 33vw"
-            unoptimized={item.isDemo}
-          />
+          <picture>
+            {item.imageSrcSet && (
+              <source
+                type="image/webp"
+                srcSet={item.imageSrcSet}
+                sizes="(max-width: 700px) 95px, 33vw"
+              />
+            )}
+            <Image
+              src={item.imageUrl}
+              alt={item.imageAlt || "?nh d?ch v? " + item.service.name}
+              width={680}
+              height={400}
+              sizes="(max-width: 700px) 95px, 33vw"
+              unoptimized={item.isDemo}
+            />
+          </picture>
         ) : (
           <Flower2 size={26} strokeWidth={1.35} />
         )}
@@ -250,6 +260,7 @@ export function MobileExperience({
   catalogUnavailable,
   page = "home",
 }: Props) {
+  useCatalogRealtime();
   const [focus, setFocus] = useState<Focus>(page === "services" ? "services" : "providers");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
