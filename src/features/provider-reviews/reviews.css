@@ -131,7 +131,8 @@
   display: grid;
   justify-items: center;
   gap: 4px;
-  width: 52px;
+  flex: 1;
+  min-width: 0;
   padding: 8px 0;
   color: #ad8238;
   cursor: pointer;
