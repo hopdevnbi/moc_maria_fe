@@ -12,7 +12,6 @@ import {
   MapPin,
   MessageCircle,
   Search,
-  ShieldCheck,
   Sparkles,
   SlidersHorizontal,
   Users,
@@ -121,9 +120,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
           )}
         </Link>
         <div className="ktv-identity">
-          {provider.isDemo ? (
-            <p className="ktv-demo-badge">HỒ SƠ MINH HỌA</p>
-          ) : (
+          {!provider.isDemo && (
             <p className="ktv-approved">
               <CheckCircle2 size={13} /> KTV đã xác minh
             </p>
@@ -151,7 +148,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
 
       <div className="ktv-offers">
         <div className="ktv-offers-heading">
-          <strong>{provider.isDemo ? "Dịch vụ minh họa" : "Dịch vụ massage"}</strong>
+          <strong>Dịch vụ massage</strong>
           <Link href={"/chuyen-vien/" + provider.id}>
             Tất cả <ArrowRight size={13} />
           </Link>
@@ -202,7 +199,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
           </span>
         )}
         {provider.isDemo ? (
-          <span className="ktv-chat-btn ktv-demo-disabled" title="Hồ sơ demo không nhận tin nhắn">
+          <span className="ktv-chat-btn ktv-demo-disabled" title="Chưa mở nhận tin nhắn">
             <MessageCircle size={17} /> Chat
           </span>
         ) : (
@@ -281,15 +278,6 @@ export function KtvFirstHomepage({
         </div>
 
         <section className="ktv-explore" aria-label="Danh sách kỹ thuật viên massage">
-          {providers.some((provider) => provider.isDemo) && (
-            <div className="ktv-demo-banner" role="note">
-              <strong>Trải nghiệm giao diện với 10 KTV mẫu</strong>
-              <span>
-                Ảnh, tuổi, kinh nghiệm và giá dịch vụ là dữ liệu giả lập. Hồ sơ mẫu không nhận lịch
-                hoặc tin nhắn.
-              </span>
-            </div>
-          )}
           <div className="ktv-search">
             <Search size={20} />
             <input
@@ -406,7 +394,7 @@ export function KtvFirstHomepage({
         </section>
         <div className="ktv-home-bottom">
           <span>
-            <ShieldCheck size={16} /> Hồ sơ KTV được xác minh trước khi công khai.
+            <Users size={16} /> Tìm hiểu hồ sơ và dịch vụ trước khi chọn KTV.
           </span>
           <Link href="/dich-vu">
             Xem tất cả dịch vụ <ArrowRight size={15} />

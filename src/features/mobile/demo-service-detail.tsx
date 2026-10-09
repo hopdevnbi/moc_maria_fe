@@ -20,15 +20,15 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
         </Link>
         <div className="mm-detail-notice" role="note">
           <ShieldAlert size={18} />
-          Dịch vụ, thời lượng và bảng giá dưới đây là dữ liệu minh họa cho giao diện. Chưa mở đặt
-          lịch với dịch vụ mẫu.
+          Dịch vụ này chưa mở đặt lịch. Bạn có thể xem thời lượng và giá bên dưới để chọn liệu trình
+          phù hợp.
         </div>
         <section className="mm-service-detail-hero mm-demo-service-hero">
           {item.imageUrl && (
             <div className="mm-demo-cover">
               <Image
                 src={item.imageUrl}
-                alt={"Hình minh họa cho " + item.service.name}
+                alt={item.service.name}
                 width={680}
                 height={400}
                 sizes="(max-width: 700px) 100vw, 480px"
@@ -38,7 +38,7 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
             </div>
           )}
           <div>
-            <span className="mm-overline">DỊCH VỤ MINH HỌA · MỘC MARIA</span>
+            <span className="mm-overline">THƯ GIÃN & CHĂM SÓC · MỘC MARIA</span>
             <h1>{item.service.name}</h1>
             <p>{item.service.description}</p>
             <p className="mm-service-detail-price">
@@ -51,7 +51,7 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
         </section>
         <section className="mm-detail-section">
           <div className="mm-results-heading">
-            <h2>Thời lượng & giá mẫu</h2>
+            <h2>Thời lượng & bảng giá</h2>
             <span>{item.variants.length} lựa chọn</span>
           </div>
           <div className="mm-detail-services">
@@ -71,8 +71,8 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
         </section>
         <section className="mm-detail-section">
           <div className="mm-results-heading">
-            <h2>KTV minh họa dịch vụ này</h2>
-            <span>{matching.length} hồ sơ mẫu</span>
+            <h2>KTV cung cấp dịch vụ này</h2>
+            <span>{matching.length} hồ sơ</span>
           </div>
           <div className="mm-demo-provider-grid">
             {matching.map((provider) => (
@@ -85,14 +85,14 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
                   src={provider.avatarUrl}
                   width={72}
                   height={86}
-                  alt={"Hình minh họa " + provider.publicName}
+                  alt={"Ảnh đại diện " + provider.publicName}
                   unoptimized
                 />
                 <div>
-                  <span className="mm-overline">KTV MẪU</span>
+                  <span className="mm-overline">KỸ THUẬT VIÊN</span>
                   <strong>{provider.publicName}</strong>
                   <small>
-                    <Sparkles size={13} /> {provider.yearsExperience} năm kinh nghiệm (mẫu)
+                    <Sparkles size={13} /> {provider.yearsExperience} năm kinh nghiệm
                   </small>
                   <small>
                     <MapPin size={13} /> {provider.serviceArea}

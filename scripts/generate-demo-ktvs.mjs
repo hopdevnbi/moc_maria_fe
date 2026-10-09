@@ -100,8 +100,8 @@ const data = entries.map(([publicName,age,yearsExperience,serviceArea,skills],i)
   const id = "demo-ktv-" + String(i+1).padStart(2,"0");
   return {
     id, publicName, age, yearsExperience, serviceArea,
-    title: "Kỹ thuật viên massage · hồ sơ minh họa",
-    introduction: "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    title: "Kỹ thuật viên massage",
+    introduction: `Tập trung vào ${services[skills[0]].name.toLocaleLowerCase("vi-VN")} và ${services[skills[1]].name.toLocaleLowerCase("vi-VN")}. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.`,
     avatarUrl: useCdn ? cdn+"/"+id+".webp" : "/demo/ktv/"+id+".webp",
     isDemo: true, bookable: false, eligibleServices: [],
     demoServices: skills.map((key)=>services[key]),
