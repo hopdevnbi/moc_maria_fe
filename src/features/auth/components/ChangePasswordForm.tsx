@@ -43,6 +43,8 @@ export function ChangePasswordForm() {
       </div>
       <input
         type="password"
+        aria-label="Mật khẩu hiện tại"
+        required
         autoComplete="current-password"
         value={currentPassword}
         onChange={(event) => setCurrentPassword(event.target.value)}
@@ -51,14 +53,25 @@ export function ChangePasswordForm() {
       />
       <input
         type="password"
+        aria-label="Mật khẩu mới"
+        required
+        minLength={10}
         autoComplete="new-password"
         value={newPassword}
         onChange={(event) => setNewPassword(event.target.value)}
         placeholder="Mật khẩu mới"
         className="min-h-11 w-full rounded-xl border border-[var(--moc-border)] bg-white px-4 outline-none"
       />
-      {error && <p className="text-sm text-red-700">{error}</p>}
-      {state === "success" && <p className="text-sm text-emerald-700">Đã cập nhật mật khẩu.</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-700">
+          {error}
+        </p>
+      )}
+      {state === "success" && (
+        <p role="status" className="text-sm text-emerald-700">
+          Đã cập nhật mật khẩu.
+        </p>
+      )}
       <button
         type="submit"
         disabled={state === "saving"}

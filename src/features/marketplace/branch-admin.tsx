@@ -149,7 +149,7 @@ function BranchDetails({ branch }: { branch: Branch }) {
             ) : hours.isError ? (
               <button onClick={() => void hours.refetch()}>Thử tải lại lịch</button>
             ) : (
-              <HoursForm key={JSON.stringify(hours.data)} branchId={branch.id} hours={hours.data} />
+              <HoursForm branchId={branch.id} hours={hours.data} />
             )}
           </article>
           <article className="market-panel">

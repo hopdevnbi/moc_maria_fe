@@ -4,7 +4,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { usePrivateData } from "./private-api";
 import { AdminForm } from "./admin-form";
 import { EmptyState } from "./components";
-import { applicationLabels } from "./format";
+import { applicationLabels, enrollmentLabels } from "./format";
 import type { Application, Course, Training } from "./types";
 
 const transitions: Record<string, string[]> = {
@@ -193,7 +193,7 @@ function ApplicationReview({
                     {course?.title || "Khóa học"} · {enrollment.attendancePercent}% ·{" "}
                     {enrollment.assessmentPassed ? "Đạt" : "Chưa đạt"}
                   </summary>
-                  <p>Trạng thái: {enrollment.status}</p>
+                  <p>Trạng thái: {enrollmentLabels[enrollment.status] || "Đang cập nhật"}</p>
                   {canReview && ["TRAINING", "ASSESSMENT"].includes(application.status) && (
                     <AdminForm
                       title="Ghi nhận kết quả đã xác minh"

@@ -19,3 +19,10 @@ export const applicationLabels: Record<string, string> = {
   REJECTED: "Chưa được duyệt",
   SUSPENDED: "Tạm dừng phục vụ",
 };
+
+export const enrollmentLabels: Record<string, string> = {
+  ENROLLED: "Đã ghi danh",
+  IN_PROGRESS: "Đang học",
+  COMPLETED: "Đã hoàn thành",
+  FAILED: "Cần đào tạo thêm",
+};

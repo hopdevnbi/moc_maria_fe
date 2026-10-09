@@ -69,9 +69,9 @@ function AccountContent() {
               </div>
               <div>
                 <p className="text-sm text-[var(--moc-muted)]">Tài khoản</p>
-                <h1 className="text-2xl font-semibold text-[var(--moc-green-deep)]">
+                <h2 className="text-2xl font-semibold text-[var(--moc-green-deep)]">
                   {user.displayName}
-                </h1>
+                </h2>
               </div>
             </div>
 

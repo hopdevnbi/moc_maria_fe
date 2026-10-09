@@ -488,6 +488,11 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+@media (max-width: 900px) {
+  .market-two-column {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 640px) {
   .market-header {
     padding-block: 22px;
