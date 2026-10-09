@@ -1,13 +1,10 @@
 import "server-only";
-import { cacheLife } from "next/cache";
 import { publicRead } from "@/features/marketplace/public-api";
 import type { Branch, Provider, ServiceItem } from "@/features/marketplace/types";
 import demoProviders from "@/features/mobile/demo-ktvs.json";
 
 // Only the public service/branch catalog is cached. Provider approvals and booking slots stay live.
 export async function catalogSnapshot() {
-  "use cache";
-  cacheLife("minutes");
   const [services, branches] = await Promise.all([
     publicRead<ServiceItem[]>("/services"),
     publicRead<Branch[]>("/branches"),

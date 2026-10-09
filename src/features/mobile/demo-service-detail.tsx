@@ -26,15 +26,24 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
         <section className="mm-service-detail-hero mm-demo-service-hero">
           {item.imageUrl && (
             <div className="mm-demo-cover">
-              <Image
-                src={item.imageUrl}
-                alt={"Hình minh họa cho " + item.service.name}
-                width={680}
-                height={400}
-                sizes="(max-width: 700px) 100vw, 480px"
-                unoptimized
-                priority
-              />
+              <picture>
+                {item.imageSrcSet && (
+                  <source
+                    type="image/webp"
+                    srcSet={item.imageSrcSet}
+                    sizes="(max-width: 700px) 100vw, 480px"
+                  />
+                )}
+                <Image
+                  src={item.imageUrl}
+                  alt={item.imageAlt || "?nh d?ch v? " + item.service.name}
+                  width={680}
+                  height={400}
+                  sizes="(max-width: 700px) 100vw, 480px"
+                  unoptimized
+                  priority
+                />
+              </picture>
             </div>
           )}
           <div>

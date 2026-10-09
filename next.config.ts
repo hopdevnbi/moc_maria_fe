@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: "/services/photography/:path*",
+        headers: [{ key: "Cache-Control", value: "public,max-age=31536000,immutable" }],
+      },
+      {
         source: "/demo/services/:path*",
         headers: [
           {
