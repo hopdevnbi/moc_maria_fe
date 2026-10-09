@@ -18,8 +18,9 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { Provider } from "@/features/marketplace/types";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./chat.css";
+import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
 
-type Thread = {
+type Thread = ChatBlockState & {
   id: string;
   customer_user_id: string;
   provider_user_id: string;
@@ -116,6 +117,8 @@ export function KtvChatPage({ provider }: { provider?: string }) {
     retry: 1,
   });
   const current = threads.data?.find((thread) => thread.id === selectedId) ?? null;
+  const paused =
+    current?.can_send === false || !!current?.blocked_by_me || !!current?.blocked_by_other;
   const recipient = (thread: Thread) =>
     user?.id === thread.customer_user_id
       ? thread.provider_name || "KTV Mộc Maria"
@@ -482,6 +485,29 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                       </Link>
                     )}
                   </header>
+                  <div className="ktv-chat-block-status">
+                    <ChatBlockControls
+                      key={current.id}
+                      thread={current}
+                      name={recipient(current)}
+                    />
+                    {paused ? (
+                      <p>
+                        {current.blocked_by_me
+                          ? "Bạn đang chặn hội thoại. Mở quản lý chặn để mở lại."
+                          : "Người kia đang chặn hội thoại."}{" "}
+                        {current.blocked_by_me &&
+                          current.my_block_expires_at &&
+                          `Tự mở lại: ${new Date(current.my_block_expires_at).toLocaleString("vi-VN")}.`}{" "}
+                        {current.blocked_by_me &&
+                          current.blocked_by_other &&
+                          "Người kia cũng đang chặn."}{" "}
+                        Bạn vẫn xem được lịch sử.
+                      </p>
+                    ) : (
+                      <small>Quản lý chặn hội thoại</small>
+                    )}
+                  </div>
                   <div
                     className="ktv-chat-messages"
                     ref={messagesRef}
@@ -530,7 +556,7 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                           </span>
                           <h2>Chào {recipient(current)}</h2>
                           <p>Bạn có thể hỏi về dịch vụ, nhu cầu chăm sóc hoặc thời gian phù hợp.</p>
-                          {customer && (
+                          {customer && !paused && (
                             <button
                               className="ktv-chat-suggestion"
                               onClick={() =>
@@ -558,7 +584,13 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                     className="ktv-chat-composer"
                     onSubmit={(event) => {
                       event.preventDefault();
-                      if (draft.trim() && !send.isPending && !history.isPending && !history.isError)
+                      if (
+                        !paused &&
+                        draft.trim() &&
+                        !send.isPending &&
+                        !history.isPending &&
+                        !history.isError
+                      )
                         send.mutate({ id: current.id, body: draft.trim() });
                     }}
                   >
@@ -571,12 +603,16 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                       }
                       maxLength={2000}
                       placeholder={`Nhắn cho ${recipient(current)}...`}
-                      disabled={send.isPending}
+                      disabled={paused || send.isPending}
                     />
                     <button
                       type="submit"
                       disabled={
-                        !draft.trim() || send.isPending || history.isPending || history.isError
+                        paused ||
+                        !draft.trim() ||
+                        send.isPending ||
+                        history.isPending ||
+                        history.isError
                       }
                       aria-label="Gửi tin nhắn"
                     >
