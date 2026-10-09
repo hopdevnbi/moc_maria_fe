@@ -1,13 +1,10 @@
 {
   "project": "moc-maria",
   "currentPhase": 3,
-  "currentTask": "P03-T28",
+  "currentTask": "P03-T29",
   "phaseStatus": "IN_PROGRESS",
   "blockers": [],
-  "completedPhases": [
-    1,
-    2
-  ],
+  "completedPhases": [1, 2],
   "completedTasks": [
     "P01-T01",
     "P01-T02",
@@ -85,20 +82,20 @@
   "production": {
     "apiUrl": "https://api.mocmaria.com/api/v1",
     "backend": "HEALTHY_AUTH_SMOKE_PASS",
-    "frontendIntegration": "STAGE_C2_READY_ISOLATED_QA_PASS",
+    "frontendIntegration": "STAGE_D1_READY_ISOLATED_QA_PASS",
     "remaining": [
       "Detailed training/history/renewal",
       "Booking/chat/reviews/media/SEO/queue/full acceptance",
       "Owner business/legal data and official admin"
     ],
-    "migrations": "ALL_12_APPLIED",
-    "backendSourceCommit": "3a069e66dd1ccc44de175cd7a507fa4b01a76e10",
-    "frontendSourceCommit": "eab0a4e2a192e9b408ad580e8306fb90f037844f",
-    "imageDigest": "sha256:e85611a9a09eb56ee1467320b45c82538f8e4604cb7721e9a1b0287c106735ea",
-    "frontendDeploymentId": "dpl_9qeeBbZLUCnKQAtmLSJinRvDMXoZ"
+    "migrations": "ALL_13_APPLIED",
+    "backendSourceCommit": "516ad558d309631d842bbd739fb2f2dfea4c1f19",
+    "frontendSourceCommit": "0d2e43d38733d64b508ebf8fed75b4159a94227a",
+    "imageDigest": "sha256:91821eb0d761c1714e293b587252d9adfcd606d00c42150c54838647536c4a19",
+    "frontendDeploymentId": "dpl_92tjoXBcRK1wPHDZMiYe5hfs6cze"
   },
   "catalogProviderIntegration": {
-    "status": "DEPLOYED_CURRENT_C2",
+    "status": "DEPLOYED_CURRENT_D1",
     "backendCommit": "ffc89b3",
     "pages": [
       "/dich-vu",
@@ -114,16 +111,16 @@
       "/quan-tri/co-so",
       "/quan-tri/ktv"
     ],
-    "release": "STAGE_C2",
+    "release": "STAGE_D1",
     "businessData": "PUBLIC_SERVICES_AND_PROVIDERS_EMPTY",
     "unitTests": 21,
-    "integrationTests": 26,
-    "productionMigration": "ALL_12_APPLIED"
+    "integrationTests": 32,
+    "productionMigration": "ALL_13_APPLIED"
   },
   "lastAuditedAt": "2026-10-09",
   "mvpStatus": "IN_PROGRESS_NOT_OPERATIONAL",
   "statusReport": "docs/CURRENT_PROGRESS_2026-10-09.md",
-  "currentStage": "D1",
+  "currentStage": "D2",
   "stageB": {
     "status": "DEPLOYED",
     "unitTests": 17,
@@ -147,5 +144,13 @@
     "browserQA": "PASS_ISOLATED_RELOAD_MOBILE",
     "backupRestore": "PASS_SCHEMA11",
     "migration": "ProviderServiceEligibility1791635200000"
+  },
+  "stageD1": {
+    "status": "DEPLOYED",
+    "unitTests": 21,
+    "integrationTests": 32,
+    "browserQA": "PASS_ISOLATED_CREATE_CORRECTION_HISTORY_RELOAD_MOBILE",
+    "backupRestore": "PASS_SCHEMA12",
+    "migration": "TrainingSessionsAttendance1791638800000"
   }
 }
