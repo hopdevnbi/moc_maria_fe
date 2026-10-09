@@ -16,6 +16,8 @@ import { ApiError } from "@/features/auth/auth-api";
 import { EmptyState } from "./components";
 import { applicationLabels } from "./format";
 import type { Application, Training } from "./types";
+import { ProviderReadinessPanel } from "./provider-readiness";
+import { AdminForm } from "./admin-form";
 
 function useApplication() {
   const { user, authFetch } = useAuth();
@@ -95,6 +97,40 @@ function ApplicationSummary({ application }: { application: Application }) {
         {application.reviewNote && (
           <p className="market-notice">Phản hồi từ Mộc: {application.reviewNote}</p>
         )}
+        <ProviderReadinessPanel />
+        {application.status !== "APPROVED" && (
+          <AdminForm
+            title="Bổ sung thông tin ứng tuyển"
+            path="/provider-applications/me"
+            method="PATCH"
+            label="Lưu hồ sơ ứng tuyển"
+            fields={[
+              {
+                name: "publicName",
+                label: "Tên hiển thị mong muốn",
+                required: true,
+                maxLength: 160,
+                value: application.publicName,
+              },
+              {
+                name: "serviceArea",
+                label: "Khu vực mong muốn phục vụ",
+                required: true,
+                maxLength: 160,
+                value: application.serviceArea,
+              },
+              {
+                name: "introduction",
+                label: "Giới thiệu kinh nghiệm",
+                type: "textarea",
+                required: true,
+                maxLength: 500,
+                value: application.introduction,
+                help: "Không nhập CCCD, hồ sơ y tế hay thông tin khách hàng.",
+              },
+            ]}
+          />
+        )}
       </article>
       <aside className="market-panel">
         <h2>Bước tiếp theo của bạn</h2>
@@ -120,7 +156,12 @@ function ApplicationForm() {
   const queryClient = useQueryClient();
   const [notice, setNotice] = useState("");
   const mutation = useMutation({
-    mutationFn: (body: { publicName: string; introduction: string; serviceArea: string }) =>
+    mutationFn: (body: {
+      publicName: string;
+      introduction: string;
+      serviceArea: string;
+      applicationConsentVersion: string;
+    }) =>
       authFetch<Application>("/provider-applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,10 +175,15 @@ function ApplicationForm() {
     event.preventDefault();
     if (mutation.isPending) return;
     const form = new FormData(event.currentTarget);
+    if (form.get("consent") !== "on") {
+      setNotice("Vui lòng đọc và chọn đồng ý sử dụng thông tin để xét duyệt hồ sơ.");
+      return;
+    }
     const body = {
       publicName: String(form.get("publicName") || "").trim(),
       introduction: String(form.get("introduction") || "").trim(),
       serviceArea: String(form.get("serviceArea") || "").trim(),
+      applicationConsentVersion: "provider-consent-v1",
     };
     if (body.publicName.length < 2 || !body.introduction || !body.serviceArea) {
       setNotice("Vui lòng điền đầy đủ tên, kinh nghiệm và khu vực mong muốn phục vụ.");
@@ -193,9 +239,10 @@ function ApplicationForm() {
             </small>
           </label>
           <label className="market-check">
-            <input type="checkbox" required />
-            Tôi xác nhận thông tin gửi là đúng và hiểu rằng việc ứng tuyển không tự cấp quyền hành
-            nghề hay quyền nhận lịch.
+            <input type="checkbox" name="consent" required />
+            Tôi đồng ý để Mộc Maria sử dụng thông tin ứng tuyển, kinh nghiệm và liên hệ để xét
+            duyệt, tổ chức đào tạo và đánh giá hồ sơ. Việc ứng tuyển không tự cấp quyền hành nghề
+            hoặc nhận lịch.
           </label>
           {notice && (
             <p className="market-notice" role="alert">

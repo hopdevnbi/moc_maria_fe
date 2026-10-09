@@ -87,3 +87,21 @@ export interface Training {
   enrollments: Array<{ enrollment: Enrollment; course: Course | null }>;
   certificates: Certificate[];
 }
+export interface ProviderReadiness {
+  consentVersion: string;
+  applicationConsent: boolean;
+  publicConsent: boolean;
+  contactVerified: boolean;
+  profileComplete: boolean;
+  reviewReady: boolean;
+  bookable: boolean;
+  bookingBlockers: string[];
+  contacts: Array<{
+    id: string;
+    channel: "EMAIL" | "PHONE";
+    verifiedAt: string;
+    revokedAt: string | null;
+    isCurrent: boolean;
+    evidenceReference?: string;
+  }>;
+}

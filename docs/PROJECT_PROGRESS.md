@@ -49,3 +49,9 @@
 - Validation: format/lint/typecheck, 4 existing unit tests and Next production build PASS. Public catalog mobile at 390px shows no horizontal overflow; anonymous admin route redirects to sign-in with returnTo. Full private admin browser flow and deployment verification remain pending.
 - Backend companion source ffc89b3; 17 unit and 20 isolated PostgreSQL integration checks PASS. No production fixture seed/reset.
 - All product phases 03–08 remain open.
+
+## Stage A/B — 2026-10-09
+- Reconciled task-level phase checklists and ownership registry; safe Plan mirror committed in .project/plan. Stages A-H defined; current Phase 03 remains open.
+- Stage A QA fixes deployed on Vercel dpl_7aBE3CnHZazqB7YfZJQiqy2gfrSh; public browser PASS.
+- Stage B contact/consent and own application edit implemented; actual private/admin/browser/mobile QA PASS; 21 integration tests; source build/quality checks PASS before final edit rerun. New additive migration deployment pending.
+- Application backup and disposable restore drill PASS; actual database never seeded by QA. Details in backend backup drill/contract docs.
