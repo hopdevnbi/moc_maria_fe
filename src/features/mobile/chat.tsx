@@ -265,6 +265,12 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       ).includes(query),
   );
   const draft = selectedId ? (drafts[selectedId] ?? "") : "";
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.style.height = "48px";
+    input.style.height = `${Math.max(48, Math.min(input.scrollHeight, 120))}px`;
+  }, [draft, selectedId, choosing]);
   const error =
     actionError ||
     (threads.isError || history.isError ? chatError(threads.error || history.error) : "");
@@ -297,8 +303,12 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
         <div className="ktv-chat-heading">
           <div>
             <span>CHĂM SÓC BẮT ĐẦU TỪ LẮNG NGHE</span>
-            <h1>Trò chuyện cùng KTV</h1>
-            <p>Chọn kỹ thuật viên bạn tin tưởng. Mỗi người, một cuộc trò chuyện riêng.</p>
+            <h1>{user && !customer ? "Tin nhắn khách hàng" : "Trò chuyện cùng KTV"}</h1>
+            <p>
+              {user && !customer
+                ? "Trả lời và tư vấn cho khách hàng. Mỗi khách, một cuộc trò chuyện riêng."
+                : "Chọn kỹ thuật viên bạn tin tưởng. Mỗi người, một cuộc trò chuyện riêng."}
+            </p>
           </div>
           <span className="ktv-chat-private">
             <ShieldCheck size={16} /> Hội thoại riêng tư
