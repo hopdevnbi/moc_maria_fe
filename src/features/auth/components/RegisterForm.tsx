@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ApiError } from "../auth-api";
 import { useAuth } from "../hooks/useAuth";
+import { safeReturnTo } from "../return-to";
 
 const optionalEmail = z
   .string()
@@ -36,7 +37,7 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-export function RegisterForm() {
+export function RegisterForm({ returnTo }: { returnTo?: string }) {
   const { register: registerAccount } = useAuth();
   const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -59,7 +60,7 @@ export function RegisterForm() {
         phone: values.phone?.trim() || undefined,
         password: values.password,
       });
-      router.replace("/tai-khoan");
+      router.replace(safeReturnTo(returnTo, "/chuyen-vien"));
     } catch (error) {
       setSubmitError(
         error instanceof ApiError ? error.message : "Không thể tạo tài khoản lúc này.",

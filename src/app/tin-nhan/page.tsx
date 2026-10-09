@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ provider?: string }>;
+  searchParams: Promise<{ provider?: string; service?: string }>;
 }) {
-  const { provider } = await searchParams;
+  const { provider, service } = await searchParams;
   return (
     <Suspense fallback={<p role="status">Đang tải tin nhắn...</p>}>
-      <KtvChatPage provider={provider} />
+      <KtvChatPage provider={provider} service={service} />
     </Suspense>
   );
 }

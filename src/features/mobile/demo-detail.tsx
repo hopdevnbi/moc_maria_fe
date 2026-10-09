@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Clock3, MapPin, Sparkles, UserRound } from "lucide-react";
+import { ArrowLeft, Clock3, MapPin, Sparkles, UserRound, MessageCircle } from "lucide-react";
 import type { Provider } from "@/features/marketplace/types";
 import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./mobile.css";
+import { chatHref } from "./links";
 
 export function DemoKtvDetail({ provider }: { provider: Provider }) {
   return (
@@ -49,6 +50,11 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
             <p className="mm-profile-title">
               {provider.scheduleOpen ? "Đã mở lịch làm việc" : "Chưa mở lịch"}
             </p>
+            {provider.chatEnabled && provider.chatProviderId && (
+              <Link className="mm-primary-cta" href={chatHref(provider.chatProviderId)}>
+                <MessageCircle size={18} /> Chat riêng với {provider.publicName}
+              </Link>
+            )}
           </div>
         </div>
         <section className="mm-detail-section" id="lich-lam-viec">
@@ -61,7 +67,10 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
           ) : (
             <p>KTV chưa thiết lập lịch làm việc.</p>
           )}
-          <p>Đặt lịch dịch vụ và nhận tin nhắn sẽ mở sau khi hồ sơ đủ điều kiện phục vụ.</p>
+          <p>
+            Bạn có thể chat để hỏi về thời gian phù hợp. Đặt lịch dịch vụ mở khi hồ sơ đủ điều kiện
+            phục vụ.
+          </p>
         </section>
         <section className="mm-detail-section">
           <div className="mm-results-heading">
@@ -79,6 +88,14 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
                   </p>
                 </div>
                 <strong>{formatPrice(service.priceVnd)}</strong>
+                {provider.chatEnabled && provider.chatProviderId && (
+                  <Link
+                    className="mm-text-link"
+                    href={chatHref(provider.chatProviderId, service.id)}
+                  >
+                    <MessageCircle size={16} /> Tư vấn dịch vụ này
+                  </Link>
+                )}
               </article>
             ))}
           </div>

@@ -2,15 +2,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock3, MapPin, ShieldAlert, Sparkles } from "lucide-react";
 import type { ServiceItem } from "@/features/marketplace/types";
+import type { ChatProvider } from "@/features/marketplace/types";
+import { publicRead } from "@/features/marketplace/public-api";
+import { chatHref } from "./links";
 import { formatPrice } from "@/features/marketplace/format";
 import demoProviders from "./demo-ktvs.json";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./mobile.css";
 
-export function DemoServiceDetail({ item }: { item: ServiceItem }) {
-  const matching = demoProviders.filter((provider) =>
-    provider.demoServices.some((offer) => offer.id === item.service.id),
-  );
+export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
+  const chat = await publicRead<ChatProvider[]>("/ktv-chat/providers");
+  const matching = demoProviders
+    .filter((provider) => provider.demoServices.some((offer) => offer.id === item.service.id))
+    .map((p) => ({
+      ...p,
+      receiver: chat.ok ? chat.data.find((c) => c.publicAlias === p.id) : undefined,
+    }));
   return (
     <div className="mobile-experience">
       <MobileHeader />
@@ -87,7 +94,16 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
             {matching.map((provider) => (
               <Link
                 className="mm-demo-provider-tile"
-                href={"/chuyen-vien/" + provider.id}
+                href={
+                  provider.receiver
+                    ? chatHref(provider.receiver.id, item.service.id)
+                    : "/chuyen-vien/" + provider.id
+                }
+                aria-label={
+                  provider.receiver
+                    ? "Chat tư vấn " + item.service.name + " với " + provider.publicName
+                    : "Xem hồ sơ " + provider.publicName
+                }
                 key={provider.id}
               >
                 <Image
@@ -106,6 +122,7 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
                   <small>
                     <MapPin size={13} /> {provider.serviceArea}
                   </small>
+                  {provider.receiver && <small>Chat để tư vấn dịch vụ</small>}
                 </div>
                 <ArrowRight size={17} />
               </Link>

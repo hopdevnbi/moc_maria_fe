@@ -20,7 +20,7 @@ import {
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "./experience";
-import { bookingHref } from "./links";
+import { bookingHref, chatHref } from "./links";
 import "./home.css";
 import { useCatalogRealtime } from "./useCatalogRealtime";
 import { ProviderRating } from "@/features/provider-reviews/reviews";
@@ -203,14 +203,14 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
             <CalendarClock size={17} /> Chưa mở lịch
           </span>
         )}
-        {provider.isDemo ? (
+        {provider.isDemo && !provider.chatEnabled ? (
           <span className="ktv-chat-btn ktv-demo-disabled" title="Chưa mở nhận tin nhắn">
             <MessageCircle size={17} /> Chat
           </span>
         ) : (
           <Link
             className="ktv-chat-btn"
-            href={"/tin-nhan?provider=" + encodeURIComponent(provider.id)}
+            href={chatHref(provider.chatProviderId || provider.id)}
             aria-label={"Chat với " + provider.publicName}
           >
             <MessageCircle size={17} /> Chat

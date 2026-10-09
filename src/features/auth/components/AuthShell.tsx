@@ -15,19 +15,19 @@ export function AuthShell({
   footer: ReactNode;
 }) {
   return (
-    <main className="min-h-screen px-6 py-10 sm:py-16">
+    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-16">
       <div className="mx-auto grid max-w-5xl overflow-hidden rounded-[2.25rem] border border-[var(--moc-border)] bg-white/80 shadow-xl shadow-emerald-950/5 lg:grid-cols-[0.8fr_1.2fr]">
-        <aside className="bg-[var(--moc-green)] p-8 text-white sm:p-10">
+        <aside className="bg-[var(--moc-green)] p-6 text-white sm:p-10">
           <Link href="/" className="text-2xl font-semibold tracking-tight">
             Mộc Maria
           </Link>
-          <p className="mt-16 text-sm font-semibold uppercase tracking-[0.22em] text-emerald-100">
+          <p className="mt-6 sm:mt-16 text-sm font-semibold uppercase tracking-[0.22em] text-emerald-100">
             {eyebrow}
           </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-tight">{title}</h1>
           <p className="mt-5 leading-7 text-emerald-50/90">{description}</p>
         </aside>
-        <section className="p-8 sm:p-10">
+        <section className="p-6 sm:p-10">
           {children}
           <div className="mt-8 border-t border-[var(--moc-border)] pt-6 text-sm text-[var(--moc-muted)]">
             {footer}

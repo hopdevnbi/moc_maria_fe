@@ -58,6 +58,8 @@ export interface Provider {
   isDemo?: boolean;
   avatarAlt?: string;
   scheduleOpen?: boolean;
+  chatProviderId?: string;
+  chatEnabled?: boolean;
   weeklySchedule?: {
     weekdays: number[];
     startsAt: string;
@@ -77,6 +79,15 @@ export interface Provider {
   providerKind?: string;
   eligibleServices?: EligibleProviderService[];
   bookable?: boolean;
+}
+export interface ChatProvider {
+  id: string;
+  publicName: string;
+  title: string;
+  serviceArea: string | null;
+  avatarUrl: string | null;
+  publicAlias?: string;
+  services: Array<{ id: string; name: string }>;
 }
 export interface EligibleProviderService {
   policyId: string;

@@ -13,7 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { publicRead } from "@/features/marketplace/public-api";
-import type { Provider } from "@/features/marketplace/types";
+import type { Provider, ChatProvider } from "@/features/marketplace/types";
 import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
 import { DemoKtvDetail } from "@/features/mobile/demo-detail";
 import demoProfiles from "@/features/mobile/demo-ktvs.json";
@@ -30,7 +30,15 @@ export const metadata: Metadata = {
 export default async function ProviderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const demo = demoProfiles.find((item) => item.id === id);
-  if (demo) return <DemoKtvDetail provider={demo} />;
+  if (demo) {
+    const chat = await publicRead<ChatProvider[]>("/ktv-chat/providers");
+    const receiver = chat.ok ? chat.data.find((c) => c.publicAlias === demo.id) : undefined;
+    return (
+      <DemoKtvDetail
+        provider={{ ...demo, chatProviderId: receiver?.id, chatEnabled: !!receiver }}
+      />
+    );
+  }
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const result = await publicRead<Provider>("/providers/" + encodeURIComponent(id));
   if (!result.ok && result.status === 404) notFound();

@@ -2,8 +2,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AuthShell } from "@/features/auth/components/AuthShell";
 import { LoginForm } from "@/features/auth/components/LoginForm";
+import { safeReturnTo } from "@/features/auth/return-to";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const returnTo = safeReturnTo((await searchParams).returnTo, "/chuyen-vien");
   return (
     <AuthShell
       eyebrow="Tài khoản Mộc Maria"
@@ -12,7 +18,10 @@ export default function LoginPage() {
       footer={
         <>
           Chưa có tài khoản?{" "}
-          <Link href="/dang-ky" className="font-semibold text-[var(--moc-green)]">
+          <Link
+            href={"/dang-ky?returnTo=" + encodeURIComponent(returnTo)}
+            className="font-semibold text-[var(--moc-green)]"
+          >
             Đăng ký ngay
           </Link>
           <span className="mx-2">·</span>
