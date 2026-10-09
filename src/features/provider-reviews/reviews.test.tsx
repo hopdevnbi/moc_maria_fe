@@ -99,7 +99,10 @@ describe("verified service feedback", () => {
   it("offers no write button to anonymous customers", async () => {
     state.status = "anonymous";
     mount(<ProviderReviews providerId="p1" />);
-    await screen.findByRole("link", { name: "Đăng nhập" });
+    expect(await screen.findByRole("link", { name: "Đăng nhập" })).toHaveAttribute(
+      "href",
+      "/dang-nhap?returnTo=%2Fchuyen-vien%2Fp1",
+    );
     expect(state.fetch).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Viết đánh giá" })).not.toBeInTheDocument();
   });

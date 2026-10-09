@@ -173,7 +173,7 @@ export function MyReviewRequests({ providerId }: { providerId: string }) {
   if (status !== "authenticated")
     return (
       <p>
-        <Link href={"/dang-nhap?next=" + encodeURIComponent("/chuyen-vien/" + providerId)}>
+        <Link href={"/dang-nhap?returnTo=" + encodeURIComponent("/chuyen-vien/" + providerId)}>
           Đăng nhập
         </Link>{" "}
         để đánh giá dịch vụ bạn đã sử dụng.
