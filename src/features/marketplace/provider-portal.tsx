@@ -20,6 +20,7 @@ import { ProviderReadinessPanel } from "./provider-readiness";
 import { AdminForm } from "./admin-form";
 import { OwnProviderPlanning } from "./provider-planning";
 import { OwnServiceReadiness } from "./provider-eligibility";
+import { OwnTrainingSessions } from "./training-sessions";
 
 function useApplication() {
   const { user, authFetch } = useAuth();
@@ -323,6 +324,7 @@ function TrainingContent() {
   return (
     <>
       <PortalNavigation />
+      <OwnTrainingSessions />
       <div className="market-two-column">
         <section>
           <h2 className="market-subtitle">Khóa học được chỉ định</h2>

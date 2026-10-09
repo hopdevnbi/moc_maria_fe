@@ -9,6 +9,7 @@ import type { Application, Course, Training } from "./types";
 import { ProviderReadinessPanel } from "./provider-readiness";
 import { AdminProviderPlanning } from "./provider-planning";
 import { AdminProviderEligibility } from "./provider-eligibility";
+import { CourseProgramAdmin, EnrollmentSessionsAdmin } from "./training-sessions";
 
 const transitions: Record<string, string[]> = {
   APPLIED: ["REVIEWING", "REJECTED"],
@@ -77,6 +78,10 @@ export function TrainingAdmin() {
               <h2 className="mt-4!">{course.title}</h2>
               <p>{course.description}</p>
               <p>{course.isActive ? "Đang hoạt động" : "Tạm ngưng"}</p>
+              <details className="market-admin-details">
+                <summary>Chương trình & buổi học</summary>
+                <CourseProgramAdmin courseId={course.id} canReview={canReview} />
+              </details>
             </article>
           ))}
           {canReview && (
@@ -208,6 +213,7 @@ function ApplicationReview({
                     {enrollment.assessmentPassed ? "Đạt" : "Chưa đạt"}
                   </summary>
                   <p>Trạng thái: {enrollmentLabels[enrollment.status] || "Đang cập nhật"}</p>
+                  <EnrollmentSessionsAdmin enrollmentId={enrollment.id} canReview={canReview} />
                   {canReview && ["TRAINING", "ASSESSMENT"].includes(application.status) && (
                     <AdminForm
                       title="Ghi nhận kết quả đã xác minh"

@@ -4,7 +4,15 @@ import { mutationMessage, usePrivateMutation } from "./private-api";
 export interface AdminField {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "time" | "checkbox" | "textarea" | "select";
+  type?:
+    | "text"
+    | "number"
+    | "date"
+    | "time"
+    | "datetime-local"
+    | "checkbox"
+    | "textarea"
+    | "select";
   required?: boolean;
   value?: string | number | boolean | null;
   min?: number;
