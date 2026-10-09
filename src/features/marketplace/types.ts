@@ -56,6 +56,14 @@ export interface Provider {
   avatarUrl: string | null;
   // Demo-only UI data. These profiles do not represent vetted providers or accept bookings.
   isDemo?: boolean;
+  avatarAlt?: string;
+  scheduleOpen?: boolean;
+  weeklySchedule?: {
+    weekdays: number[];
+    startsAt: string;
+    endsAt: string;
+    timezone: string;
+  } | null;
   age?: number;
   demoServices?: Array<{
     id: string;

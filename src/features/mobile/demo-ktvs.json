@@ -7,7 +7,7 @@
     "serviceArea": "Cầu Giấy · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage thư giãn toàn thân và massage đá nóng. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-01.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-01-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -36,7 +36,15 @@
         "durationMinutes": 60,
         "priceVnd": 390000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": true,
+    "weeklySchedule": {
+      "weekdays": [1, 2, 3, 4, 5, 6],
+      "startsAt": "09:00",
+      "endsAt": "18:00",
+      "timezone": "Asia/Ho_Chi_Minh"
+    }
   },
   {
     "id": "demo-ktv-02",
@@ -46,7 +54,7 @@
     "serviceArea": "Nam Từ Liêm · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage thư giãn toàn thân và massage cổ vai gáy. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-02.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-02-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -75,7 +83,15 @@
         "durationMinutes": 45,
         "priceVnd": 220000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": true,
+    "weeklySchedule": {
+      "weekdays": [1, 2, 3, 4, 5, 6],
+      "startsAt": "09:00",
+      "endsAt": "18:00",
+      "timezone": "Asia/Ho_Chi_Minh"
+    }
   },
   {
     "id": "demo-ktv-03",
@@ -85,7 +101,7 @@
     "serviceArea": "Đống Đa · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage đá nóng và massage thảo dược. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-03.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-03-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -114,7 +130,15 @@
         "durationMinutes": 60,
         "priceVnd": 420000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": true,
+    "weeklySchedule": {
+      "weekdays": [1, 2, 3, 4, 5, 6],
+      "startsAt": "09:00",
+      "endsAt": "18:00",
+      "timezone": "Asia/Ho_Chi_Minh"
+    }
   },
   {
     "id": "demo-ktv-04",
@@ -124,7 +148,7 @@
     "serviceArea": "Hà Đông · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage cổ vai gáy và massage bấm huyệt. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-04.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-04-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -153,7 +177,15 @@
         "durationMinutes": 45,
         "priceVnd": 260000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": true,
+    "weeklySchedule": {
+      "weekdays": [1, 2, 3, 4, 5, 6],
+      "startsAt": "09:00",
+      "endsAt": "18:00",
+      "timezone": "Asia/Ho_Chi_Minh"
+    }
   },
   {
     "id": "demo-ktv-05",
@@ -163,7 +195,7 @@
     "serviceArea": "Tây Hồ · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage thư giãn toàn thân và massage đá nóng. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-05.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-05-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -192,7 +224,15 @@
         "durationMinutes": 60,
         "priceVnd": 390000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": true,
+    "weeklySchedule": {
+      "weekdays": [1, 2, 3, 4, 5, 6],
+      "startsAt": "09:00",
+      "endsAt": "18:00",
+      "timezone": "Asia/Ho_Chi_Minh"
+    }
   },
   {
     "id": "demo-ktv-06",
@@ -202,7 +242,7 @@
     "serviceArea": "Thanh Xuân · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage bấm huyệt và massage cổ vai gáy. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-06.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-06-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -237,7 +277,10 @@
         "durationMinutes": 45,
         "priceVnd": 260000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": false,
+    "weeklySchedule": null
   },
   {
     "id": "demo-ktv-07",
@@ -247,7 +290,7 @@
     "serviceArea": "Hoài Đức · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage chân và massage thư giãn toàn thân. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-07.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-07-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -276,7 +319,10 @@
         "durationMinutes": 45,
         "priceVnd": 220000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": false,
+    "weeklySchedule": null
   },
   {
     "id": "demo-ktv-08",
@@ -286,7 +332,7 @@
     "serviceArea": "Ba Đình · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage thảo dược và massage bấm huyệt. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-08.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-08-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -321,7 +367,10 @@
         "durationMinutes": 60,
         "priceVnd": 420000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": false,
+    "weeklySchedule": null
   },
   {
     "id": "demo-ktv-09",
@@ -331,7 +380,7 @@
     "serviceArea": "Long Biên · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage thư giãn toàn thân và massage chân. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-09.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-09-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -366,7 +415,10 @@
         "durationMinutes": 45,
         "priceVnd": 260000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": false,
+    "weeklySchedule": null
   },
   {
     "id": "demo-ktv-10",
@@ -376,7 +428,7 @@
     "serviceArea": "Bắc Từ Liêm · Hà Nội",
     "title": "Kỹ thuật viên massage",
     "introduction": "Tập trung vào massage đá nóng và massage thư giãn toàn thân. Phong cách chăm sóc nhẹ nhàng, chú trọng sự thoải mái của khách hàng.",
-    "avatarUrl": "/demo/ktv/demo-ktv-10.webp",
+    "avatarUrl": "/media/ktv/demo-ktv-10-care.webp",
     "isDemo": true,
     "bookable": false,
     "eligibleServices": [],
@@ -411,6 +463,9 @@
         "durationMinutes": 45,
         "priceVnd": 260000
       }
-    ]
+    ],
+    "avatarAlt": "Ảnh hoạt động chăm sóc tại Mộc Maria",
+    "scheduleOpen": false,
+    "weeklySchedule": null
   }
 ]

@@ -11,10 +11,19 @@ describe("isolated demonstration KTV seed", () => {
       expect(item.isDemo).toBe(true);
       expect(item.bookable).toBe(false);
       expect(item.demoServices.length).toBeGreaterThanOrEqual(2);
-      expect(
-        item.avatarUrl.startsWith("/demo/ktv/") ||
-          item.avatarUrl.startsWith("https://giangxa-media-cdn.b-cdn.net/moc-maria/demo-ktv/"),
-      ).toBe(true);
+      expect(item.avatarUrl.startsWith("/media/ktv/")).toBe(true);
+    }
+  });
+
+  it("configures five working schedules and leaves five unset without enabling reservations", () => {
+    expect(demoProfiles.filter((p) => p.scheduleOpen)).toHaveLength(5);
+    expect(demoProfiles.filter((p) => !p.scheduleOpen)).toHaveLength(5);
+    for (const p of demoProfiles) {
+      if (p.scheduleOpen) {
+        expect(p.weeklySchedule?.weekdays).toEqual([1, 2, 3, 4, 5, 6]);
+        expect(p.weeklySchedule?.startsAt).toBe("09:00");
+        expect(p.weeklySchedule?.endsAt).toBe("18:00");
+      } else expect(p.weeklySchedule).toBeNull();
     }
   });
 

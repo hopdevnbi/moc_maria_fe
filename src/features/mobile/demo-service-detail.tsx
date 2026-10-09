@@ -94,7 +94,7 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
                   src={provider.avatarUrl}
                   width={72}
                   height={86}
-                  alt={"Ảnh đại diện " + provider.publicName}
+                  alt={provider.avatarAlt || "Ảnh đại diện " + provider.publicName}
                   unoptimized
                 />
                 <div>
