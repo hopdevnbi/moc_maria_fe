@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { ShieldCheck, UserRound } from "lucide-react";
@@ -7,12 +7,16 @@ import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useState } from "react";
 import { MarketShell } from "@/features/marketplace/components";
+import { MobileNavigation } from "@/features/mobile/experience";
 
 export default function AccountPage() {
   return (
-    <RequireAuth>
-      <AccountContent />
-    </RequireAuth>
+    <>
+      <RequireAuth>
+        <AccountContent />
+      </RequireAuth>
+      <MobileNavigation active="account" />
+    </>
   );
 }
 
@@ -57,6 +61,8 @@ function AccountContent() {
           </p>
         )}
         <nav className="market-portal-nav mt-8">
+          <Link href="/lich-hen">Lịch hẹn của tôi</Link>
+          <Link href="/hoi-vien">Hội viên & hạng khách hàng</Link>
           <Link href="/ktv/ho-so">Hồ sơ ứng tuyển KTV</Link>
           <Link href="/ktv/dao-tao">Đào tạo & chứng nhận</Link>
           <Link href="/dich-vu">Khám phá dịch vụ</Link>

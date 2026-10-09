@@ -1,22 +1,30 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Suspense } from "react";
-import { MarketShell, CardSkeleton } from "@/features/marketplace/components";
-import { ProviderResults } from "@/features/marketplace/providers";
+import { publicMarketplace } from "@/features/mobile/data";
+import { MobileExperience } from "@/features/mobile/experience";
+
 export const metadata: Metadata = {
-  title: "Chuyên viên Mộc Maria",
-  description: "Tìm hiểu chuyên viên đã hoàn thành đào tạo nội bộ và được Mộc Maria phê duyệt.",
+  title: "Danh sách Kỹ thuật viên",
+  description:
+    "Khám phá KTV Mộc Maria đã được phê duyệt, xem kinh nghiệm và chọn dịch vụ để đặt lịch.",
   alternates: { canonical: "/chuyen-vien" },
 };
+
+async function ProviderList() {
+  const data = await publicMarketplace();
+  return <MobileExperience {...data} page="providers" />;
+}
+
 export default function ProvidersPage() {
   return (
-    <MarketShell
-      title="Chăm sóc bằng sự tận tâm."
-      eyebrow="NGƯỜI ĐỒNG HÀNH CÙNG BẠN"
-      description="Gặp gỡ những chuyên viên của Mộc. Hồ sơ công khai chỉ được hiển thị sau khi được phê duyệt và có chứng nhận đào tạo nội bộ hợp lệ."
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-4xl p-8" role="status">
+          Đang tải danh sách kỹ thuật viên...
+        </main>
+      }
     >
-      <Suspense fallback={<CardSkeleton />}>
-        <ProviderResults />
-      </Suspense>
-    </MarketShell>
+      <ProviderList />
+    </Suspense>
   );
 }

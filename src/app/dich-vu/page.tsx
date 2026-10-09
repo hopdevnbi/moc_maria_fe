@@ -1,26 +1,30 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Suspense } from "react";
-import { MarketShell, CardSkeleton } from "@/features/marketplace/components";
-import { ServiceResults } from "@/features/marketplace/catalog";
+import { publicMarketplace } from "@/features/mobile/data";
+import { MobileExperience } from "@/features/mobile/experience";
+
 export const metadata: Metadata = {
-  title: "Dịch vụ chăm sóc",
-  description: "Khám phá các gói chăm sóc Mộc Maria, thời lượng và giá niêm yết chính thức.",
+  title: "Dịch vụ massage và chăm sóc",
+  description:
+    "Chọn dịch vụ massage, thời lượng, bảng giá công khai và kỹ thuật viên đáp ứng điều kiện.",
   alternates: { canonical: "/dich-vu" },
 };
-export default function ServicesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+
+async function ServiceList() {
+  const data = await publicMarketplace();
+  return <MobileExperience {...data} page="services" />;
+}
+
+export default function ServicesPage() {
   return (
-    <MarketShell
-      title="Một trải nghiệm dành riêng cho bạn."
-      eyebrow="DỊCH VỤ MỘC MARIA"
-      description="Lắng nghe cơ thể, chọn một khoảng chăm sóc phù hợp. Mỗi gói được công bố cùng thời lượng và giá niêm yết rõ ràng."
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-4xl p-8" role="status">
+          Đang tải dịch vụ...
+        </main>
+      }
     >
-      <Suspense fallback={<CardSkeleton />}>
-        <ServiceResults searchParams={searchParams} />
-      </Suspense>
-    </MarketShell>
+      <ServiceList />
+    </Suspense>
   );
 }

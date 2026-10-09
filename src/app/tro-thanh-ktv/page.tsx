@@ -1,62 +1,77 @@
+﻿import type { Metadata } from "next";
 import Link from "next/link";
-import type { Metadata } from "next";
-import { GraduationCap, Leaf, ShieldCheck } from "lucide-react";
-import { MarketShell } from "@/features/marketplace/components";
+import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
+import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
+import "@/features/mobile/mobile.css";
 
 export const metadata: Metadata = {
-  title: "Trở thành KTV Mộc Maria",
-  description: "Ứng tuyển chuyên viên, đồng hành cùng Mộc Maria qua đào tạo và đánh giá tay nghề.",
+  title: "Đăng ký trở thành KTV Mộc Maria",
+  description:
+    "Tạo tài khoản ứng tuyển, gửi thông tin kinh nghiệm và theo dõi xét duyệt KTV Mộc Maria.",
   alternates: { canonical: "/tro-thanh-ktv" },
 };
+
+const steps = [
+  {
+    title: "Gửi hồ sơ cá nhân",
+    detail: "Đăng ký tài khoản, khai báo tên hiển thị, kinh nghiệm và khu vực mong muốn phục vụ.",
+  },
+  {
+    title: "Mộc kiểm tra và đánh giá",
+    detail: "Hồ sơ chờ quản trị viên xét duyệt, xác minh và đào tạo theo quy trình.",
+  },
+  {
+    title: "Mở dịch vụ phù hợp",
+    detail: "Chỉ hồ sơ và dịch vụ đủ điều kiện mới được hiển thị trong danh sách KTV.",
+  },
+];
+
 export default function ApplyPage() {
   return (
-    <MarketShell
-      title="Cùng Mộc, chăm sóc bằng sự tận tâm."
-      eyebrow="ĐỒNG HÀNH CÙNG MỘC"
-      description="Một hành trình bắt đầu từ sự lắng nghe, tiếp nối bằng học hỏi và trách nhiệm trong từng trải nghiệm chăm sóc."
-    >
-      <div className="market-grid">
-        {[
-          {
-            icon: Leaf,
-            title: "Chia sẻ câu chuyện của bạn",
-            description:
-              "Giới thiệu kinh nghiệm, khu vực mong muốn phục vụ và lý do bạn muốn đồng hành cùng Mộc.",
-          },
-          {
-            icon: GraduationCap,
-            title: "Học hỏi & thực hành",
-            description:
-              "Tham gia khóa học được chỉ định, hoàn thành đào tạo và đánh giá tay nghề.",
-          },
-          {
-            icon: ShieldCheck,
-            title: "Phục vụ với trách nhiệm",
-            description:
-              "Hoàn tất xác minh và phê duyệt cho từng dịch vụ trước khi mở lịch chăm sóc.",
-          },
-        ].map((item) => (
-          <article className="market-panel" key={item.title}>
-            <item.icon size={30} strokeWidth={1.4} />
-            <h2 className="mt-6!">{item.title}</h2>
-            <p>{item.description}</p>
-          </article>
-        ))}
-      </div>
-      <section className="market-panel market-section">
-        <h2>Bạn đã sẵn sàng đồng hành?</h2>
-        <p>
-          Đăng nhập hoặc tạo tài khoản để gửi hồ sơ. Nếu đã ứng tuyển, bạn có thể theo dõi trạng
-          thái ngay trong hồ sơ của mình.
-        </p>
-        <Link className="market-button" href="/ktv/ho-so">
-          Ứng tuyển / Xem hồ sơ của tôi
+    <div className="mobile-experience">
+      <MobileHeader />
+      <main className="mm-container mm-application-section">
+        <Link className="mm-back" href="/chuyen-vien">
+          <ArrowLeft size={16} /> Quay lại danh sách KTV
         </Link>
-        <p className="market-notice">
-          Đào tạo tại Mộc cấp chứng nhận nội bộ. Quyền cung cấp dịch vụ cần đáp ứng đầy đủ điều kiện
-          chuyên môn và các yêu cầu pháp lý tương ứng.
+        <span className="mm-overline">GIA NHẬP ĐỘI NGŨ MỘC MARIA</span>
+        <h1>
+          Bắt đầu hành trình <em>cùng Mộc.</em>
+        </h1>
+        <p>
+          Đăng ký thông tin kỹ thuật viên ngay trên điện thoại. Mộc sẽ xem xét, hướng dẫn các bước
+          tiếp theo trước khi cho phép nhận lịch phục vụ.
         </p>
-      </section>
-    </MarketShell>
+        <div className="mm-application-steps">
+          {steps.map((item, index) => (
+            <article key={item.title}>
+              <span>0{index + 1}</span>
+              <h2>{item.title}</h2>
+              <p>{item.detail}</p>
+            </article>
+          ))}
+        </div>
+        <section className="mm-application-actions">
+          <h2>Đã sẵn sàng đăng ký?</h2>
+          <p>
+            Nếu bạn chưa có tài khoản, hãy tạo tài khoản trước. Nếu đã đăng nhập, có thể gửi hồ sơ
+            ứng tuyển hoặc xem kết quả xét duyệt ngay.
+          </p>
+          <div className="mm-hero-links">
+            <Link href="/ktv/ho-so" className="mm-primary-cta">
+              Đăng ký / Xem hồ sơ KTV <ArrowRight size={18} />
+            </Link>
+            <Link href="/dang-ky" className="mm-outline-cta">
+              Tạo tài khoản mới
+            </Link>
+          </div>
+        </section>
+        <div className="mm-detail-notice" style={{ marginTop: 20 }}>
+          <ShieldCheck size={18} /> Đào tạo và chứng nhận nội bộ Mộc Maria không thay thế điều kiện
+          hành nghề do pháp luật quy định. Hồ sơ chưa được duyệt sẽ không được hiển thị cho khách.
+        </div>
+      </main>
+      <MobileNavigation active="account" />
+    </div>
   );
 }
