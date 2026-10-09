@@ -7,6 +7,7 @@ import {
   ArrowRight,
   CheckCircle2,
   MapPin,
+  MessageCircle,
   ShieldCheck,
   Sparkles,
   UserRound,
@@ -90,6 +91,12 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
                 <p>{provider.introduction || "Thông tin giới thiệu đang được cập nhật."}</p>
                 <Link className="mm-primary-cta" href={bookingHref({ provider: provider.id })}>
                   Chọn KTV & đặt lịch <ArrowRight size={18} />
+                </Link>
+                <Link
+                  className="mm-outline-cta"
+                  href={"/tin-nhan?provider=" + encodeURIComponent(provider.id)}
+                >
+                  <MessageCircle size={17} /> Chat với KTV
                 </Link>
               </div>
             </div>

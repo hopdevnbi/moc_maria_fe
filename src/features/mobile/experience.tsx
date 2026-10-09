@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -14,6 +14,7 @@ import {
   HandHeart,
   Heart,
   Home,
+  MessageCircle,
   MapPin,
   Search,
   ShieldCheck,
@@ -59,13 +60,13 @@ function normalized(value: string) {
 export function MobileNavigation({
   active = "home",
 }: {
-  active?: "home" | "providers" | "services" | "booking" | "account";
+  active?: "home" | "providers" | "services" | "booking" | "chat" | "account";
 }) {
   const nav = [
-    { href: "/", label: "Khám phá", icon: Home, key: "home" },
-    { href: "/chuyen-vien", label: "KTV", icon: Users, key: "providers" },
-    { href: "/dat-lich", label: "Đặt lịch", icon: CalendarDays, key: "booking" },
+    { href: "/", label: "KTV", icon: Home, key: "home" },
     { href: "/dich-vu", label: "Dịch vụ", icon: HandHeart, key: "services" },
+    { href: "/dat-lich", label: "Đặt lịch", icon: CalendarDays, key: "booking" },
+    { href: "/tin-nhan", label: "Chat", icon: MessageCircle, key: "chat" },
     { href: "/tai-khoan", label: "Tài khoản", icon: UserRound, key: "account" },
   ] as const;
   return (
@@ -101,6 +102,7 @@ export function MobileHeader() {
         <nav className="mm-desktop-menu" aria-label="Điều hướng chính">
           <Link href="/chuyen-vien">Kỹ thuật viên</Link>
           <Link href="/dich-vu">Dịch vụ</Link>
+          <Link href="/tin-nhan">Chat KTV</Link>
           <Link href="/tro-thanh-ktv">Trở thành KTV</Link>
           <Link href="/hoi-vien">Hội viên</Link>
         </nav>

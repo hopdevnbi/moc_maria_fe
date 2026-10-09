@@ -1,10 +1,10 @@
 ﻿import { Suspense } from "react";
 import { publicMarketplace } from "@/features/mobile/data";
-import { MobileExperience } from "@/features/mobile/experience";
+import { KtvFirstHomepage } from "@/features/mobile/ktv-home";
 
 async function HomeContent() {
   const data = await publicMarketplace();
-  return <MobileExperience {...data} page="home" />;
+  return <KtvFirstHomepage {...data} />;
 }
 
 export default function HomePage() {

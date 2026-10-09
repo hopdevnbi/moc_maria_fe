@@ -62,6 +62,7 @@ function AccountContent() {
         )}
         <nav className="market-portal-nav mt-8">
           <Link href="/lich-hen">Lịch hẹn của tôi</Link>
+          <Link href="/tin-nhan">Tin nhắn KTV</Link>
           <Link href="/hoi-vien">Hội viên & hạng khách hàng</Link>
           <Link href="/ktv/ho-so">Hồ sơ ứng tuyển KTV</Link>
           <Link href="/ktv/dao-tao">Đào tạo & chứng nhận</Link>
