@@ -19,6 +19,7 @@ import { DemoKtvDetail } from "@/features/mobile/demo-detail";
 import demoProfiles from "@/features/mobile/demo-ktvs.json";
 import { bookingHref } from "@/features/mobile/links";
 import "@/features/mobile/mobile.css";
+import { ProviderRating, ProviderReviews } from "@/features/provider-reviews/reviews";
 
 export const metadata: Metadata = {
   title: "Hồ sơ kỹ thuật viên",
@@ -79,6 +80,7 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
                   <CheckCircle2 size={15} /> Hồ sơ đã được xét duyệt
                 </span>
                 <h1>{provider.publicName}</h1>
+                <ProviderRating providerId={provider.id} />
                 <p className="mm-profile-title">{provider.title || "Kỹ thuật viên Mộc Maria"}</p>
                 <div className="mm-profile-facts">
                   {provider.yearsExperience != null && (
@@ -133,6 +135,7 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
                 <div className="mm-empty">KTV chưa có dịch vụ đủ điều kiện để mở đặt lịch.</div>
               )}
             </section>
+            <ProviderReviews providerId={provider.id} />
             <div className="mm-detail-notice">
               <ShieldCheck size={18} /> Việc phê duyệt hồ sơ và chứng nhận đào tạo nội bộ không thay
               thế giấy phép chuyên ngành. Giờ trống chỉ được xác nhận khi kiểm tra lịch thật.

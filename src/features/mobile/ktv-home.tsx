@@ -23,6 +23,7 @@ import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "./experience";
 import { bookingHref } from "./links";
 import "./home.css";
+import { ProviderRating } from "@/features/provider-reviews/reviews";
 
 type HomeProps = {
   providers: Provider[];
@@ -131,6 +132,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
             {provider.publicName}
           </Link>
           <p className="ktv-role">{provider.title || "Kỹ thuật viên massage"}</p>
+          <ProviderRating providerId={provider.id} isDemo={provider.isDemo} />
           <div className="ktv-facts">
             {provider.age != null && <span>{provider.age} tuổi</span>}
             {provider.yearsExperience != null && (
