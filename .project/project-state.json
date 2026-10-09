@@ -1,7 +1,7 @@
 {
   "project": "moc-maria",
   "currentPhase": 3,
-  "currentTask": "P03-T10",
+  "currentTask": "P03-T32",
   "phaseStatus": "IN_PROGRESS",
   "blockers": [],
   "completedPhases": [
@@ -57,11 +57,11 @@
       "Media CDN and SEO",
       "Complete profile/role/admin integration"
     ],
-    "migrations": "ALL_10_APPLIED",
-    "backendSourceCommit": "cd51766c6be91abf44da2d7bdf6b987291dddb7c",
-    "frontendSourceCommit": "fcb2b66daa015f6cd52aa4d4c9359ad8a53e39cf",
-    "imageDigest": "sha256:d3863e3403ad0e7cc2e9b7158e2f9f0eba04c55def94c19d9098b062020565c4",
-    "frontendDeploymentId": "dpl_HaZaKDoqbpQ3ZhmGrofGgXfePmJs"
+    "migrations": "ALL_11_APPLIED",
+    "backendSourceCommit": "4544c60663cf6d4f5e3876106a599d48e101eadf",
+    "frontendSourceCommit": "07cdc199b111d7f8d350ba45cf2963ddb2db0183",
+    "imageDigest": "sha256:017cc71c5607016f3739253b97a7aa1f48e8f1c94e3c1cd6fe244830b4a2ad68",
+    "frontendDeploymentId": "dpl_BPkUaftignL4U8NpGYtUZPHeLoJm"
   },
   "catalogProviderIntegration": {
     "status": "DEPLOYED_PRIVATE_BROWSER_QA_PASS_SMALL_FIXES_PENDING",
@@ -86,7 +86,7 @@
   "lastAuditedAt": "2026-10-09",
   "mvpStatus": "IN_PROGRESS_NOT_OPERATIONAL",
   "statusReport": "docs/CURRENT_PROGRESS_2026-10-09.md",
-  "currentStage": "C",
+  "currentStage": "C2",
   "stageB": {
     "status": "DEPLOYED",
     "unitTests": 17,
@@ -94,5 +94,13 @@
     "browserQA": "PASS_ISOLATED",
     "backupRestore": "PASS",
     "migration": "ProviderConsentContact1791628000000"
+  },
+  "stageC1": {
+    "status": "DEPLOYED",
+    "unitTests": 21,
+    "integrationTests": 26,
+    "browserQA": "PASS_ISOLATED",
+    "backupRestore": "PASS_SCHEMA10",
+    "migration": "ProviderSkillsSchedule1791631600000"
   }
 }
