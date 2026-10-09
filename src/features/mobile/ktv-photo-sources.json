@@ -1,0 +1,62 @@
+[
+  {
+    "seedId": "demo-ktv-01",
+    "sourceFile": "509439388_122206846178041562_1540271962883847003_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-01-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-02",
+    "sourceFile": "510803302_122206846196041562_1283754670379932585_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-02-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-03",
+    "sourceFile": "528636564_122212479404041562_6061330698136638333_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-03-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-04",
+    "sourceFile": "528809730_122212470206041562_2588753942825939540_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-04-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-05",
+    "sourceFile": "529277439_122212470518041562_7266666206736747630_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-05-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-06",
+    "sourceFile": "529488832_122212479422041562_2679279076438114378_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-06-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-07",
+    "sourceFile": "536277999_122214045866041562_5336261166416810767_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-07-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-08",
+    "sourceFile": "544406413_122216153234041562_3170640531150119471_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-08-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-09",
+    "sourceFile": "551329792_122217572264041562_4045494047020492500_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-09-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  },
+  {
+    "seedId": "demo-ktv-10",
+    "sourceFile": "552722889_122217572216041562_499445858121215434_n.jpg",
+    "avatarUrl": "/media/ktv/demo-ktv-10-care.webp",
+    "imageUsage": "care activity illustration for owner-seeded profile; no identity inference"
+  }
+]

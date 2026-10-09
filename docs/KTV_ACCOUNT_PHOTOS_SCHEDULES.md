@@ -1,0 +1,11 @@
+# KTV accounts, activity photos and schedules — 2026-10-09
+
+Owner explicitly requested ten persistent seeded KTV accounts, real photos from the supplied folder, and five configured/five unset schedules. This supersedes generic no-production-seed guidance for these specific onboarding records. Existing E2a modules and operational eligibility checks are untouched.
+
+CODE: Ten distinct source activity photos selected in `ktv-photo-sources.json`, served as local 640×740 WebP assets. The folder does not contain ten individually identified portraits; photos represent care activity, not identity evidence. Generator now requires the owner source folder and preserves profile/account/schedule data instead of restoring drawn avatars. Five public profiles link to working schedules; five show unset schedules. All profiles remain nonbookable pending operational review.
+
+BUSINESS_DATA: Owner-authorized backend provisioning creates ten THERAPIST accounts, staff profiles and APPLIED provider applications. First five have six weekly shifts, Monday–Saturday 09:00–18:00 Asia/Ho_Chi_Minh; last five have no shifts. Creates one branch with city-only placeholder address if no active branch exists. No training certificates, fake assessments, contact verification, reviews or appointments. Profiles remain APPLIED; configuring working hours is distinct from accepting customer reservations. Initial passwords are unique, Argon2id-hashed and flagged for change. Login identifiers do not provision mailboxes.
+
+TEST: Disposable PostgreSQL integration PASS: atomic failure rollback, rerun without duplicates/password reset, identity collision refusal, all ten password hashes, five scheduled accounts/30 shifts and zero certificates. Frontend 23 tests, lint, typecheck and build PASS. Private transactional snapshot saved before production writes. Production account creation PASS; authenticated login/planning checks and deployment verification in progress.
+
+COMMIT/DEPLOY: pending reviewed GitHub integration and Vercel production. Backend scripts run against the existing API image; no schema/API deployment needed. Credentials TXT is outside Git in the owner's photo folder, never bundled into the website or committed. The seed metadata contains only IDs and schedule flags, no passwords.

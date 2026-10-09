@@ -19,7 +19,7 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
             {provider.avatarUrl ? (
               <Image
                 src={provider.avatarUrl}
-                alt={"Ảnh đại diện " + provider.publicName}
+                alt={provider.avatarAlt || "Ảnh đại diện " + provider.publicName}
                 width={230}
                 height={265}
                 unoptimized
@@ -46,9 +46,23 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
               )}
             </div>
             <p>{provider.introduction}</p>
-            <p className="mm-profile-title">Chưa mở lịch · Chưa mở nhận tin nhắn</p>
+            <p className="mm-profile-title">
+              {provider.scheduleOpen ? "Đã mở lịch làm việc" : "Chưa mở lịch"}
+            </p>
           </div>
         </div>
+        <section className="mm-detail-section" id="lich-lam-viec">
+          <h2>Lịch làm việc</h2>
+          {provider.scheduleOpen && provider.weeklySchedule ? (
+            <p>
+              Thứ Hai–thứ Bảy · {provider.weeklySchedule.startsAt}–{provider.weeklySchedule.endsAt}{" "}
+              (giờ Việt Nam). Chủ nhật nghỉ.
+            </p>
+          ) : (
+            <p>KTV chưa thiết lập lịch làm việc.</p>
+          )}
+          <p>Đặt lịch dịch vụ và nhận tin nhắn sẽ mở sau khi hồ sơ đủ điều kiện phục vụ.</p>
+        </section>
         <section className="mm-detail-section">
           <div className="mm-results-heading">
             <h2>Dịch vụ chăm sóc</h2>

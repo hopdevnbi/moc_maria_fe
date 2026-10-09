@@ -113,7 +113,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
               width={88}
               height={100}
               sizes="88px"
-              alt={"KTV " + provider.publicName}
+              alt={provider.avatarAlt || "KTV " + provider.publicName}
               unoptimized={provider.isDemo}
             />
           ) : (
@@ -193,6 +193,10 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
         {canBook ? (
           <Link className="ktv-book-btn" href={bookingHref({ provider: provider.id })}>
             <CalendarClock size={17} /> Đặt lịch nhanh <ArrowRight size={16} />
+          </Link>
+        ) : provider.isDemo && provider.scheduleOpen ? (
+          <Link className="ktv-book-btn" href={"/chuyen-vien/" + provider.id + "#lich-lam-viec"}>
+            <CalendarClock size={17} /> Đã mở lịch <ArrowRight size={16} />
           </Link>
         ) : (
           <span className="ktv-book-btn ktv-disabled">

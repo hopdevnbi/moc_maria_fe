@@ -264,6 +264,19 @@
         "FE/src/features/mobile/experience.tsx (public catalog copy only)"
       ],
       "note": "User explicitly requests removing sample/demo/illustration labels from public KTV seed presentation. Reuse isolated worktree; preserve source provenance flags, chat/booking gates and real ratings. Do not overwrite local service-photo/realtime branch."
+    },
+    {
+      "agent": "Codex KTV accounts photos schedules 2026-10-09",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/ktv-accounts-photos",
+      "backendBranch": "codex/ktv-accounts-photos",
+      "ownedPaths": [
+        "FE seed profile photos, seed schedule display and generator",
+        "BE scripts/provision-ktv-accounts.cjs",
+        "BE seed-owned identity/application/branch-assignment/weekly-shift rows only",
+        "Plan own claim and release evidence"
+      ],
+      "note": "User explicitly authorizes ten persistent KTV accounts and five configured schedules, plus local photo publication. Existing E2a modules remain unchanged; no invented certificates/contact verification/assessment results or appointment writes."
     }
   ]
 }
