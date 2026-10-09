@@ -4,6 +4,7 @@ import { ShieldCheck, MapPin } from "lucide-react";
 import { publicRead } from "./public-api";
 import type { Provider } from "./types";
 import { EmptyState, ProviderCard } from "./components";
+import { formatPrice } from "./format";
 
 export async function ProviderResults({ preview = false }: { preview?: boolean }) {
   const result = await publicRead<Provider[]>("/providers");
@@ -53,6 +54,14 @@ export async function ProviderDetails({ params }: { params: Promise<{ id: string
           Đã hoàn thành đào tạo nội bộ
         </span>
         <h2 className="mt-5!">{provider.publicName}</h2>
+        {provider.title && (
+          <p>
+            {provider.title}
+            {provider.yearsExperience != null
+              ? ` · ${provider.yearsExperience} năm kinh nghiệm`
+              : ""}
+          </p>
+        )}
         <p className="whitespace-pre-line">
           {provider.introduction || "Phần giới thiệu đang được cập nhật."}
         </p>
@@ -67,6 +76,21 @@ export async function ProviderDetails({ params }: { params: Promise<{ id: string
       </section>
       <aside className="market-panel">
         <h2>Trải nghiệm phù hợp</h2>
+        {provider.eligibleServices?.map((service) => (
+          <article key={service.policyId} className="market-admin-details">
+            <h3 className="market-subtitle">{service.serviceName}</h3>
+            <p>
+              {service.branchName} · {service.mode === "AT_HOME" ? "Tại nhà" : "Tại cơ sở"} ·{" "}
+              {service.territoryLabel}
+            </p>
+            {service.mode === "AT_HOME" && (
+              <p>
+                Phí di chuyển {formatPrice(service.travelFeeVnd)}
+                {service.maxRadiusKm ? ` · Trong ${service.maxRadiusKm} km từ cơ sở` : ""}
+              </p>
+            )}
+          </article>
+        ))}
         <p>
           Gói chăm sóc và lịch phục vụ được công bố khi chuyên viên đáp ứng điều kiện của từng dịch
           vụ.

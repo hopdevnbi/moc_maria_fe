@@ -19,6 +19,7 @@ import type { Application, Training } from "./types";
 import { ProviderReadinessPanel } from "./provider-readiness";
 import { AdminForm } from "./admin-form";
 import { OwnProviderPlanning } from "./provider-planning";
+import { OwnServiceReadiness } from "./provider-eligibility";
 
 function useApplication() {
   const { user, authFetch } = useAuth();
@@ -148,6 +149,7 @@ function ApplicationSummary({ application }: { application: Application }) {
           cần được xác minh riêng.
         </p>
         <OwnProviderPlanning />
+        <OwnServiceReadiness />
       </aside>
     </div>
   );

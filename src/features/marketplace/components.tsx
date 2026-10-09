@@ -183,6 +183,14 @@ export function ProviderCard({ provider }: { provider: Provider }) {
         <h3>
           <Link href={`/chuyen-vien/${provider.id}`}>{provider.publicName}</Link>
         </h3>
+        {provider.title && (
+          <p>
+            {provider.title}
+            {provider.yearsExperience != null
+              ? ` · ${provider.yearsExperience} năm kinh nghiệm`
+              : ""}
+          </p>
+        )}
         <p className="market-clamp">
           {provider.introduction || "Chuyên viên đồng hành trong hành trình chăm sóc của bạn."}
         </p>

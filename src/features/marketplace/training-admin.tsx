@@ -8,6 +8,7 @@ import { applicationLabels, enrollmentLabels } from "./format";
 import type { Application, Course, Training } from "./types";
 import { ProviderReadinessPanel } from "./provider-readiness";
 import { AdminProviderPlanning } from "./provider-planning";
+import { AdminProviderEligibility } from "./provider-eligibility";
 
 const transitions: Record<string, string[]> = {
   APPLIED: ["REVIEWING", "REJECTED"],
@@ -134,6 +135,11 @@ function ApplicationReview({
       <AdminProviderPlanning
         applicationId={application.id}
         applicationUserId={application.userId}
+        canReview={canReview}
+      />
+      <AdminProviderEligibility
+        applicationId={application.id}
+        courses={courses}
         canReview={canReview}
       />
       <div className="market-two-column">

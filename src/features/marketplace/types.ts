@@ -47,6 +47,25 @@ export interface Provider {
   introduction: string | null;
   serviceArea: string | null;
   avatarUrl: string | null;
+  slug?: string;
+  title?: string;
+  yearsExperience?: number | null;
+  providerKind?: string;
+  eligibleServices?: EligibleProviderService[];
+  bookable?: boolean;
+}
+export interface EligibleProviderService {
+  policyId: string;
+  serviceId: string;
+  serviceName: string;
+  branchId: string;
+  branchName: string;
+  mode: "ON_SITE" | "AT_HOME";
+  jurisdictionCode: string;
+  territoryLabel: string;
+  travelBufferMinutes: number;
+  travelFeeVnd: string;
+  maxRadiusKm: number | null;
 }
 export interface Application {
   id: string;
