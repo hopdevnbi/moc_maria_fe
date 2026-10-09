@@ -34,7 +34,7 @@ const first = {
   updated_at: "2026-10-09T08:00:00Z",
 };
 const second = { ...first, id: "b", provider_application_id: "p2", provider_name: "Thanh An" };
-function mount(provider?: string) {
+function mount(provider?: string, service?: string) {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, refetchInterval: false },
@@ -45,7 +45,7 @@ function mount(provider?: string) {
     client,
     ...render(
       <QueryClientProvider client={client}>
-        <KtvChatPage provider={provider} />
+        <KtvChatPage provider={provider} service={service} />
       </QueryClientProvider>,
     ),
   };
@@ -54,9 +54,14 @@ beforeEach(() => {
   state.status = "authenticated";
   state.fetch.mockReset().mockImplementation(async (path: string, init?: RequestInit) => {
     if (path === "/ktv-chat/threads") return init?.method === "POST" ? first : [first, second];
-    if (path === "/providers")
+    if (path === "/ktv-chat/providers")
       return [
-        { id: "p1", publicName: "Ngọc Mai" },
+        {
+          id: "p1",
+          publicName: "Ngọc Mai",
+          publicAlias: "demo-ktv-01",
+          services: [{ id: "neck", name: "Massage cổ vai gáy" }],
+        },
         { id: "demo", publicName: "Demo KTV", isDemo: true },
       ];
     if (path.endsWith("/read")) return undefined;
@@ -98,7 +103,7 @@ describe("private KTV chat interactions", () => {
     let finish!: (value: unknown) => void;
     state.fetch.mockImplementation(async (path: string) => {
       if (path === "/ktv-chat/threads") return [first, second];
-      if (path === "/providers") return [];
+      if (path === "/ktv-chat/providers") return [];
       if (path === "/ktv-chat/threads/a/messages")
         return new Promise((resolve) => {
           finish = resolve;
@@ -178,5 +183,48 @@ describe("private KTV chat interactions", () => {
     expect(screen.getByRole("textbox", { name: "Nội dung tin nhắn" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Gửi tin nhắn" })).toBeDisabled();
     expect(screen.getByText(/Người kia đang chặn hội thoại/)).toBeInTheDocument();
+  });
+  it("keeps a chosen service through registration and composes its consultation question", async () => {
+    mount("p1", "neck");
+    await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
+    expect(await screen.findByRole("combobox", { name: "Chọn dịch vụ để tư vấn" })).toHaveValue(
+      "neck",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Soạn câu hỏi" }));
+    expect(
+      (screen.getByRole("textbox", { name: "Nội dung tin nhắn" }) as HTMLTextAreaElement).value,
+    ).toContain("Massage cổ vai gáy");
+    expect(screen.getByRole("link", { name: /Xem hồ sơ/ })).toHaveAttribute(
+      "href",
+      "/chuyen-vien/demo-ktv-01",
+    );
+  });
+  it("inserts emoji at the cursor without sending until the customer submits", async () => {
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    const input = (await screen.findByRole("textbox", {
+      name: "Nội dung tin nhắn",
+    })) as HTMLTextAreaElement;
+    fireEvent.change(input, { target: { value: "Xin chào " } });
+    input.setSelectionRange(9, 9);
+    fireEvent.click(screen.getByRole("button", { name: "Chọn biểu cảm" }));
+    fireEvent.click(screen.getByRole("button", { name: "Chèn biểu cảm 😊" }));
+    expect(input).toHaveValue("Xin chào 😊");
+    expect(
+      state.fetch.mock.calls.filter(
+        ([path, init]) => path.endsWith("/messages") && init?.method === "POST",
+      ),
+    ).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
+    await waitFor(() =>
+      expect(
+        state.fetch.mock.calls.some(
+          ([path, init]) =>
+            path.endsWith("/messages") &&
+            init?.method === "POST" &&
+            JSON.parse(init.body).body === "Xin chào 😊",
+        ),
+      ).toBe(true),
+    );
   });
 });

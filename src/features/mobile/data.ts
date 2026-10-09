@@ -1,6 +1,6 @@
 import "server-only";
 import { publicRead } from "@/features/marketplace/public-api";
-import type { Branch, Provider, ServiceItem } from "@/features/marketplace/types";
+import type { Branch, Provider, ServiceItem, ChatProvider } from "@/features/marketplace/types";
 import demoProviders from "@/features/mobile/demo-ktvs.json";
 
 // Only the public service/branch catalog is cached. Provider approvals and booking slots stay live.
@@ -30,6 +30,13 @@ export async function publicMarketplace() {
 
 // One provider directory for both public entry points. Never mix demos with bookings.
 export async function publicProviderDirectory() {
-  const data = await publicMarketplace();
-  return { ...data, providers: [...data.providers, ...(demoProviders as Provider[])] };
+  const [data, chat] = await Promise.all([
+    publicMarketplace(),
+    publicRead<ChatProvider[]>("/ktv-chat/providers"),
+  ]);
+  const seed = (demoProviders as Provider[]).map((p) => {
+    const receiver = chat.ok ? chat.data.find((c) => c.publicAlias === p.id) : undefined;
+    return { ...p, chatProviderId: receiver?.id, chatEnabled: !!receiver };
+  });
+  return { ...data, providers: [...data.providers, ...seed] };
 }

@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { AuthShell } from "@/features/auth/components/AuthShell";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
+import { safeReturnTo } from "@/features/auth/return-to";
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const returnTo = safeReturnTo((await searchParams).returnTo, "/chuyen-vien");
   return (
     <AuthShell
       eyebrow="Khách hàng mới"
@@ -11,13 +17,16 @@ export default function RegisterPage() {
       footer={
         <>
           Đã có tài khoản?{" "}
-          <Link href="/dang-nhap" className="font-semibold text-[var(--moc-green)]">
+          <Link
+            href={"/dang-nhap?returnTo=" + encodeURIComponent(returnTo)}
+            className="font-semibold text-[var(--moc-green)]"
+          >
             Đăng nhập
           </Link>
         </>
       }
     >
-      <RegisterForm />
+      <RegisterForm returnTo={returnTo} />
     </AuthShell>
   );
 }

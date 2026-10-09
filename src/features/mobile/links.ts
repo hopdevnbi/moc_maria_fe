@@ -6,3 +6,9 @@ export function bookingHref(params: { provider?: string; service?: string; varia
   const suffix = query.toString();
   return "/dat-lich" + (suffix ? "?" + suffix : "");
 }
+
+export function chatHref(provider: string, service?: string) {
+  const query = new URLSearchParams({ provider });
+  if (service) query.set("service", service);
+  return "/tin-nhan?" + query.toString();
+}

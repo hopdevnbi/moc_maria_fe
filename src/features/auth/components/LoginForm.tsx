@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ApiError } from "../auth-api";
 import { useAuth } from "../hooks/useAuth";
+import { safeReturnTo } from "../return-to";
 
 const schema = z.object({
   identifier: z.string().trim().min(3, "Nhập email hoặc số điện thoại."),
@@ -15,11 +16,6 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
-
-function safeReturnTo(value: string | null): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/tai-khoan";
-  return value;
-}
 
 export function LoginForm() {
   const { login, status } = useAuth();

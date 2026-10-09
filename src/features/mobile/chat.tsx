@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -13,9 +14,11 @@ import {
   Search,
   Send,
   ShieldCheck,
+  Smile,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import type { Provider } from "@/features/marketplace/types";
+import type { ChatProvider } from "@/features/marketplace/types";
+import { chatHref } from "./links";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
@@ -86,13 +89,16 @@ function chatError(error: unknown) {
   return "Chưa kết nối được chat. Vui lòng thử lại sau ít phút.";
 }
 
-export function KtvChatPage({ provider }: { provider?: string }) {
+export function KtvChatPage({ provider, service }: { provider?: string; service?: string }) {
   const { status, user, authFetch } = useAuth();
   const client = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
   const [search, setSearch] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [serviceSelections, setServiceSelections] = useState<Record<string, string>>({});
+  const [emojiFor, setEmojiFor] = useState<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [actionError, setActionError] = useState("");
   const [deepLinkAttempt, setDeepLinkAttempt] = useState(0);
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -112,11 +118,18 @@ export function KtvChatPage({ provider }: { provider?: string }) {
   });
   const directory = useQuery({
     queryKey: [...key, "providers"],
-    queryFn: () => authFetch<Provider[]>("/providers", { cache: "no-store" }),
+    queryFn: () => authFetch<ChatProvider[]>("/ktv-chat/providers", { cache: "no-store" }),
     enabled: enabled && customer,
     retry: 1,
   });
   const current = threads.data?.find((thread) => thread.id === selectedId) ?? null;
+  const currentProvider = directory.data?.find((p) => p.id === current?.provider_application_id);
+  const selectedService = current
+    ? (serviceSelections[current.id] ??
+      (current.provider_application_id === provider ? (service ?? "") : ""))
+    : "";
+  const consultationService = currentProvider?.services?.find((s) => s.id === selectedService);
+  const returnTo = provider ? chatHref(provider, service) : "/tin-nhan";
   const paused =
     current?.can_send === false || !!current?.blocked_by_me || !!current?.blocked_by_other;
   const recipient = (thread: Thread) =>
@@ -242,7 +255,14 @@ export function KtvChatPage({ provider }: { provider?: string }) {
   );
   const filteredProviders = (directory.data ?? []).filter(
     (item) =>
-      !item.isDemo && normalize(item.publicName + " " + (item.serviceArea ?? "")).includes(query),
+      !("isDemo" in item && item.isDemo === true) &&
+      normalize(
+        item.publicName +
+          " " +
+          (item.serviceArea ?? "") +
+          " " +
+          (item.services ?? []).map((s) => s.name).join(" "),
+      ).includes(query),
   );
   const draft = selectedId ? (drafts[selectedId] ?? "") : "";
   const error =
@@ -299,16 +319,13 @@ export function KtvChatPage({ provider }: { provider?: string }) {
             </p>
             <Link
               className="ktv-chat-primary"
-              href={
-                "/dang-nhap?returnTo=" +
-                encodeURIComponent(
-                  "/tin-nhan" + (provider ? "?provider=" + encodeURIComponent(provider) : ""),
-                )
-              }
+              href={"/dang-nhap?returnTo=" + encodeURIComponent(returnTo)}
             >
               Đăng nhập để nhắn tin <ArrowRight size={17} />
             </Link>
-            <Link href="/dang-ky">Tạo tài khoản mới</Link>
+            <Link href={"/dang-ky?returnTo=" + encodeURIComponent(returnTo)}>
+              Tạo tài khoản mới
+            </Link>
           </div>
         ) : (
           <div className="ktv-chat-layout">
@@ -390,7 +407,19 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                             else open.mutate(item.id);
                           }}
                         >
-                          <span className="ktv-chat-avatar">{initials(item.publicName)}</span>
+                          <span className="ktv-chat-avatar">
+                            {item.avatarUrl ? (
+                              <Image
+                                src={item.avatarUrl}
+                                alt=""
+                                width={48}
+                                height={56}
+                                unoptimized
+                              />
+                            ) : (
+                              initials(item.publicName)
+                            )}
+                          </span>
                           <span className="ktv-chat-contact-text">
                             <b>{item.publicName}</b>
                             <small>{item.title || "Kỹ thuật viên Mộc Maria"}</small>
@@ -479,12 +508,48 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                     {user.id === current.customer_user_id && (
                       <Link
                         className="ktv-chat-profile"
-                        href={"/chuyen-vien/" + current.provider_application_id}
+                        href={
+                          "/chuyen-vien/" +
+                          (currentProvider?.publicAlias || current.provider_application_id)
+                        }
                       >
                         Xem hồ sơ <ChevronRight size={15} />
                       </Link>
                     )}
                   </header>
+                  {customer && !!currentProvider?.services?.length && (
+                    <label className="ktv-chat-service">
+                      <span>Dịch vụ cần tư vấn</span>
+                      <select
+                        aria-label="Chọn dịch vụ để tư vấn"
+                        value={selectedService}
+                        onChange={(e) =>
+                          setServiceSelections((old) => ({ ...old, [current.id]: e.target.value }))
+                        }
+                      >
+                        <option value="">Tư vấn chung</option>
+                        {currentProvider.services.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                      {consultationService && (
+                        <button
+                          type="button"
+                          disabled={paused}
+                          onClick={() =>
+                            setDrafts((old) => ({
+                              ...old,
+                              [current.id]: `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}. Bạn giúp tôi chọn thời gian phù hợp nhé.`,
+                            }))
+                          }
+                        >
+                          Soạn câu hỏi
+                        </button>
+                      )}
+                    </label>
+                  )}
                   <div className="ktv-chat-block-status">
                     <ChatBlockControls
                       key={current.id}
@@ -495,7 +560,9 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                       <p>
                         {current.blocked_by_me
                           ? "Bạn đang chặn hội thoại. Mở quản lý chặn để mở lại."
-                          : "Người kia đang chặn hội thoại."}{" "}
+                          : current.blocked_by_other
+                            ? "Người kia đang chặn hội thoại."
+                            : "Hội thoại tạm ngừng nhận tin nhắn mới."}{" "}
                         {current.blocked_by_me &&
                           current.my_block_expires_at &&
                           `Tự mở lại: ${new Date(current.my_block_expires_at).toLocaleString("vi-VN")}.`}{" "}
@@ -562,8 +629,9 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                               onClick={() =>
                                 setDrafts((old) => ({
                                   ...old,
-                                  [current.id]:
-                                    "Chào anh/chị, tôi muốn tìm hiểu thêm về dịch vụ chăm sóc.",
+                                  [current.id]: consultationService
+                                    ? `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}.`
+                                    : "Chào anh/chị, tôi muốn tìm hiểu thêm về dịch vụ chăm sóc.",
                                 }))
                               }
                             >
@@ -594,7 +662,72 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                         send.mutate({ id: current.id, body: draft.trim() });
                     }}
                   >
+                    {emojiFor === current.id && !paused && (
+                      <div
+                        className="ktv-chat-emoji-picker"
+                        id="ktv-chat-emojis"
+                        aria-label="Biểu cảm"
+                      >
+                        {[
+                          "😊",
+                          "❤️",
+                          "👍",
+                          "🙏",
+                          "🌿",
+                          "✨",
+                          "😄",
+                          "😍",
+                          "🥰",
+                          "🤗",
+                          "😌",
+                          "💐",
+                          "👌",
+                          "👋",
+                          "💚",
+                          "🎉",
+                          "🤔",
+                          "😅",
+                          "🙌",
+                          "☀️",
+                        ].map((emoji) => (
+                          <button
+                            type="button"
+                            key={emoji}
+                            aria-label={"Chèn biểu cảm " + emoji}
+                            onClick={() => {
+                              const start = inputRef.current?.selectionStart ?? draft.length;
+                              const end = inputRef.current?.selectionEnd ?? draft.length;
+                              const next = draft.slice(0, start) + emoji + draft.slice(end);
+                              if (next.length > 2000) return;
+                              setDrafts((old) => ({ ...old, [current.id]: next }));
+                              setEmojiFor(null);
+                              requestAnimationFrame(() => {
+                                inputRef.current?.focus();
+                                inputRef.current?.setSelectionRange(
+                                  start + emoji.length,
+                                  start + emoji.length,
+                                );
+                              });
+                            }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className="ktv-chat-emoji-toggle"
+                      disabled={paused || send.isPending}
+                      aria-label="Chọn biểu cảm"
+                      aria-expanded={emojiFor === current.id}
+                      aria-controls="ktv-chat-emojis"
+                      onClick={() => setEmojiFor((old) => (old === current.id ? null : current.id))}
+                    >
+                      <Smile size={22} />
+                    </button>
                     <textarea
+                      ref={inputRef}
                       rows={1}
                       aria-label="Nội dung tin nhắn"
                       value={draft}
@@ -604,6 +737,17 @@ export function KtvChatPage({ provider }: { provider?: string }) {
                       maxLength={2000}
                       placeholder={`Nhắn cho ${recipient(current)}...`}
                       disabled={paused || send.isPending}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") setEmojiFor(null);
+                        if (
+                          event.key === "Enter" &&
+                          !event.shiftKey &&
+                          !event.nativeEvent.isComposing
+                        ) {
+                          event.preventDefault();
+                          event.currentTarget.form?.requestSubmit();
+                        }
+                      }}
                     />
                     <button
                       type="submit"
