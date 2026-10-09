@@ -156,4 +156,27 @@ describe("private KTV chat interactions", () => {
     fireEvent.click(screen.getByRole("button", { name: "Quay lại danh sách hội thoại" }));
     expect(screen.queryByRole("textbox", { name: "Nội dung tin nhắn" })).not.toBeInTheDocument();
   });
+  it("a peer block disables sending while keeping history visible", async () => {
+    state.fetch.mockImplementation(async (path: string) => {
+      if (path === "/ktv-chat/threads")
+        return [{ ...first, blocked_by_other: true, can_send: false }];
+      if (path.endsWith("/messages"))
+        return [
+          {
+            id: "old",
+            thread_id: "a",
+            sender_user_id: "provider",
+            body: "Lịch sử vẫn còn",
+            created_at: first.updated_at,
+          },
+        ];
+      return [];
+    });
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    await screen.findByText("Lịch sử vẫn còn");
+    expect(screen.getByRole("textbox", { name: "Nội dung tin nhắn" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Gửi tin nhắn" })).toBeDisabled();
+    expect(screen.getByText(/Người kia đang chặn hội thoại/)).toBeInTheDocument();
+  });
 });
