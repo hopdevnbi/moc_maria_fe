@@ -1,7 +1,8 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { publicMarketplace } from "@/features/mobile/data";
 import { MobileExperience } from "@/features/mobile/experience";
+import demoServices from "@/features/mobile/demo-services.json";
 
 export const metadata: Metadata = {
   title: "Dịch vụ massage và chăm sóc",
@@ -12,7 +13,9 @@ export const metadata: Metadata = {
 
 async function ServiceList() {
   const data = await publicMarketplace();
-  return <MobileExperience {...data} page="services" />;
+  return (
+    <MobileExperience {...data} services={[...data.services, ...demoServices]} page="services" />
+  );
 }
 
 export default function ServicesPage() {

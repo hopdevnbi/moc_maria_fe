@@ -29,6 +29,12 @@
         "name": "Massage cổ vai gáy",
         "durationMinutes": 45,
         "priceVnd": 250000
+      },
+      {
+        "id": "demo-aroma",
+        "name": "Massage tinh dầu",
+        "durationMinutes": 60,
+        "priceVnd": 390000
       }
     ]
   },
@@ -60,6 +66,12 @@
       {
         "id": "demo-foot",
         "name": "Massage chân",
+        "durationMinutes": 45,
+        "priceVnd": 220000
+      },
+      {
+        "id": "demo-hair",
+        "name": "Gội đầu dưỡng sinh",
         "durationMinutes": 45,
         "priceVnd": 220000
       }
@@ -95,6 +107,12 @@
         "name": "Massage thư giãn toàn thân",
         "durationMinutes": 60,
         "priceVnd": 350000
+      },
+      {
+        "id": "demo-thai",
+        "name": "Massage Thái thư giãn",
+        "durationMinutes": 60,
+        "priceVnd": 420000
       }
     ]
   },
@@ -128,6 +146,12 @@
         "name": "Massage thảo dược",
         "durationMinutes": 90,
         "priceVnd": 480000
+      },
+      {
+        "id": "demo-back",
+        "name": "Chăm sóc và thư giãn vùng lưng",
+        "durationMinutes": 45,
+        "priceVnd": 260000
       }
     ]
   },
@@ -161,6 +185,12 @@
         "name": "Massage chân",
         "durationMinutes": 45,
         "priceVnd": 220000
+      },
+      {
+        "id": "demo-aroma",
+        "name": "Massage tinh dầu",
+        "durationMinutes": 60,
+        "priceVnd": 390000
       }
     ]
   },
@@ -194,6 +224,18 @@
         "name": "Massage đá nóng",
         "durationMinutes": 90,
         "priceVnd": 500000
+      },
+      {
+        "id": "demo-thai",
+        "name": "Massage Thái thư giãn",
+        "durationMinutes": 60,
+        "priceVnd": 420000
+      },
+      {
+        "id": "demo-back",
+        "name": "Chăm sóc và thư giãn vùng lưng",
+        "durationMinutes": 45,
+        "priceVnd": 260000
       }
     ]
   },
@@ -227,6 +269,12 @@
         "name": "Massage thảo dược",
         "durationMinutes": 90,
         "priceVnd": 480000
+      },
+      {
+        "id": "demo-hair",
+        "name": "Gội đầu dưỡng sinh",
+        "durationMinutes": 45,
+        "priceVnd": 220000
       }
     ]
   },
@@ -260,6 +308,18 @@
         "name": "Massage đá nóng",
         "durationMinutes": 90,
         "priceVnd": 500000
+      },
+      {
+        "id": "demo-aroma",
+        "name": "Massage tinh dầu",
+        "durationMinutes": 60,
+        "priceVnd": 390000
+      },
+      {
+        "id": "demo-thai",
+        "name": "Massage Thái thư giãn",
+        "durationMinutes": 60,
+        "priceVnd": 420000
       }
     ]
   },
@@ -293,6 +353,18 @@
         "name": "Massage cổ vai gáy",
         "durationMinutes": 45,
         "priceVnd": 250000
+      },
+      {
+        "id": "demo-hair",
+        "name": "Gội đầu dưỡng sinh",
+        "durationMinutes": 45,
+        "priceVnd": 220000
+      },
+      {
+        "id": "demo-back",
+        "name": "Chăm sóc và thư giãn vùng lưng",
+        "durationMinutes": 45,
+        "priceVnd": 260000
       }
     ]
   },
@@ -326,6 +398,18 @@
         "name": "Massage thảo dược",
         "durationMinutes": 90,
         "priceVnd": 480000
+      },
+      {
+        "id": "demo-aroma",
+        "name": "Massage tinh dầu",
+        "durationMinutes": 60,
+        "priceVnd": 390000
+      },
+      {
+        "id": "demo-back",
+        "name": "Chăm sóc và thư giãn vùng lưng",
+        "durationMinutes": 45,
+        "priceVnd": 260000
       }
     ]
   }

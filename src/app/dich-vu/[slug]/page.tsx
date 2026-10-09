@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Clock3, MapPin, ShieldCheck } from "lucide-react";
@@ -7,6 +7,8 @@ import { formatPrice } from "@/features/marketplace/format";
 import type { Provider, ServiceDetail } from "@/features/marketplace/types";
 import { MobileHeader, MobileNavigation, ProviderTile } from "@/features/mobile/experience";
 import { bookingHref } from "@/features/mobile/links";
+import { DemoServiceDetail } from "@/features/mobile/demo-service-detail";
+import demoServices from "@/features/mobile/demo-services.json";
 import "@/features/mobile/mobile.css";
 
 export const metadata: Metadata = {
@@ -17,6 +19,8 @@ export const metadata: Metadata = {
 export default async function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   if (!/^[a-z0-9-]{1,120}$/i.test(slug)) notFound();
+  const demo = demoServices.find((item) => item.service.slug === slug);
+  if (demo) return <DemoServiceDetail item={demo} />;
   const [result, providerResult] = await Promise.all([
     publicRead<ServiceDetail>("/services/" + encodeURIComponent(slug)),
     publicRead<Provider[]>("/providers"),

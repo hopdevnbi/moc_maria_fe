@@ -1,0 +1,377 @@
+[
+  {
+    "service": {
+      "id": "demo-relaxation",
+      "slug": "massage-thu-gian-toan-than-demo",
+      "name": "Massage thư giãn toàn thân",
+      "description": "Liệu trình chăm sóc nhẹ nhàng giúp cơ thể có thời gian thư giãn sau những ngày bận rộn.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-relaxation-60",
+        "serviceId": "demo-relaxation",
+        "name": "60 phút",
+        "durationMinutes": 60,
+        "priceVnd": "350000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-relaxation-90",
+        "serviceId": "demo-relaxation",
+        "name": "90 phút",
+        "durationMinutes": 90,
+        "priceVnd": "490000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Thư giãn",
+    "imageUrl": "/demo/services/demo-relaxation.webp",
+    "demoProviderIds": [
+      "demo-ktv-01",
+      "demo-ktv-02",
+      "demo-ktv-03",
+      "demo-ktv-05",
+      "demo-ktv-07",
+      "demo-ktv-09",
+      "demo-ktv-10"
+    ]
+  },
+  {
+    "service": {
+      "id": "demo-hot-stone",
+      "slug": "massage-da-nong-demo",
+      "name": "Massage đá nóng",
+      "description": "Trải nghiệm hơi ấm từ đá massage kết hợp thao tác êm dịu trong không gian an yên.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-hot-stone-90",
+        "serviceId": "demo-hot-stone",
+        "name": "90 phút",
+        "durationMinutes": 90,
+        "priceVnd": "500000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-hot-stone-120",
+        "serviceId": "demo-hot-stone",
+        "name": "120 phút",
+        "durationMinutes": 120,
+        "priceVnd": "650000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Đá nóng",
+    "imageUrl": "/demo/services/demo-hot-stone.webp",
+    "demoProviderIds": [
+      "demo-ktv-01",
+      "demo-ktv-03",
+      "demo-ktv-05",
+      "demo-ktv-06",
+      "demo-ktv-08",
+      "demo-ktv-10"
+    ]
+  },
+  {
+    "service": {
+      "id": "demo-neck",
+      "slug": "massage-co-vai-gay-demo",
+      "name": "Massage cổ vai gáy",
+      "description": "Chăm sóc tập trung vùng cổ, vai và lưng trên, phù hợp người làm việc tại bàn nhiều giờ.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-neck-45",
+        "serviceId": "demo-neck",
+        "name": "45 phút",
+        "durationMinutes": 45,
+        "priceVnd": "250000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-neck-60",
+        "serviceId": "demo-neck",
+        "name": "60 phút",
+        "durationMinutes": 60,
+        "priceVnd": "320000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Cổ vai gáy",
+    "imageUrl": "/demo/services/demo-neck.webp",
+    "demoProviderIds": ["demo-ktv-01", "demo-ktv-02", "demo-ktv-04", "demo-ktv-06", "demo-ktv-09"]
+  },
+  {
+    "service": {
+      "id": "demo-foot",
+      "slug": "massage-chan-demo",
+      "name": "Massage chân",
+      "description": "Thả lỏng đôi chân với các động tác massage và chăm sóc thư giãn.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-foot-45",
+        "serviceId": "demo-foot",
+        "name": "45 phút",
+        "durationMinutes": 45,
+        "priceVnd": "220000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-foot-60",
+        "serviceId": "demo-foot",
+        "name": "60 phút",
+        "durationMinutes": 60,
+        "priceVnd": "280000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Chăm sóc chân",
+    "imageUrl": "/demo/services/demo-foot.webp",
+    "demoProviderIds": ["demo-ktv-02", "demo-ktv-05", "demo-ktv-07", "demo-ktv-09"]
+  },
+  {
+    "service": {
+      "id": "demo-herbal",
+      "slug": "massage-thao-duoc-demo",
+      "name": "Massage thảo dược",
+      "description": "Hương thảo mộc dịu nhẹ kết hợp thao tác massage để tạo khoảng nghỉ dưỡng dễ chịu.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-herbal-90",
+        "serviceId": "demo-herbal",
+        "name": "90 phút",
+        "durationMinutes": 90,
+        "priceVnd": "480000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-herbal-120",
+        "serviceId": "demo-herbal",
+        "name": "120 phút",
+        "durationMinutes": 120,
+        "priceVnd": "600000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Thảo mộc",
+    "imageUrl": "/demo/services/demo-herbal.webp",
+    "demoProviderIds": ["demo-ktv-03", "demo-ktv-04", "demo-ktv-07", "demo-ktv-08", "demo-ktv-10"]
+  },
+  {
+    "service": {
+      "id": "demo-pressure",
+      "slug": "massage-bam-huyet-demo",
+      "name": "Massage bấm huyệt",
+      "description": "Các thao tác massage theo điểm và vùng cơ, ở mức độ phù hợp theo nhu cầu thư giãn.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-pressure-60",
+        "serviceId": "demo-pressure",
+        "name": "60 phút",
+        "durationMinutes": 60,
+        "priceVnd": "390000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-pressure-90",
+        "serviceId": "demo-pressure",
+        "name": "90 phút",
+        "durationMinutes": 90,
+        "priceVnd": "550000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Điểm cơ",
+    "imageUrl": "/demo/services/demo-pressure.webp",
+    "demoProviderIds": ["demo-ktv-04", "demo-ktv-06", "demo-ktv-08"]
+  },
+  {
+    "service": {
+      "id": "demo-aroma",
+      "slug": "massage-tinh-dau-demo",
+      "name": "Massage tinh dầu",
+      "description": "Chăm sóc bằng tinh dầu tạo hương thơm nhẹ nhàng và trải nghiệm nghỉ ngơi ấm áp.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-aroma-60",
+        "serviceId": "demo-aroma",
+        "name": "60 phút",
+        "durationMinutes": 60,
+        "priceVnd": "390000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-aroma-90",
+        "serviceId": "demo-aroma",
+        "name": "90 phút",
+        "durationMinutes": 90,
+        "priceVnd": "520000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Tinh dầu",
+    "imageUrl": "/demo/services/demo-aroma.webp",
+    "demoProviderIds": ["demo-ktv-01", "demo-ktv-05", "demo-ktv-08", "demo-ktv-10"]
+  },
+  {
+    "service": {
+      "id": "demo-thai",
+      "slug": "massage-thai-thu-gian-demo",
+      "name": "Massage Thái thư giãn",
+      "description": "Trải nghiệm thao tác co giãn và thư giãn cơ thể ở mức độ nhẹ nhàng.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-thai-60",
+        "serviceId": "demo-thai",
+        "name": "60 phút",
+        "durationMinutes": 60,
+        "priceVnd": "420000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-thai-90",
+        "serviceId": "demo-thai",
+        "name": "90 phút",
+        "durationMinutes": 90,
+        "priceVnd": "550000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Kiểu Thái",
+    "imageUrl": "/demo/services/demo-thai.webp",
+    "demoProviderIds": ["demo-ktv-03", "demo-ktv-06", "demo-ktv-08"]
+  },
+  {
+    "service": {
+      "id": "demo-back",
+      "slug": "cham-soc-lung-demo",
+      "name": "Chăm sóc và thư giãn vùng lưng",
+      "description": "Liệu trình chăm sóc riêng vùng lưng, giúp bạn thư thái hơn sau khi vận động hoặc làm việc.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-back-45",
+        "serviceId": "demo-back",
+        "name": "45 phút",
+        "durationMinutes": 45,
+        "priceVnd": "260000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-back-60",
+        "serviceId": "demo-back",
+        "name": "60 phút",
+        "durationMinutes": 60,
+        "priceVnd": "330000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Chăm sóc lưng",
+    "imageUrl": "/demo/services/demo-back.webp",
+    "demoProviderIds": ["demo-ktv-04", "demo-ktv-06", "demo-ktv-09", "demo-ktv-10"]
+  },
+  {
+    "service": {
+      "id": "demo-hair",
+      "slug": "goi-dau-duong-sinh-demo",
+      "name": "Gội đầu dưỡng sinh",
+      "description": "Chăm sóc tóc và da đầu kết hợp massage thư giãn nhẹ nhàng.",
+      "isPublished": false,
+      "categoryId": "demo-category-massage"
+    },
+    "variants": [
+      {
+        "id": "demo-hair-45",
+        "serviceId": "demo-hair",
+        "name": "45 phút",
+        "durationMinutes": 45,
+        "priceVnd": "220000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      },
+      {
+        "id": "demo-hair-60",
+        "serviceId": "demo-hair",
+        "name": "60 phút",
+        "durationMinutes": 60,
+        "priceVnd": "300000",
+        "isActive": true,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0
+      }
+    ],
+    "isDemo": true,
+    "tag": "Da đầu",
+    "imageUrl": "/demo/services/demo-hair.webp",
+    "demoProviderIds": ["demo-ktv-02", "demo-ktv-07", "demo-ktv-09"]
+  }
+]

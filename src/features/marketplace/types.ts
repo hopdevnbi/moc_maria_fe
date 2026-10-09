@@ -29,6 +29,10 @@ export interface Variant {
 export interface ServiceItem {
   service: Service;
   variants: Variant[];
+  isDemo?: boolean;
+  imageUrl?: string;
+  tag?: string;
+  demoProviderIds?: string[];
 }
 export interface Branch {
   id: string;
