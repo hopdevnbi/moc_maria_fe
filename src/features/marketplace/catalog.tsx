@@ -5,6 +5,7 @@ import { publicRead } from "./public-api";
 import type { Category, ServiceDetail, ServiceItem } from "./types";
 import { EmptyState, ServiceCard } from "./components";
 import { formatPrice } from "./format";
+import { BookingRequest } from "./booking-request";
 
 export async function ServiceResults({
   searchParams,
@@ -195,6 +196,7 @@ export async function ServiceDetails({ params }: { params: Promise<{ slug: strin
           Khám phá chuyên viên
           <ArrowUpRight size={17} />
         </Link>
+        <BookingRequest detail={result.data} />
       </section>
       <aside className="market-panel">
         <h2>Cơ sở cung cấp</h2>

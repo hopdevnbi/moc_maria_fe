@@ -57,6 +57,10 @@ function AccountContent() {
           </p>
         )}
         <nav className="market-portal-nav mt-8">
+          {user.permissions.includes("customer.portal") && (
+            <Link href="/lich-hen">Lịch hẹn của tôi</Link>
+          )}
+          {hasStaffPortal && <Link href="/ktv/lich-hen">Yêu cầu dành cho KTV</Link>}
           <Link href="/ktv/ho-so">Hồ sơ ứng tuyển KTV</Link>
           <Link href="/ktv/dao-tao">Đào tạo & chứng nhận</Link>
           <Link href="/dich-vu">Khám phá dịch vụ</Link>

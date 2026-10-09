@@ -27,6 +27,9 @@ function AdminNavigation() {
   return (
     <nav className="market-portal-nav" aria-label="Quản trị">
       <Link href="/quan-tri">Tổng quan</Link>
+      {user?.permissions.includes("roles.manage") && (
+        <Link href="/quan-tri/lich-hen">Yêu cầu & báo giá</Link>
+      )}
       {user?.permissions.includes("staff.manage") && (
         <>
           <Link href="/quan-tri/dich-vu">Dịch vụ & bảng giá</Link>

@@ -3,13 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ApiError } from "@/features/auth/auth-api";
 
-export function usePrivateData<T>(path: string, enabled = true) {
+export function usePrivateData<T>(path: string, enabled = true, refetchInterval?: number) {
   const { user, authFetch } = useAuth();
   return useQuery({
     queryKey: ["private", user?.id, path],
     queryFn: () => authFetch<T>(path, { cache: "no-store" }),
     enabled: !!user && enabled,
     retry: false,
+    refetchInterval,
   });
 }
 export function usePrivateMutation<T = unknown>() {
