@@ -26,17 +26,6 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
         <section className="mm-service-detail-hero mm-demo-service-hero">
           {item.imageUrl && (
             <div className="mm-demo-cover">
-<<<<<<< HEAD
-              <Image
-                src={item.imageUrl}
-                alt={item.service.name}
-                width={680}
-                height={400}
-                sizes="(max-width: 700px) 100vw, 480px"
-                unoptimized
-                priority
-              />
-=======
               <picture>
                 {item.imageSrcSet && (
                   <source
@@ -47,7 +36,7 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
                 )}
                 <Image
                   src={item.imageUrl}
-                  alt={item.imageAlt || "?nh d?ch v? " + item.service.name}
+                  alt={item.imageAlt || "Ảnh dịch vụ " + item.service.name}
                   width={680}
                   height={400}
                   sizes="(max-width: 700px) 100vw, 480px"
@@ -55,7 +44,6 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
                   priority
                 />
               </picture>
->>>>>>> origin/main
             </div>
           )}
           <div>

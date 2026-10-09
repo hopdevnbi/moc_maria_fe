@@ -192,16 +192,6 @@ export function ServiceTile({ item }: { item: ServiceItem }) {
     <article className={"mm-service-card" + (item.isDemo ? " mm-demo-service-card" : "")}>
       <div className={"mm-service-decor" + (item.imageUrl ? " mm-service-photo" : "")}>
         {item.imageUrl ? (
-<<<<<<< HEAD
-          <Image
-            src={item.imageUrl}
-            alt={item.service.name}
-            width={680}
-            height={400}
-            sizes="(max-width: 700px) 95px, 33vw"
-            unoptimized={item.isDemo}
-          />
-=======
           <picture>
             {item.imageSrcSet && (
               <source
@@ -212,14 +202,13 @@ export function ServiceTile({ item }: { item: ServiceItem }) {
             )}
             <Image
               src={item.imageUrl}
-              alt={item.imageAlt || "?nh d?ch v? " + item.service.name}
+              alt={item.imageAlt || "Ảnh dịch vụ " + item.service.name}
               width={680}
               height={400}
               sizes="(max-width: 700px) 95px, 33vw"
               unoptimized={item.isDemo}
             />
           </picture>
->>>>>>> origin/main
         ) : (
           <Flower2 size={26} strokeWidth={1.35} />
         )}
