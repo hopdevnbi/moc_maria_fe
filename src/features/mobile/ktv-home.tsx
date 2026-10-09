@@ -22,6 +22,7 @@ import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "./experience";
 import { bookingHref } from "./links";
 import "./home.css";
+import { useCatalogRealtime } from "./useCatalogRealtime";
 import { ProviderRating } from "@/features/provider-reviews/reviews";
 
 type HomeProps = {
@@ -222,6 +223,7 @@ export function KtvFirstHomepage({
   providersUnavailable,
   catalogUnavailable,
 }: HomeProps) {
+  useCatalogRealtime();
   const [search, setSearch] = useState("");
   const [serviceId, setServiceId] = useState("");
   const [showAllFilters, setShowAllFilters] = useState(false);

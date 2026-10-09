@@ -32,7 +32,7 @@
     ],
     "isDemo": true,
     "tag": "Thư giãn",
-    "imageUrl": "/demo/services/demo-relaxation.webp",
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/relaxation-c29795f81eb9-960.webp",
     "demoProviderIds": [
       "demo-ktv-01",
       "demo-ktv-02",
@@ -41,7 +41,10 @@
       "demo-ktv-07",
       "demo-ktv-09",
       "demo-ktv-10"
-    ]
+    ],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/relaxation-c29795f81eb9-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/relaxation-c29795f81eb9-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "509439388_122206846178041562_1540271962883847003_n.jpg"
   },
   {
     "service": {
@@ -76,7 +79,7 @@
     ],
     "isDemo": true,
     "tag": "Đá nóng",
-    "imageUrl": "/demo/services/demo-hot-stone.webp",
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/hot-stone-732ea1395b88-960.webp",
     "demoProviderIds": [
       "demo-ktv-01",
       "demo-ktv-03",
@@ -84,7 +87,10 @@
       "demo-ktv-06",
       "demo-ktv-08",
       "demo-ktv-10"
-    ]
+    ],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/hot-stone-732ea1395b88-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/hot-stone-732ea1395b88-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "536275033_122214045824041562_4781609690225640382_n.jpg"
   },
   {
     "service": {
@@ -119,8 +125,11 @@
     ],
     "isDemo": true,
     "tag": "Cổ vai gáy",
-    "imageUrl": "/demo/services/demo-neck.webp",
-    "demoProviderIds": ["demo-ktv-01", "demo-ktv-02", "demo-ktv-04", "demo-ktv-06", "demo-ktv-09"]
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/neck-ce87c1a1b5b9-960.webp",
+    "demoProviderIds": ["demo-ktv-01", "demo-ktv-02", "demo-ktv-04", "demo-ktv-06", "demo-ktv-09"],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/neck-ce87c1a1b5b9-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/neck-ce87c1a1b5b9-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "553130422_122217572210041562_3323816858710040903_n.jpg"
   },
   {
     "service": {
@@ -155,8 +164,11 @@
     ],
     "isDemo": true,
     "tag": "Chăm sóc chân",
-    "imageUrl": "/demo/services/demo-foot.webp",
-    "demoProviderIds": ["demo-ktv-02", "demo-ktv-05", "demo-ktv-07", "demo-ktv-09"]
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/foot-732ea1395b88-960.webp",
+    "demoProviderIds": ["demo-ktv-02", "demo-ktv-05", "demo-ktv-07", "demo-ktv-09"],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/foot-732ea1395b88-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/foot-732ea1395b88-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "528621802_122212470332041562_8902093716872232832_n.jpg"
   },
   {
     "service": {
@@ -191,8 +203,11 @@
     ],
     "isDemo": true,
     "tag": "Thảo mộc",
-    "imageUrl": "/demo/services/demo-herbal.webp",
-    "demoProviderIds": ["demo-ktv-03", "demo-ktv-04", "demo-ktv-07", "demo-ktv-08", "demo-ktv-10"]
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/herbal-88701a37e396-960.webp",
+    "demoProviderIds": ["demo-ktv-03", "demo-ktv-04", "demo-ktv-07", "demo-ktv-08", "demo-ktv-10"],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/herbal-88701a37e396-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/herbal-88701a37e396-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "539930215_122214805496041562_899773868917724325_n.jpg"
   },
   {
     "service": {
@@ -227,8 +242,11 @@
     ],
     "isDemo": true,
     "tag": "Điểm cơ",
-    "imageUrl": "/demo/services/demo-pressure.webp",
-    "demoProviderIds": ["demo-ktv-04", "demo-ktv-06", "demo-ktv-08"]
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/pressure-23aaf8eed097-960.webp",
+    "demoProviderIds": ["demo-ktv-04", "demo-ktv-06", "demo-ktv-08"],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/pressure-23aaf8eed097-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/pressure-23aaf8eed097-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "526185038_122212171106041562_8401566479176350477_n.jpg"
   },
   {
     "service": {
@@ -263,8 +281,11 @@
     ],
     "isDemo": true,
     "tag": "Tinh dầu",
-    "imageUrl": "/demo/services/demo-aroma.webp",
-    "demoProviderIds": ["demo-ktv-01", "demo-ktv-05", "demo-ktv-08", "demo-ktv-10"]
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/aroma-c9d9cc82d2bf-960.webp",
+    "demoProviderIds": ["demo-ktv-01", "demo-ktv-05", "demo-ktv-08", "demo-ktv-10"],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/aroma-c9d9cc82d2bf-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/aroma-c9d9cc82d2bf-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "545702234_122216153252041562_8383232195062919896_n.jpg"
   },
   {
     "service": {
@@ -299,8 +320,11 @@
     ],
     "isDemo": true,
     "tag": "Kiểu Thái",
-    "imageUrl": "/demo/services/demo-thai.webp",
-    "demoProviderIds": ["demo-ktv-03", "demo-ktv-06", "demo-ktv-08"]
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/thai-596f4365e01f-960.webp",
+    "demoProviderIds": ["demo-ktv-03", "demo-ktv-06", "demo-ktv-08"],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/thai-596f4365e01f-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/thai-596f4365e01f-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "510803302_122206846196041562_1283754670379932585_n.jpg"
   },
   {
     "service": {
@@ -335,8 +359,11 @@
     ],
     "isDemo": true,
     "tag": "Chăm sóc lưng",
-    "imageUrl": "/demo/services/demo-back.webp",
-    "demoProviderIds": ["demo-ktv-04", "demo-ktv-06", "demo-ktv-09", "demo-ktv-10"]
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/back-1d0452800a98-960.webp",
+    "demoProviderIds": ["demo-ktv-04", "demo-ktv-06", "demo-ktv-09", "demo-ktv-10"],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/back-1d0452800a98-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/back-1d0452800a98-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "509442291_122206846184041562_2726557434662030144_n.jpg"
   },
   {
     "service": {
@@ -371,7 +398,10 @@
     ],
     "isDemo": true,
     "tag": "Da đầu",
-    "imageUrl": "/demo/services/demo-hair.webp",
-    "demoProviderIds": ["demo-ktv-02", "demo-ktv-07", "demo-ktv-09"]
+    "imageUrl": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/hair-be9ed1917a19-960.webp",
+    "demoProviderIds": ["demo-ktv-02", "demo-ktv-07", "demo-ktv-09"],
+    "imageSrcSet": "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/hair-be9ed1917a19-480.webp 480w, https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/hair-be9ed1917a19-960.webp 960w",
+    "imageAlt": "Hình ảnh hoạt động massage thực tế tại Mộc Maria",
+    "photoSourceFile": "552722889_122217572216041562_499445858121215434_n.jpg"
   }
 ]
