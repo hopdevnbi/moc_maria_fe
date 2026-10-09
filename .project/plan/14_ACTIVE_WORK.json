@@ -250,7 +250,7 @@
     },
     {
       "agent": "Codex KTV seed presentation audit 2026-10-09",
-      "status": "ACTIVE",
+      "status": "RELEASED",
       "stage": "Seed catalog presentation",
       "frontendBranch": "codex/ktv-profile-presentation",
       "ownedPaths": [
