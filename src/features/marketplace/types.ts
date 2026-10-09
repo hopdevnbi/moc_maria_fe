@@ -47,6 +47,15 @@ export interface Provider {
   introduction: string | null;
   serviceArea: string | null;
   avatarUrl: string | null;
+  // Demo-only UI data. These profiles do not represent vetted providers or accept bookings.
+  isDemo?: boolean;
+  age?: number;
+  demoServices?: Array<{
+    id: string;
+    name: string;
+    durationMinutes: number;
+    priceVnd: number;
+  }>;
   slug?: string;
   title?: string;
   yearsExperience?: number | null;

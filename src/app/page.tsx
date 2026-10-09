@@ -1,10 +1,13 @@
-﻿import { Suspense } from "react";
+import { Suspense } from "react";
 import { publicMarketplace } from "@/features/mobile/data";
 import { KtvFirstHomepage } from "@/features/mobile/ktv-home";
+import demoProviders from "@/features/mobile/demo-ktvs.json";
+import type { Provider } from "@/features/marketplace/types";
 
 async function HomeContent() {
   const data = await publicMarketplace();
-  return <KtvFirstHomepage {...data} />;
+  const demos = demoProviders as Provider[];
+  return <KtvFirstHomepage {...data} providers={[...data.providers, ...demos]} />;
 }
 
 export default function HomePage() {

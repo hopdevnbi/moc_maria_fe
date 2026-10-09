@@ -1,0 +1,332 @@
+[
+  {
+    "id": "demo-ktv-01",
+    "publicName": "Linh Anh",
+    "age": 26,
+    "yearsExperience": 3,
+    "serviceArea": "Cầu Giấy · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-01.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-relaxation",
+        "name": "Massage thư giãn toàn thân",
+        "durationMinutes": 60,
+        "priceVnd": 350000
+      },
+      {
+        "id": "demo-hot-stone",
+        "name": "Massage đá nóng",
+        "durationMinutes": 90,
+        "priceVnd": 500000
+      },
+      {
+        "id": "demo-neck",
+        "name": "Massage cổ vai gáy",
+        "durationMinutes": 45,
+        "priceVnd": 250000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-02",
+    "publicName": "Mai Anh",
+    "age": 25,
+    "yearsExperience": 2,
+    "serviceArea": "Nam Từ Liêm · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-02.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-relaxation",
+        "name": "Massage thư giãn toàn thân",
+        "durationMinutes": 60,
+        "priceVnd": 350000
+      },
+      {
+        "id": "demo-neck",
+        "name": "Massage cổ vai gáy",
+        "durationMinutes": 45,
+        "priceVnd": 250000
+      },
+      {
+        "id": "demo-foot",
+        "name": "Massage chân",
+        "durationMinutes": 45,
+        "priceVnd": 220000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-03",
+    "publicName": "Thu Hà",
+    "age": 28,
+    "yearsExperience": 5,
+    "serviceArea": "Đống Đa · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-03.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-hot-stone",
+        "name": "Massage đá nóng",
+        "durationMinutes": 90,
+        "priceVnd": 500000
+      },
+      {
+        "id": "demo-herbal",
+        "name": "Massage thảo dược",
+        "durationMinutes": 90,
+        "priceVnd": 480000
+      },
+      {
+        "id": "demo-relaxation",
+        "name": "Massage thư giãn toàn thân",
+        "durationMinutes": 60,
+        "priceVnd": 350000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-04",
+    "publicName": "Bảo Ngọc",
+    "age": 27,
+    "yearsExperience": 4,
+    "serviceArea": "Hà Đông · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-04.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-neck",
+        "name": "Massage cổ vai gáy",
+        "durationMinutes": 45,
+        "priceVnd": 250000
+      },
+      {
+        "id": "demo-pressure",
+        "name": "Massage bấm huyệt",
+        "durationMinutes": 60,
+        "priceVnd": 390000
+      },
+      {
+        "id": "demo-herbal",
+        "name": "Massage thảo dược",
+        "durationMinutes": 90,
+        "priceVnd": 480000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-05",
+    "publicName": "Hương Ly",
+    "age": 26,
+    "yearsExperience": 3,
+    "serviceArea": "Tây Hồ · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-05.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-relaxation",
+        "name": "Massage thư giãn toàn thân",
+        "durationMinutes": 60,
+        "priceVnd": 350000
+      },
+      {
+        "id": "demo-hot-stone",
+        "name": "Massage đá nóng",
+        "durationMinutes": 90,
+        "priceVnd": 500000
+      },
+      {
+        "id": "demo-foot",
+        "name": "Massage chân",
+        "durationMinutes": 45,
+        "priceVnd": 220000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-06",
+    "publicName": "Ngọc Anh",
+    "age": 29,
+    "yearsExperience": 6,
+    "serviceArea": "Thanh Xuân · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-06.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-pressure",
+        "name": "Massage bấm huyệt",
+        "durationMinutes": 60,
+        "priceVnd": 390000
+      },
+      {
+        "id": "demo-neck",
+        "name": "Massage cổ vai gáy",
+        "durationMinutes": 45,
+        "priceVnd": 250000
+      },
+      {
+        "id": "demo-hot-stone",
+        "name": "Massage đá nóng",
+        "durationMinutes": 90,
+        "priceVnd": 500000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-07",
+    "publicName": "Thanh Trúc",
+    "age": 24,
+    "yearsExperience": 2,
+    "serviceArea": "Hoài Đức · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-07.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-foot",
+        "name": "Massage chân",
+        "durationMinutes": 45,
+        "priceVnd": 220000
+      },
+      {
+        "id": "demo-relaxation",
+        "name": "Massage thư giãn toàn thân",
+        "durationMinutes": 60,
+        "priceVnd": 350000
+      },
+      {
+        "id": "demo-herbal",
+        "name": "Massage thảo dược",
+        "durationMinutes": 90,
+        "priceVnd": 480000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-08",
+    "publicName": "Phương Thảo",
+    "age": 30,
+    "yearsExperience": 7,
+    "serviceArea": "Ba Đình · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-08.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-herbal",
+        "name": "Massage thảo dược",
+        "durationMinutes": 90,
+        "priceVnd": 480000
+      },
+      {
+        "id": "demo-pressure",
+        "name": "Massage bấm huyệt",
+        "durationMinutes": 60,
+        "priceVnd": 390000
+      },
+      {
+        "id": "demo-hot-stone",
+        "name": "Massage đá nóng",
+        "durationMinutes": 90,
+        "priceVnd": 500000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-09",
+    "publicName": "Minh Châu",
+    "age": 27,
+    "yearsExperience": 4,
+    "serviceArea": "Long Biên · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-09.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-relaxation",
+        "name": "Massage thư giãn toàn thân",
+        "durationMinutes": 60,
+        "priceVnd": 350000
+      },
+      {
+        "id": "demo-foot",
+        "name": "Massage chân",
+        "durationMinutes": 45,
+        "priceVnd": 220000
+      },
+      {
+        "id": "demo-neck",
+        "name": "Massage cổ vai gáy",
+        "durationMinutes": 45,
+        "priceVnd": 250000
+      }
+    ]
+  },
+  {
+    "id": "demo-ktv-10",
+    "publicName": "Khánh Linh",
+    "age": 25,
+    "yearsExperience": 3,
+    "serviceArea": "Bắc Từ Liêm · Hà Nội",
+    "title": "Kỹ thuật viên massage · hồ sơ minh họa",
+    "introduction": "Hồ sơ và ảnh minh họa dùng để trải nghiệm giao diện Mộc Maria. Không phải nhân sự đang nhận lịch.",
+    "avatarUrl": "/demo/ktv/demo-ktv-10.webp",
+    "isDemo": true,
+    "bookable": false,
+    "eligibleServices": [],
+    "demoServices": [
+      {
+        "id": "demo-hot-stone",
+        "name": "Massage đá nóng",
+        "durationMinutes": 90,
+        "priceVnd": 500000
+      },
+      {
+        "id": "demo-relaxation",
+        "name": "Massage thư giãn toàn thân",
+        "durationMinutes": 60,
+        "priceVnd": 350000
+      },
+      {
+        "id": "demo-herbal",
+        "name": "Massage thảo dược",
+        "durationMinutes": 90,
+        "priceVnd": 480000
+      }
+    ]
+  }
+]

@@ -1,7 +1,39 @@
-﻿.ktv-home {
+.ktv-home {
   --ktv-forest: #2b513d;
   --ktv-olive: #718870;
   background: #f8f9f4;
+}
+.ktv-demo-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 13px;
+  border: 1px solid #eadac0;
+  background: #fff8ec;
+  color: #866747;
+  border-radius: 12px;
+  padding: 11px 13px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.ktv-demo-banner strong {
+  font-weight: 800;
+}
+.ktv-demo-badge {
+  display: inline-flex;
+  border-radius: 99px;
+  background: #f9edda;
+  padding: 4px 7px;
+  color: #937143;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.25px;
+}
+.ktv-demo-disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  user-select: none;
 }
 .ktv-home-main {
   padding-top: 27px;

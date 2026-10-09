@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -46,6 +46,14 @@ export function normalizeSearch(value: string) {
 }
 
 export function providerOffers(provider: Provider, services: ServiceItem[]): ServiceOffer[] {
+  if (provider.isDemo) {
+    return (provider.demoServices || []).map((item) => ({
+      id: item.id,
+      name: item.name,
+      duration: item.durationMinutes,
+      price: item.priceVnd,
+    }));
+  }
   const byId = new Map(services.map((entry) => [entry.service.id, entry]));
   const unique = new Map<string, ServiceOffer>();
   for (const policy of provider.eligibleServices || []) {
@@ -80,10 +88,16 @@ function initials(name: string) {
 
 function MassageKtvCard({ provider, offers }: { provider: Provider; offers: ServiceOffer[] }) {
   const avatar =
-    provider.avatarUrl?.startsWith("/media/") && !provider.avatarUrl.includes("..")
+    (provider.avatarUrl?.startsWith("/media/") ||
+      (provider.isDemo &&
+        (provider.avatarUrl?.startsWith("/demo/ktv/") ||
+          provider.avatarUrl?.startsWith(
+            "https://giangxa-media-cdn.b-cdn.net/moc-maria/demo-ktv/",
+          )))) &&
+    !provider.avatarUrl.includes("..")
       ? provider.avatarUrl
       : null;
-  const canBook = provider.bookable !== false && offers.length > 0;
+  const canBook = !provider.isDemo && provider.bookable !== false && offers.length > 0;
   return (
     <article className="ktv-card">
       <div className="ktv-person">
@@ -99,20 +113,26 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
               height={100}
               sizes="88px"
               alt={"KTV " + provider.publicName}
+              unoptimized={provider.isDemo}
             />
           ) : (
             <span>{initials(provider.publicName)}</span>
           )}
         </Link>
         <div className="ktv-identity">
-          <p className="ktv-approved">
-            <CheckCircle2 size={13} /> KTV đã xác minh
-          </p>
+          {provider.isDemo ? (
+            <p className="ktv-demo-badge">HỒ SƠ MINH HỌA</p>
+          ) : (
+            <p className="ktv-approved">
+              <CheckCircle2 size={13} /> KTV đã xác minh
+            </p>
+          )}
           <Link href={"/chuyen-vien/" + provider.id} className="ktv-name">
             {provider.publicName}
           </Link>
           <p className="ktv-role">{provider.title || "Kỹ thuật viên massage"}</p>
           <div className="ktv-facts">
+            {provider.age != null && <span>{provider.age} tuổi</span>}
             {provider.yearsExperience != null && (
               <span>
                 <Sparkles size={13} /> {provider.yearsExperience} năm kinh nghiệm
@@ -129,7 +149,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
 
       <div className="ktv-offers">
         <div className="ktv-offers-heading">
-          <strong>Dịch vụ massage</strong>
+          <strong>{provider.isDemo ? "Dịch vụ minh họa" : "Dịch vụ massage"}</strong>
           <Link href={"/chuyen-vien/" + provider.id}>
             Tất cả <ArrowRight size={13} />
           </Link>
@@ -147,7 +167,11 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
                   )}
                 </div>
                 <div className="ktv-offer-end">
-                  <span>{item.price != null ? "Từ " + formatPrice(item.price) : "Liên hệ"}</span>
+                  <span>
+                    {item.price != null
+                      ? (provider.isDemo ? "" : "Từ ") + formatPrice(item.price)
+                      : "Liên hệ"}
+                  </span>
                   {canBook && (
                     <Link
                       href={bookingHref({ provider: provider.id, service: item.id })}
@@ -175,13 +199,19 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
             <CalendarClock size={17} /> Chưa mở lịch
           </span>
         )}
-        <Link
-          className="ktv-chat-btn"
-          href={"/tin-nhan?provider=" + encodeURIComponent(provider.id)}
-          aria-label={"Chat với " + provider.publicName}
-        >
-          <MessageCircle size={17} /> Chat
-        </Link>
+        {provider.isDemo ? (
+          <span className="ktv-chat-btn ktv-demo-disabled" title="Hồ sơ demo không nhận tin nhắn">
+            <MessageCircle size={17} /> Chat
+          </span>
+        ) : (
+          <Link
+            className="ktv-chat-btn"
+            href={"/tin-nhan?provider=" + encodeURIComponent(provider.id)}
+            aria-label={"Chat với " + provider.publicName}
+          >
+            <MessageCircle size={17} /> Chat
+          </Link>
+        )}
       </div>
     </article>
   );
@@ -201,9 +231,14 @@ export function KtvFirstHomepage({
     [providers, services],
   );
   const serviceFilters = useMemo(() => {
-    const ids = new Set([...knownOffers.values()].flat().map((offer) => offer.id));
-    return services.filter((item) => ids.has(item.service.id)).map((item) => item.service);
-  }, [knownOffers, services]);
+    return [
+      ...new Map(
+        [...knownOffers.values()]
+          .flat()
+          .map((offer) => [offer.id, { id: offer.id, name: offer.name }]),
+      ).values(),
+    ];
+  }, [knownOffers]);
   const q = normalizeSearch(search.trim());
   const visible = providers.filter((provider) => {
     const offers = knownOffers.get(provider.id) || [];
@@ -244,6 +279,15 @@ export function KtvFirstHomepage({
         </div>
 
         <section className="ktv-explore" aria-label="Danh sách kỹ thuật viên massage">
+          {providers.some((provider) => provider.isDemo) && (
+            <div className="ktv-demo-banner" role="note">
+              <strong>Trải nghiệm giao diện với 10 KTV mẫu</strong>
+              <span>
+                Ảnh, tuổi, kinh nghiệm và giá dịch vụ là dữ liệu giả lập. Hồ sơ mẫu không nhận lịch
+                hoặc tin nhắn.
+              </span>
+            </div>
+          )}
           <div className="ktv-search">
             <Search size={20} />
             <input
@@ -298,10 +342,10 @@ export function KtvFirstHomepage({
               <h2>Danh sách KTV massage</h2>
             </div>
             <span className="ktv-result-count">
-              <Users size={14} /> {visible.length} KTV
+              <Users size={14} /> {visible.length} hồ sơ
             </span>
           </div>
-          {providersUnavailable || catalogUnavailable ? (
+          {(providersUnavailable || catalogUnavailable) && !visible.length ? (
             <div className="ktv-list-empty" role="alert">
               <span className="ktv-empty-icon">
                 <Users size={30} />
