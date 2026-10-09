@@ -247,6 +247,23 @@
         "test": "25 BE unit +65 disposable PostgreSQL integrations; migration rollback/reapply; FE21 tests/full quality/build; 320/390px local browser QA; production schema16→17, health200/private401/public ratings200; backend/FE CI and production Vercel deployment PASS",
         "businessData": "No production fixtures or approval/booking writes. Real eligible KTV count0. Verified review submission depends on existing separately owned E2 completion workflow."
       }
+    },
+    {
+      "agent": "Codex KTV seed presentation audit 2026-10-09",
+      "status": "ACTIVE",
+      "stage": "Seed catalog presentation",
+      "frontendBranch": "codex/ktv-profile-presentation",
+      "ownedPaths": [
+        "FE/src/features/mobile/ktv-home.tsx (seed display copy only)",
+        "FE/src/features/mobile/demo-detail.tsx",
+        "FE/src/features/mobile/demo-ktvs.json",
+        "FE/src/features/mobile/demo-service-detail.tsx (public display copy only)",
+        "FE/scripts/generate-demo-ktvs.mjs (profile text only)",
+        "FE/docs/KTV_SEED_PRESENTATION.md",
+        "Plan own claim/release evidence",
+        "FE/src/features/mobile/experience.tsx (public catalog copy only)"
+      ],
+      "note": "User explicitly requests removing sample/demo/illustration labels from public KTV seed presentation. Reuse isolated worktree; preserve source provenance flags, chat/booking gates and real ratings. Do not overwrite local service-photo/realtime branch."
     }
   ]
 }

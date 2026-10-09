@@ -202,7 +202,7 @@ export function ServiceTile({ item }: { item: ServiceItem }) {
             )}
             <Image
               src={item.imageUrl}
-              alt={item.imageAlt || "?nh d?ch v? " + item.service.name}
+              alt={item.imageAlt || "Ảnh dịch vụ " + item.service.name}
               width={680}
               height={400}
               sizes="(max-width: 700px) 95px, 33vw"
@@ -214,9 +214,7 @@ export function ServiceTile({ item }: { item: ServiceItem }) {
         )}
       </div>
       <div className="mm-service-body">
-        <span className="mm-overline">
-          {item.isDemo ? "DỮ LIỆU MINH HỌA" : "THƯ GIÃN & CHĂM SÓC"}
-        </span>
+        <span className="mm-overline">THƯ GIÃN & CHĂM SÓC</span>
         <h3>
           <Link href={"/dich-vu/" + encodeURIComponent(item.service.slug)}>
             {item.service.name}
@@ -231,7 +229,7 @@ export function ServiceTile({ item }: { item: ServiceItem }) {
         </div>
         <div className="mm-service-bottom">
           <div>
-            <small>{item.isDemo ? "Giá minh họa" : "Giá tham khảo"}</small>
+            <small>Giá tham khảo</small>
             <strong>
               {prices.length ? "Từ " + formatPrice(Math.min(...prices)) : "Đang cập nhật"}
             </strong>
@@ -378,13 +376,6 @@ export function MobileExperience({
           </section>
         )}
 
-        {page === "services" && services.some((item) => item.isDemo) && (
-          <div className="mm-detail-notice" role="note">
-            <ShieldCheck size={18} />
-            Bộ dịch vụ minh họa để trải nghiệm giao diện. Giá, thời lượng và hình ảnh chưa phải
-            thông tin thương mại chính thức; dịch vụ mẫu không nhận đặt lịch.
-          </div>
-        )}
         <section className="mm-discover" aria-labelledby="mm-discover-title">
           <div className="mm-section-heading">
             <div>
