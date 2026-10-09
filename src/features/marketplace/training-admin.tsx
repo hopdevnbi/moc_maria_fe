@@ -10,6 +10,7 @@ import { ProviderReadinessPanel } from "./provider-readiness";
 import { AdminProviderPlanning } from "./provider-planning";
 import { AdminProviderEligibility } from "./provider-eligibility";
 import { CourseProgramAdmin, EnrollmentSessionsAdmin } from "./training-sessions";
+import { EnrollmentAssessmentsAdmin, CertificateHistoryAdmin } from "./training-assessments";
 
 const transitions: Record<string, string[]> = {
   APPLIED: ["REVIEWING", "REJECTED"],
@@ -210,35 +211,23 @@ function ApplicationReview({
                 <details className="market-admin-details" key={enrollment.id}>
                   <summary>
                     {course?.title || "Khóa học"} · {enrollment.attendancePercent}% ·{" "}
-                    {enrollment.assessmentPassed ? "Đạt" : "Chưa đạt"}
+                    {enrollment.evidenceCurrent
+                      ? "Đạt hiện hành"
+                      : enrollment.assessmentPassed
+                        ? "Cần rà soát"
+                        : "Chưa đạt"}
                   </summary>
                   <p>Trạng thái: {enrollmentLabels[enrollment.status] || "Đang cập nhật"}</p>
                   <EnrollmentSessionsAdmin enrollmentId={enrollment.id} canReview={canReview} />
-                  {canReview && ["TRAINING", "ASSESSMENT"].includes(application.status) && (
-                    <AdminForm
-                      title="Ghi nhận kết quả đã xác minh"
-                      method="PATCH"
-                      path={`/admin/provider-training/enrollments/${enrollment.id}/assessment`}
-                      label="Lưu kết quả đánh giá"
-                      fields={[
-                        {
-                          name: "attendancePercent",
-                          label: "Tỷ lệ tham gia đào tạo (%)",
-                          type: "number",
-                          required: true,
-                          min: 0,
-                          max: 100,
-                          value: enrollment.attendancePercent,
-                        },
-                        {
-                          name: "assessmentPassed",
-                          label: "Đạt đánh giá tay nghề",
-                          type: "checkbox",
-                          value: enrollment.assessmentPassed,
-                        },
-                      ]}
-                    />
-                  )}
+                  <EnrollmentAssessmentsAdmin
+                    enrollmentId={enrollment.id}
+                    canReview={
+                      canReview &&
+                      ["TRAINING", "ASSESSMENT", "APPROVED", "SUSPENDED"].includes(
+                        application.status,
+                      )
+                    }
+                  />
                 </details>
               ))}
               {training.data.certificates.map((cert) => (
@@ -247,6 +236,14 @@ function ApplicationReview({
                     {cert.title} · {cert.isValid ? "Còn hiệu lực" : "Không còn hiệu lực"}
                   </summary>
                   <p>Số chứng nhận: {cert.certificateNumber}</p>
+                  <CertificateHistoryAdmin
+                    applicationId={application.id}
+                    certificate={cert}
+                    canReview={
+                      canReview &&
+                      ["TRAINING", "ASSESSMENT", "APPROVED"].includes(application.status)
+                    }
+                  />
                   {canReview && !cert.revokedAt && (
                     <AdminForm
                       path={`/admin/provider-applications/${application.id}/certificates/${cert.id}/revoke`}
@@ -314,10 +311,29 @@ function ApplicationReview({
                     maxLength: 60,
                     pattern: "[A-Z0-9_-]+",
                   },
-                  { name: "expiresAt", label: "Ngày hết hạn (nếu áp dụng)", type: "date" },
+                  {
+                    name: "expiresAt",
+                    label: "Ngày hết hạn chứng nhận",
+                    type: "date",
+                    required: true,
+                  },
+                  {
+                    name: "issuedConfirmed",
+                    label: "Tôi đã kiểm tra sát hạch đạt và thời hạn chứng nhận",
+                    type: "checkbox",
+                    required: true,
+                  },
+                  {
+                    name: "reason",
+                    label: "Lý do cấp chứng nhận",
+                    type: "textarea",
+                    required: true,
+                    maxLength: 500,
+                  },
                 ]}
                 transform={(body) => ({
                   ...body,
+                  expiresAt: String(body.expiresAt) + "T23:59:59+07:00",
                   title:
                     activeCourses.find((course) => course.code === body.courseCode)?.title ||
                     "Chứng nhận đào tạo nội bộ",

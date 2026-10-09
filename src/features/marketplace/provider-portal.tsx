@@ -347,16 +347,18 @@ function TrainingContent() {
                 <dl className="market-definition">
                   <div>
                     <dt>Tham gia đào tạo</dt>
-                    <dd>{enrollment.attendancePercent}%</dd>
+                    <dd>{enrollment.currentAttendancePercent ?? enrollment.attendancePercent}%</dd>
                   </div>
                   <div>
                     <dt>Đánh giá tay nghề</dt>
                     <dd>
                       {!enrollment.assessedAt
                         ? "Chưa đánh giá"
-                        : enrollment.assessmentPassed
-                          ? "Đạt"
-                          : "Cần cải thiện"}
+                        : enrollment.evidenceCurrent
+                          ? "Đạt, còn hiệu lực"
+                          : enrollment.assessmentPassed
+                            ? "Cần rà soát lại kết quả"
+                            : "Cần cải thiện"}
                     </dd>
                   </div>
                 </dl>
@@ -377,7 +379,11 @@ function TrainingContent() {
                 <article className="market-panel mb-6" key={certificate.id}>
                   <span className="market-badge">
                     {valid ? <ShieldCheck size={15} /> : <CheckCircle2 size={15} />}
-                    {certificate.revokedAt ? "Đã thu hồi" : valid ? "Còn hiệu lực" : "Đã hết hạn"}
+                    {certificate.revokedAt
+                      ? "Đã thu hồi"
+                      : valid
+                        ? "Còn hiệu lực"
+                        : "Chưa đủ điều kiện hiệu lực"}
                   </span>
                   <h2 className="mt-5!">{certificate.title}</h2>
                   <dl className="market-definition">

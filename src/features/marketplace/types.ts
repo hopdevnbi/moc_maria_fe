@@ -84,6 +84,8 @@ export interface Course {
   isActive: boolean;
 }
 export interface Enrollment {
+  evidenceCurrent?: boolean;
+  currentAttendancePercent?: number;
   id: string;
   courseId: string;
   providerApplicationId: string;

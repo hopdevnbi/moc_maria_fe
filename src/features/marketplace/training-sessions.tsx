@@ -2,6 +2,7 @@
 import { usePrivateData } from "./private-api";
 import { AdminForm, type AdminField } from "./admin-form";
 import type { Branch } from "./types";
+import { TrainingCriteriaAdmin } from "./training-assessments";
 interface Module {
   id: string;
   code: string;
@@ -143,6 +144,7 @@ export function CourseProgramAdmin({
           />
         </details>
       )}
+      <TrainingCriteriaAdmin courseId={courseId} canReview={canReview} />
       <h3 className="market-subtitle mt-6">Buổi học & người phụ trách</h3>
       {program.data.sessions.map((s) => (
         <details className="market-admin-details" key={s.id}>
