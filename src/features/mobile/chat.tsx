@@ -265,6 +265,12 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       ).includes(query),
   );
   const draft = selectedId ? (drafts[selectedId] ?? "") : "";
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.style.height = "48px";
+    input.style.height = `${Math.max(48, Math.min(input.scrollHeight, 120))}px`;
+  }, [draft, selectedId, choosing]);
   const error =
     actionError ||
     (threads.isError || history.isError ? chatError(threads.error || history.error) : "");
