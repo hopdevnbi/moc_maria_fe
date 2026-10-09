@@ -3,8 +3,6 @@ import { NextResponse } from "next/server";
 import { publicRead } from "@/features/marketplace/public-api";
 import type { Branch, Provider, ServiceItem } from "@/features/marketplace/types";
 
-export const dynamic = "force-dynamic";
-
 function stable<T extends { id: string }>(rows: T[]) {
   return [...rows].sort((a, b) => a.id.localeCompare(b.id));
 }
