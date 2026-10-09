@@ -2,6 +2,7 @@ import "server-only";
 import { cacheLife } from "next/cache";
 import { publicRead } from "@/features/marketplace/public-api";
 import type { Branch, Provider, ServiceItem } from "@/features/marketplace/types";
+import demoProviders from "@/features/mobile/demo-ktvs.json";
 
 // Only the public service/branch catalog is cached. Provider approvals and booking slots stay live.
 export async function catalogSnapshot() {
@@ -28,4 +29,10 @@ export async function publicMarketplace() {
     providers: providers.ok ? providers.data : [],
     providersUnavailable: !providers.ok,
   };
+}
+
+// One provider directory for both public entry points. Never mix demos with bookings.
+export async function publicProviderDirectory() {
+  const data = await publicMarketplace();
+  return { ...data, providers: [...data.providers, ...(demoProviders as Provider[])] };
 }

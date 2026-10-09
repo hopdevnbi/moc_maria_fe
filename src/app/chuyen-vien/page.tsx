@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from "next";
 import { Suspense } from "react";
-import { publicMarketplace } from "@/features/mobile/data";
-import { MobileExperience } from "@/features/mobile/experience";
+import { publicProviderDirectory } from "@/features/mobile/data";
+import { KtvFirstHomepage } from "@/features/mobile/ktv-home";
 
 export const metadata: Metadata = {
   title: "Danh sách Kỹ thuật viên",
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 };
 
 async function ProviderList() {
-  const data = await publicMarketplace();
-  return <MobileExperience {...data} page="providers" />;
+  const data = await publicProviderDirectory();
+  return <KtvFirstHomepage {...data} />;
 }
 
 export default function ProvidersPage() {
