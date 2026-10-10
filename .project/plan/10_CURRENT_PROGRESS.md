@@ -53,3 +53,11 @@ BOOKING PROVIDER PRESELECTION RELEASE — 2026-10-10
 FE fa62d846e939c6c2ad08befedb723c9604609bb2; production deployment 6976629615.
 Full quality and PR CI PASS: 61 tests, format/lint/typecheck/build. Production browser client navigation Mai Anh to home to Bao Ngoc: URL demo-ktv-04 selects Bao Ngoc only, compatible services visible. Desktop 1440 and mobile 390 correct selection, no overflow. No production appointment submitted.
 Clicked provider overrides unrelated sign-in drafts. Existing API and confirmation behavior unchanged.
+
+KTV SAFETY AND CLEAN PUBLIC URL RELEASE — 2026-10-10
+CODE: FE 56fe71d279f2b3ed68a532e1405a67e69db77194; BE 8bbc2c20809acbd0ccc470f992b1a939abe23304
+TEST: Merged PR CI: FE 80 tests and full quality/build PASS; BE 37 unit tests and full quality/audit PASS; 8 isolated PostgreSQL safety integrations PASS. QA KTV loaded session does not start GPS; admin stale/overdue/SOS, acknowledge then resolve PASS. Responsive 320/390/1440 no overflow. Production old profile and booking URLs become named aliases and retain Linh Anh; booking/sign-in links contain no demo. Live/ready 200, private safety endpoints 401. Production deployment success.
+COMMIT: https://github.com/hopdevnbi/moc_maria_fe/pull/24; https://github.com/hopdevnbi/moc_maria_be/pull/14
+DEPLOY: Vercel production 6978653776; ghcr.io/hopdevnbi/moc_maria_be@sha256:fba61122bf79d31da44e10f1447fd86f4575359214832ec7efb006b926116782
+BUSINESS_DATA: No production safety sessions, GPS points, SOS alerts, bookings, approvals or public reviews created. Dedicated production encryption key stored in Kubernetes Secret only. Safety feature requires no new schema migration.
+LIMITATIONS: Web GPS needs visible foreground page; native background tracking is future work. SOS needs network and an on-duty operator, no automatic calls/SMS. Real device GPS was not enabled during QA. OSM tiles unreachable from QA machine network; fallback coordinates/stale status verified, map background availability not verified. Existing internal seed/database IDs preserved.
