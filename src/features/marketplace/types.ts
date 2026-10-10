@@ -104,6 +104,9 @@ export interface EligibleProviderService {
 }
 export interface Application {
   id: string;
+  avatarUrl?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   publicName: string;
   introduction: string | null;
   serviceArea: string | null;

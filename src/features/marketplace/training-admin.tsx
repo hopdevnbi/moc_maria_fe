@@ -1,16 +1,14 @@
-"use client";
-import { useState } from "react";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+﻿"use client";
 import { usePrivateData } from "./private-api";
 import { AdminForm } from "./admin-form";
-import { EmptyState } from "./components";
 import { applicationLabels, enrollmentLabels } from "./format";
 import type { Application, Course, Training } from "./types";
 import { ProviderReadinessPanel } from "./provider-readiness";
 import { AdminProviderPlanning } from "./provider-planning";
 import { AdminProviderEligibility } from "./provider-eligibility";
-import { CourseProgramAdmin, EnrollmentSessionsAdmin } from "./training-sessions";
+import { EnrollmentSessionsAdmin } from "./training-sessions";
 import { EnrollmentAssessmentsAdmin, CertificateHistoryAdmin } from "./training-assessments";
+import { KtvAdminDirectory } from "./ktv-admin-directory";
 
 const transitions: Record<string, string[]> = {
   APPLIED: ["REVIEWING", "REJECTED"],
@@ -21,107 +19,12 @@ const transitions: Record<string, string[]> = {
   REJECTED: ["REVIEWING"],
   SUSPENDED: ["TRAINING", "ASSESSMENT", "APPROVED", "REJECTED"],
 };
+
 export function TrainingAdmin() {
-  const { user } = useAuth();
-  const canReview = !!user?.permissions.includes("roles.manage");
-  const applications = usePrivateData<Application[]>("/admin/provider-applications");
-  const courses = usePrivateData<Course[]>("/admin/provider-training/courses");
-  const [selected, setSelected] = useState<string>("");
-  if (applications.isPending || courses.isPending)
-    return <p role="status">Đang tải ứng tuyển và đào tạo...</p>;
-  if (applications.isError || courses.isError)
-    return (
-      <EmptyState title="Chưa tải được dữ liệu" error>
-        <button
-          className="market-button"
-          onClick={() => {
-            void applications.refetch();
-            void courses.refetch();
-          }}
-        >
-          Thử lại
-        </button>
-      </EmptyState>
-    );
-  const application = applications.data.find((item) => item.id === selected);
-  return (
-    <>
-      <div className="market-two-column">
-        <section>
-          <h2 className="market-subtitle">Hồ sơ ứng tuyển</h2>
-          {applications.data.length ? (
-            applications.data.map((item) => (
-              <article className="market-panel mb-6" key={item.id}>
-                <span className="market-badge">
-                  {applicationLabels[item.status] || item.status}
-                </span>
-                <h2 className="mt-4!">{item.publicName}</h2>
-                <p>{item.serviceArea || "Chưa có khu vực phục vụ"}</p>
-                <button
-                  className="market-button market-button-secondary"
-                  onClick={() => setSelected(item.id)}
-                >
-                  Xem hồ sơ & đào tạo
-                </button>
-              </article>
-            ))
-          ) : (
-            <EmptyState title="Chưa có hồ sơ ứng tuyển">
-              <p>Các hồ sơ được gửi qua website sẽ xuất hiện tại đây.</p>
-            </EmptyState>
-          )}
-        </section>
-        <section>
-          <h2 className="market-subtitle">Khóa đào tạo nội bộ</h2>
-          {courses.data.map((course) => (
-            <article className="market-panel mb-6" key={course.id}>
-              <span className="market-badge">{course.code}</span>
-              <h2 className="mt-4!">{course.title}</h2>
-              <p>{course.description}</p>
-              <p>{course.isActive ? "Đang hoạt động" : "Tạm ngưng"}</p>
-              <details className="market-admin-details">
-                <summary>Chương trình & buổi học</summary>
-                <CourseProgramAdmin courseId={course.id} canReview={canReview} />
-              </details>
-            </article>
-          ))}
-          {canReview && (
-            <article className="market-panel">
-              <AdminForm
-                title="Thêm khóa đào tạo"
-                path="/admin/provider-training/courses"
-                label="Tạo khóa học"
-                fields={[
-                  {
-                    name: "code",
-                    label: "Mã khóa học",
-                    required: true,
-                    maxLength: 80,
-                    pattern: "[A-Z0-9_-]+",
-                    help: "Chữ in hoa, số, dấu gạch ngang hoặc gạch dưới.",
-                  },
-                  { name: "title", label: "Tên khóa học", required: true, maxLength: 180 },
-                  { name: "description", label: "Mô tả", type: "textarea", maxLength: 1500 },
-                ]}
-              />
-            </article>
-          )}
-        </section>
-      </div>
-      {application && (
-        <section className="market-section">
-          <ApplicationReview
-            key={application.id + application.status}
-            application={application}
-            courses={courses.data}
-            canReview={canReview && application.userId !== user?.id}
-          />
-        </section>
-      )}
-    </>
-  );
+  return <KtvAdminDirectory />;
 }
-function ApplicationReview({
+
+export function ApplicationReview({
   application,
   courses,
   canReview,
