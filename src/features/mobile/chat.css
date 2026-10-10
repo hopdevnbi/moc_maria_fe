@@ -837,3 +837,18 @@
   min-height: 80px;
   resize: vertical;
 }
+.ktv-chat-delivery {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+.ktv-chat-delivery button {
+  color: inherit;
+  border: 1px solid currentColor;
+  padding: 3px 8px;
+  border-radius: 8px;
+}

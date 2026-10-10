@@ -315,6 +315,25 @@
         "test": "25 BE unit, 71 disposable PostgreSQL integrations/all17 migrations, 27 FE tests/full quality/build PASS; source PR/main CI and Vercel PASS; live browser registration preserves KTV/service, customer emoji send and KTV UI reply, reciprocal block/unblock; live API outsider404, distinct private KTV conversations, denied blocked writes/history preservation; mobile320/390, reduced500px height and desktop1440 checked",
         "businessData": "Owner opt-in flags for existing ten THERAPIST accounts; one ordinary CUSTOMER registered through production UI. Five scheduled/five unset remain. No provider approvals, certificates, customer reservations or public ratings seeded."
       }
+    },
+    {
+      "agent": "Codex instant chat and notification sound 2026-10-10",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/chat-instant-send-sound",
+      "frontendWorktree": "C:\\Users\\admin\\Desktop\\DỰ ÁN GIÁO LÝ VIÊN\\moc_maria_fe_chat",
+      "taskIds": [
+        "P06-T14",
+        "P06-T15",
+        "P06-T26"
+      ],
+      "ownedPaths": [
+        "FE/src/features/mobile/chat*",
+        "FE/public/media/audio/**",
+        "FE/docs/PRIVATE_KTV_CHAT.md",
+        "Plan own scoped evidence",
+        "FE/next.config.ts (versioned chat audio cache header only)"
+      ],
+      "note": "Immediate local outgoing message rendering, idempotent retry/reconciliation and incoming notification sound. Existing E2a booking and shared socket scope preserved."
     }
   ]
 }

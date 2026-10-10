@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KtvChatPage } from "./chat";
 
@@ -71,6 +71,89 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it("shows an outgoing bubble before the network resolves, keeps the next draft and reconciles once", async () => {
+    let finish!: (value: unknown) => void;
+    const message = {
+      id: "confirmed",
+      thread_id: "a",
+      sender_user_id: "customer",
+      body: "Xin tư vấn",
+      created_at: first.updated_at,
+    };
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (path.endsWith("/messages") && init?.method === "POST")
+        return new Promise((resolve) => {
+          finish = resolve;
+        });
+      return original(path, init);
+    });
+    const { client } = mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    const input = await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
+    fireEvent.change(input, { target: { value: message.body } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Gửi tin nhắn" })).toBeEnabled());
+    fireEvent.submit(input.closest("form")!);
+    const log = within(screen.getByRole("log", { name: "Tin nhắn" }));
+    await log.findByText(message.body);
+    expect(log.getByText("Đang gửi…")).toBeInTheDocument();
+    expect(input).toHaveValue("");
+    expect(input).toBeEnabled();
+    fireEvent.change(input, { target: { value: "Câu tiếp theo" } });
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: ["ktv-chat", "customer", "messages", "a"] });
+    });
+    expect(log.getAllByText(message.body)).toHaveLength(1);
+    await act(async () => finish(message));
+    await log.findByText("Đã gửi");
+    expect(input).toHaveValue("Câu tiếp theo");
+    await act(async () => {
+      client.setQueryData(["ktv-chat", "customer", "messages", "a"], {
+        pages: [[message]],
+        pageParams: [undefined],
+      });
+    });
+    expect(log.getAllByText(message.body)).toHaveLength(1);
+  });
+  it("keeps a failed bubble and the next draft, retries it with the original key across thread switches", async () => {
+    let fail!: (error: Error) => void;
+    const sent: { body: string; clientMessageId: string }[] = [];
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (path.endsWith("/messages") && init?.method === "POST") {
+        sent.push(JSON.parse(init.body as string));
+        if (sent.length === 1)
+          return new Promise((_resolve, reject) => {
+            fail = reject;
+          });
+        return {
+          id: "retry-confirmed",
+          thread_id: "a",
+          sender_user_id: "customer",
+          body: sent[0].body,
+          created_at: first.updated_at,
+        };
+      }
+      return original(path, init);
+    });
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    const input = await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
+    fireEvent.change(input, { target: { value: "Tin đầu" } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Gửi tin nhắn" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
+    await screen.findByText("Đang gửi…");
+    fireEvent.change(input, { target: { value: "Tin tiếp theo" } });
+    fireEvent.click(screen.getByRole("button", { name: /Thanh An/ }));
+    expect(screen.queryByText("Tin đầu")).not.toBeInTheDocument();
+    await act(async () => fail(new Error("network")));
+    fireEvent.click(screen.getByRole("button", { name: /Ngọc Mai/ }));
+    expect(input).toHaveValue("Tin tiếp theo");
+    fireEvent.click(await screen.findByRole("button", { name: "Gửi lại" }));
+    await screen.findByText("Đã gửi");
+    expect(sent[0].clientMessageId).toBe(sent[1].clientMessageId);
+    expect(input).toHaveValue("Tin tiếp theo");
+  });
   it("requires login while preserving the chosen KTV", () => {
     state.status = "anonymous";
     mount("p1");

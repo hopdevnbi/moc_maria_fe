@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/media/audio/chat-notification-053a2fe62791.mp3",
+        headers: [{ key: "Cache-Control", value: "public,max-age=31536000,immutable" }],
+      },
+      {
         source: "/demo/ktv/:path*",
         headers: [
           {
