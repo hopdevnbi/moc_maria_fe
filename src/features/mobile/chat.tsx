@@ -168,6 +168,26 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       });
     return [...saved, ...outbox.filter((m) => m.thread_id === selectedId && !seen.has(m.id))];
   }, [history.data, outbox, selectedId]);
+  useEffect(() => {
+    return client.getQueryCache().subscribe((event) => {
+      const queryKey = event.query.queryKey;
+      if (
+        event.type !== "updated" ||
+        event.action.type !== "success" ||
+        queryKey[0] !== "ktv-chat" ||
+        queryKey[1] !== user?.id ||
+        queryKey[2] !== "messages"
+      )
+        return;
+      const data = event.query.state.data as { pages: ChatMessage[][] } | undefined;
+      const confirmed = new Set(data?.pages.flat().map((m) => m.id) ?? []);
+      setOutbox((old) =>
+        old.some((m) => m.delivery === "sent" && confirmed.has(m.id))
+          ? old.filter((m) => m.delivery !== "sent" || !confirmed.has(m.id))
+          : old,
+      );
+    });
+  }, [client, user?.id]);
   const latestMessageId = history.data?.pages[0]?.at(-1)?.id;
   useEffect(() => {
     if (threads.data && incoming.inbox(threads.data, choosing ? null : selectedId)) playSound();
