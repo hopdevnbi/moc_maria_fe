@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,7 +17,7 @@ import { publicRead } from "@/features/marketplace/public-api";
 import type { Provider, ChatProvider } from "@/features/marketplace/types";
 import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
 import { DemoKtvDetail } from "@/features/mobile/demo-detail";
-import demoProfiles from "@/features/mobile/demo-ktvs.json";
+import { findNamedProfile } from "@/features/mobile/provider-slugs";
 import { bookingHref } from "@/features/mobile/links";
 import "@/features/mobile/mobile.css";
 import { ProviderRating, ProviderReviews } from "@/features/provider-reviews/reviews";
@@ -31,8 +31,9 @@ export const metadata: Metadata = {
 
 export default async function ProviderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const demo = demoProfiles.find((item) => item.id === id);
+  const demo = findNamedProfile(id);
   if (demo) {
+    if (id !== demo.urlSlug) permanentRedirect("/chuyen-vien/" + demo.urlSlug);
     const chat = await publicRead<ChatProvider[]>("/ktv-chat/providers");
     const receiver = chat.ok ? chat.data.find((c) => c.publicAlias === demo.id) : undefined;
     const [presentation] = await approvedDescriptions([

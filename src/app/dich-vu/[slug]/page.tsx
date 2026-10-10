@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { publicServiceSlug } from "@/features/mobile/public-route-ids";
 import { ArrowLeft, ArrowRight, Clock3, MapPin, ShieldCheck } from "lucide-react";
 import { publicRead } from "@/features/marketplace/public-api";
 import { formatPrice } from "@/features/marketplace/format";
@@ -19,8 +20,14 @@ export const metadata: Metadata = {
 export default async function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   if (!/^[a-z0-9-]{1,120}$/i.test(slug)) notFound();
-  const demo = demoServices.find((item) => item.service.slug === slug);
-  if (demo) return <DemoServiceDetail item={demo} />;
+  const demo = demoServices.find(
+    (item) => item.service.slug === slug || publicServiceSlug(item.service.slug) === slug,
+  );
+  if (demo) {
+    const clean = publicServiceSlug(demo.service.slug);
+    if (slug !== clean) permanentRedirect("/dich-vu/" + clean);
+    return <DemoServiceDetail item={demo} />;
+  }
   const [result, providerResult] = await Promise.all([
     publicRead<ServiceDetail>("/services/" + encodeURIComponent(slug)),
     publicRead<Provider[]>("/providers"),

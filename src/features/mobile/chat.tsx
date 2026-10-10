@@ -1,4 +1,5 @@
 "use client";
+import { providerProfileHref } from "./provider-slugs";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -707,10 +708,10 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                     {user.id === current.customer_user_id && (
                       <Link
                         className="ktv-chat-profile"
-                        href={
-                          "/chuyen-vien/" +
-                          (currentProvider?.publicAlias || current.provider_application_id)
-                        }
+                        href={providerProfileHref({
+                          id: currentProvider?.publicAlias || current.provider_application_id,
+                          publicName: recipient(current),
+                        })}
                       >
                         Xem hồ sơ <ChevronRight size={15} />
                       </Link>

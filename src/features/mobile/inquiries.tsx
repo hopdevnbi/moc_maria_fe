@@ -99,6 +99,14 @@ export function AppointmentInquiries() {
             </p>
             {item.notes && <p className="mm-preserve-lines">Ghi chú: {item.notes}</p>}
             <div className="mm-inquiry-actions">
+              {user?.id !== item.customerId &&
+                user?.roles.some((r) => r === "THERAPIST" || r === "DOCTOR_CONSULTANT") &&
+                item.location === "AT_HOME" &&
+                item.status === "CONTACTED" && (
+                  <Link className="mm-primary-cta" href="/ktv/an-toan">
+                    An toàn khi đi phục vụ
+                  </Link>
+                )}
               <Link
                 className="mm-outline-cta"
                 href={

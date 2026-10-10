@@ -1,4 +1,7 @@
 "use client";
+import { providerProfileHref } from "./provider-slugs";
+import { publicServiceSlug } from "./public-route-ids";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
@@ -60,13 +63,13 @@ export function AccountSearch() {
           ) : (
             <>
               {providers.map((p) => (
-                <Link key={p.id} href={"/chuyen-vien/" + p.id}>
+                <Link key={p.id} href={providerProfileHref(p)}>
                   <strong>{p.publicName}</strong>
                   <small>Kỹ thuật viên · {p.serviceArea || "Hà Nội"}</small>
                 </Link>
               ))}
               {services.map((s) => (
-                <Link key={s.id} href={"/dich-vu/" + s.slug}>
+                <Link key={s.id} href={"/dich-vu/" + publicServiceSlug(s.slug)}>
                   <strong>{s.name}</strong>
                   <small>Xem dịch vụ & lựa chọn KTV</small>
                 </Link>

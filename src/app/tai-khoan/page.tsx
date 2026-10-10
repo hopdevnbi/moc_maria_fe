@@ -44,6 +44,12 @@ function AccountContent() {
   const actions = technician
     ? [
         {
+          href: "/ktv/an-toan",
+          title: "An toàn khi đi phục vụ",
+          text: "Tự bật GPS, check-in và SOS khi cần hỗ trợ",
+          Icon: ShieldCheck,
+        },
+        {
           href: "/tin-nhan",
           title: "Tin nhắn khách hàng",
           text: "Trả lời, tư vấn và quản lý chặn",
@@ -149,6 +155,11 @@ function AccountContent() {
       {admin && (
         <Link className="mm-primary-cta" href="/quan-tri">
           <ShieldCheck size={18} /> Mở khu vực quản trị
+        </Link>
+      )}
+      {user.roles.includes("SUPER_ADMIN") && (
+        <Link className="mm-primary-cta" href="/quan-tri/an-toan-ktv">
+          <ShieldCheck size={18} /> Theo dõi an toàn KTV
         </Link>
       )}
       {user.roles.includes("SUPER_ADMIN") && (
