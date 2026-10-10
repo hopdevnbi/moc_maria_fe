@@ -24,6 +24,7 @@ import { usePrivateData } from "./private-api";
 import { CourseProgramAdmin } from "./training-sessions";
 import type { Application, Course } from "./types";
 import { KtvAvatar } from "./ktv-avatar";
+import { resolveAdminKtvAvatar } from "./ktv-admin-avatar-source";
 import {
   countKtvStatus,
   filterKtvApplications,
@@ -297,7 +298,11 @@ export function KtvAdminDirectory() {
                         <tr key={item.id}>
                           <td data-label="KTV">
                             <div className="mm-ktv-person">
-                              <KtvAvatar name={item.publicName} src={item.avatarUrl} />
+                              <KtvAvatar
+                                name={item.publicName}
+                                src={resolveAdminKtvAvatar(item).src}
+                                illustrative={resolveAdminKtvAvatar(item).illustrative}
+                              />
                               <span className="mm-ktv-person-copy">
                                 <strong>{item.publicName}</strong>
                                 <small>Hồ sơ #{item.id.slice(0, 8).toUpperCase()}</small>

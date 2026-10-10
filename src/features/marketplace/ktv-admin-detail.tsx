@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import {
@@ -14,6 +14,7 @@ import { applicationLabels } from "./format";
 import { usePrivateData } from "./private-api";
 import { ApplicationReview } from "./training-admin";
 import { KtvAvatar } from "./ktv-avatar";
+import { resolveAdminKtvAvatar } from "./ktv-admin-avatar-source";
 import type { Application, Course } from "./types";
 import "./ktv-admin.css";
 
@@ -48,7 +49,12 @@ export function AdminKtvDetail({ id }: { id: string }) {
         <>
           <div className="mm-ktv-profile-hero">
             <div className="mm-ktv-profile-photo">
-              <KtvAvatar name={item.publicName} src={item.avatarUrl} size="large" />
+              <KtvAvatar
+                name={item.publicName}
+                src={resolveAdminKtvAvatar(item).src}
+                illustrative={resolveAdminKtvAvatar(item).illustrative}
+                size="large"
+              />
             </div>
             <div className="mm-ktv-profile-copy">
               <span className="mm-ktv-overline">

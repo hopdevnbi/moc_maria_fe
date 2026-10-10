@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { adminVisibleGroups } from "./admin-shell";
 
 function asUser(roles: string[], permissions: string[]) {
@@ -16,6 +16,7 @@ describe("Admin sidebar RBAC navigation", () => {
       "/quan-tri/ktv",
       "/quan-tri/dich-vu",
       "/quan-tri/co-so",
+      "/quan-tri/ho-so",
     ]);
     expect(items.filter((item) => !item.href).map((item) => item.label)).toEqual([
       "Khách hàng",
@@ -28,7 +29,10 @@ describe("Admin sidebar RBAC navigation", () => {
     const groups = adminVisibleGroups(
       asUser(["RECEPTIONIST"], ["admin.portal", "customers.manage"]),
     );
-    expect(groups.flatMap((group) => group.items).map((item) => item.label)).toEqual(["Tổng quan"]);
+    expect(groups.flatMap((group) => group.items).map((item) => item.label)).toEqual([
+      "Tổng quan",
+      "Hồ sơ cá nhân",
+    ]);
   });
 
   it("shows operational modules only with staff.manage", () => {
@@ -38,6 +42,7 @@ describe("Admin sidebar RBAC navigation", () => {
       "/quan-tri/ktv",
       "/quan-tri/dich-vu",
       "/quan-tri/co-so",
+      "/quan-tri/ho-so",
     ]);
   });
 
