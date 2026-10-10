@@ -7,3 +7,7 @@ Public profiles now use `/chuyen-vien/linh-anh`; booking uses `/dat-lich?provide
 All public navigation sources use the helpers: homepage, profile, service details, account search, chat profile link and booking CTA. Internal seed filenames/IDs are retained for compatibility; this change does not rename database identities or pretend new operational approvals.
 
 Verify: all ten slugs are unique, legacy aliases round-trip to exact internal IDs, services/variants resolve correctly, old bookmarked URLs redirect, and the selected KTV remains selected on desktop/mobile booking.
+
+## Production verification
+
+Both owner-provided legacy URLs navigate to named Linh Anh aliases. Booking preselection and clean sign-in return link verified on production; 390px has no horizontal overflow. Internal KTV receiver and account IDs remain intact. FE release 56fe71d279f2b3ed68a532e1405a67e69db77194; deployment 6978653776.
