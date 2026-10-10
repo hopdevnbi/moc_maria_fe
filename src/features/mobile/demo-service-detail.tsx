@@ -1,3 +1,4 @@
+import { providerProfileHref } from "./provider-slugs";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock3, MapPin, ShieldAlert, Sparkles } from "lucide-react";
@@ -97,7 +98,7 @@ export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
                 href={
                   provider.receiver
                     ? chatHref(provider.receiver.id, item.service.id)
-                    : "/chuyen-vien/" + provider.id
+                    : providerProfileHref(provider)
                 }
                 aria-label={
                   provider.receiver

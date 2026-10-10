@@ -437,7 +437,7 @@ describe("private KTV chat interactions", () => {
     ).toContain("Massage cổ vai gáy");
     expect(screen.getByRole("link", { name: /Xem hồ sơ/ })).toHaveAttribute(
       "href",
-      "/chuyen-vien/demo-ktv-01",
+      "/chuyen-vien/linh-anh",
     );
   });
   it("inserts emoji at the cursor without sending until the customer submits", async () => {

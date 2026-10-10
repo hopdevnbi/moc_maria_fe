@@ -1,4 +1,6 @@
 "use client";
+import { publicServiceSlug } from "./public-route-ids";
+import { providerProfileHref } from "./provider-slugs";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -145,7 +147,7 @@ export function ProviderTile({ provider }: { provider: Provider }) {
       : null;
   return (
     <article className="mm-provider-card">
-      <Link href={"/chuyen-vien/" + provider.id} className="mm-provider-main">
+      <Link href={providerProfileHref(provider)} className="mm-provider-main">
         <div className="mm-avatar">
           {safeAvatar ? (
             <Image
@@ -192,7 +194,7 @@ export function ProviderTile({ provider }: { provider: Provider }) {
         </div>
       )}
       <div className="mm-tile-actions">
-        <Link className="mm-subtle-action" href={"/chuyen-vien/" + provider.id}>
+        <Link className="mm-subtle-action" href={providerProfileHref(provider)}>
           Xem hồ sơ <ArrowUpRight size={16} />
         </Link>
         <Link className="mm-tile-book" href={bookingHref({ provider: provider.id })}>
@@ -237,7 +239,7 @@ export function ServiceTile({ item, eager = false }: { item: ServiceItem; eager?
       <div className="mm-service-body">
         <span className="mm-overline">THƯ GIÃN & CHĂM SÓC</span>
         <h3>
-          <Link href={"/dich-vu/" + encodeURIComponent(item.service.slug)}>
+          <Link href={"/dich-vu/" + encodeURIComponent(publicServiceSlug(item.service.slug))}>
             {item.service.name}
           </Link>
         </h3>
@@ -258,7 +260,7 @@ export function ServiceTile({ item, eager = false }: { item: ServiceItem; eager?
           <Link
             href={
               item.isDemo
-                ? "/dich-vu/" + encodeURIComponent(item.service.slug)
+                ? "/dich-vu/" + encodeURIComponent(publicServiceSlug(item.service.slug))
                 : bookingHref({ service: item.service.id })
             }
             aria-label={"Chọn dịch vụ " + item.service.name}

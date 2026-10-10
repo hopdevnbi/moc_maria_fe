@@ -1,0 +1,223 @@
+.mm-safety {
+  display: grid;
+  gap: 20px;
+  padding-bottom: 24px;
+  color: #274a39;
+}
+.mm-safety h2 {
+  font-size: 24px;
+  line-height: 1.3;
+  margin: 0 0 12px;
+}
+.mm-safety h3 {
+  font-size: 18px;
+  margin: 12px 0;
+}
+.mm-safety p {
+  line-height: 1.65;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.mm-safety p svg,
+.mm-safety h2 svg,
+.mm-safety h3 svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+.safety-intro {
+  display: flex;
+  gap: 16px;
+  padding: 22px;
+  background: #eaf1e5;
+  border-radius: 20px;
+}
+.safety-intro > svg {
+  flex-shrink: 0;
+}
+.safety-web-note,
+.safety-warning {
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff4dd;
+  color: #705326;
+  border: 1px solid #edd7b2;
+}
+.safety-card {
+  min-width: 0;
+  border: 1px solid #dce5d9;
+  border-radius: 22px;
+  background: #fff;
+  padding: 24px;
+}
+.safety-card-heading {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.safety-pill {
+  padding: 8px 12px;
+  border-radius: 30px;
+  font-size: 13px;
+  background: #f8edd6;
+  color: #805d24;
+}
+.safety-pill.fresh {
+  background: #e3f2e7;
+  color: #21674a;
+}
+.safety-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0;
+}
+.mm-safety form {
+  display: grid;
+  gap: 18px;
+}
+.mm-safety label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.mm-safety select,
+.mm-safety textarea {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid #d9e3d7;
+  border-radius: 12px;
+  background: #fff;
+  padding: 13px;
+  color: #274a39;
+  font: inherit;
+}
+.mm-safety .safety-consent {
+  display: flex;
+  align-items: flex-start;
+  font-weight: 400;
+  line-height: 1.65;
+}
+.safety-consent input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin: 4px 4px 0 0;
+  accent-color: #21674a;
+}
+.safety-sos-box {
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #edccc7;
+  background: #fff6f3;
+  border-radius: 16px;
+  color: #823a33;
+}
+.safety-sos {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: #b63732;
+  color: white;
+  padding: 13px 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mm-safety button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.mm-safety button:focus-visible,
+.mm-safety a:focus-visible,
+.mm-safety input:focus-visible,
+.mm-safety select:focus-visible,
+.mm-safety textarea:focus-visible {
+  outline: 3px solid #709b81;
+  outline-offset: 3px;
+}
+.safety-fine {
+  font-size: 13px;
+  color: #647b6b;
+}
+.safety-history {
+  border-top: 1px solid #dce5d9;
+  padding: 18px 0;
+}
+.safety-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.safety-stats > div {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #eaf1e5;
+}
+.safety-stats strong {
+  font-size: 30px;
+}
+.safety-stats span {
+  font-size: 13px;
+}
+.safety-stats .urgent {
+  background: #fde6e1;
+  color: #a4312c;
+}
+.safety-monitor-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.safety-incident {
+  border: 2px solid #d57c70;
+}
+.safety-map {
+  height: 420px;
+  width: 100%;
+  border-radius: 16px;
+  z-index: 0;
+  background: #edf1e9;
+}
+@media (max-width: 700px) {
+  .safety-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+  .safety-intro {
+    padding: 18px;
+  }
+  .mm-safety h2 {
+    font-size: 21px;
+  }
+  .safety-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .safety-monitor-list {
+    grid-template-columns: 1fr;
+  }
+  .safety-map {
+    height: 320px;
+  }
+  .safety-actions > * {
+    flex: 1 1 180px;
+  }
+  .mm-safety .mm-primary-cta {
+    white-space: normal;
+    text-align: center;
+  }
+  .safety-sos {
+    width: 100%;
+  }
+  .safety-consent span {
+    min-width: 0;
+  }
+}

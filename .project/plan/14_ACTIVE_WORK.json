@@ -75,7 +75,11 @@
       "agent": "Codex current chat",
       "status": "RELEASED",
       "stage": "D2 — practical criteria / derived attendance / assessment history / renewal",
-      "taskIds": ["P03-T28", "P03-T29", "P03-T30"],
+      "taskIds": [
+        "P03-T28",
+        "P03-T29",
+        "P03-T30"
+      ],
       "backendBranch": "codex/production-integration",
       "frontendBranch": "codex/platform-integration",
       "frontendWorktree": "C:/Users/User/.codex/worktrees/moc-maria-platform/moc_maria_fe",
@@ -108,7 +112,15 @@
       "agent": "Codex current chat",
       "status": "RELEASED",
       "stage": "E1 — availability/schema and booking transaction contract",
-      "taskIds": ["P04-T01", "P04-T03", "P04-T04", "P04-T11", "P04-T13", "P04-T14", "P04-T25"],
+      "taskIds": [
+        "P04-T01",
+        "P04-T03",
+        "P04-T04",
+        "P04-T11",
+        "P04-T13",
+        "P04-T14",
+        "P04-T25"
+      ],
       "backendBranch": "codex/production-integration",
       "frontendBranch": "codex/platform-integration",
       "frontendWorktree": "C:/Users/User/.codex/worktrees/moc-maria-platform/moc_maria_fe",
@@ -206,7 +218,13 @@
       "agent": "Codex customer KTV blocking and verified reviews 2026-10-09",
       "status": "RELEASED",
       "stage": "F2 — reciprocal timed blocking and service ratings",
-      "taskIds": ["P06-T19", "P06-T25", "P06-T27", "P06-T26", "P03-T24"],
+      "taskIds": [
+        "P06-T19",
+        "P06-T25",
+        "P06-T27",
+        "P06-T26",
+        "P03-T24"
+      ],
       "frontendBranch": "codex/chat-blocks-reviews",
       "backendBranch": "codex/chat-blocks-reviews",
       "ownedPaths": [
@@ -303,7 +321,11 @@
       "status": "RELEASED",
       "frontendBranch": "codex/chat-instant-send-sound",
       "frontendWorktree": "C:\\Users\\admin\\Desktop\\DỰ ÁN GIÁO LÝ VIÊN\\moc_maria_fe_chat",
-      "taskIds": ["P06-T14", "P06-T15", "P06-T26"],
+      "taskIds": [
+        "P06-T14",
+        "P06-T15",
+        "P06-T26"
+      ],
       "ownedPaths": [
         "FE/src/features/mobile/chat*",
         "FE/public/media/audio/**",
@@ -436,6 +458,24 @@
         "validation": "Full quality and PR CI PASS: 61 tests, format/lint/typecheck/build. Production browser client navigation Mai Anh to home to Bao Ngoc: URL demo-ktv-04 selects Bao Ngoc only, compatible services visible. Desktop 1440 and mobile 390 correct selection, no overflow. No production appointment submitted.",
         "releasedAt": "2026-10-10T05:32:14.941Z"
       }
+    },
+    {
+      "agent": "Codex KTV safety tracking 2026-10-10",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/ktv-safety-tracking",
+      "backendBranch": "codex/ktv-safety-tracking",
+      "ownedPaths": [
+        "BE/src/modules/ktv-safety/**",
+        "BE/src/app.module.ts module registration only",
+        "BE/test/ktv-safety.e2e-spec.ts",
+        "FE/src/features/safety/**",
+        "FE/src/app/ktv/an-toan and quan-tri/an-toan-ktv",
+        "FE/src/app/tai-khoan/page.tsx additive safety links only",
+        "FE/src/features/mobile/inquiries.tsx additive provider safety link only",
+        "Own docs and Plan release evidence",
+        "FE public route aliases/provider-slugs integration from remote d33f44d; mobile links/profile/service/booking/chat routes and tests; preserve internal IDs"
+      ],
+      "note": "Voluntary web location sharing for home visits; SUPER_ADMIN private monitoring, stale status, check-in/out, SOS, encrypted latest point and retention. Read-only inquiry association. Preserve other ownership and all booking/eligibility behavior."
     }
   ]
 }
