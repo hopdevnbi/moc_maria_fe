@@ -652,7 +652,15 @@
         "imageDigest": "sha256:35295f4b7fb0213b9cd76cc6da9039f7910459d5ffa42e5977b0d2c30f1656c1",
         "migration": "PrivateKtvChat1791659000000",
         "frontendDeployment": "6959386754",
-        "test": "BE 25 unit + 55 disposable PostgreSQL integrations; migration rollback/reapply; FE 17 unit/interaction tests, quality/build and 320/390px browser QA; production health200/chat401/alias verified"
+        "test": "BE 25 unit + 55 disposable PostgreSQL integrations; migration rollback/reapply; FE 17 unit/interaction tests, quality/build and 320/390px browser QA; production health200/chat401/alias verified",
+        "instantSoundRelease": {
+          "frontend": "7b74524c85bf9f4c90bf5b69b40bbc2ec5e7789c",
+          "frontendDeployment": "6973619586",
+          "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/8",
+          "test": "33 FE tests; format/lint/typecheck/production build and PR/main CI PASS. Live Enter shows pending bubble before server response; KTV reply received; mute survives reload; mobile320/390 no page overflow and composer visible. Audio HTTP200/audio-mpeg/16128 bytes/exact SHA256; Vercel cache HIT and public max-age31536000 immutable; browser resource inventory confirms MP3 fetch.",
+          "businessData": "Two explicitly labelled QA messages in existing owner-created customer/Linh Anh thread. No backend/schema, booking, review or eligibility changes.",
+          "limits": "Incoming transport remains REST polling5s active/8s inbox. Sound applies while chat page mounted after user gesture; no background push or recipient-delivered claim."
+        }
       },
       "consultationEvidence": {
         "date": "2026-10-10",
@@ -678,7 +686,15 @@
         "imageDigest": "sha256:35295f4b7fb0213b9cd76cc6da9039f7910459d5ffa42e5977b0d2c30f1656c1",
         "migration": "PrivateKtvChat1791659000000",
         "frontendDeployment": "6959386754",
-        "test": "BE 25 unit + 55 disposable PostgreSQL integrations; migration rollback/reapply; FE 17 unit/interaction tests, quality/build and 320/390px browser QA; production health200/chat401/alias verified"
+        "test": "BE 25 unit + 55 disposable PostgreSQL integrations; migration rollback/reapply; FE 17 unit/interaction tests, quality/build and 320/390px browser QA; production health200/chat401/alias verified",
+        "instantSoundRelease": {
+          "frontend": "7b74524c85bf9f4c90bf5b69b40bbc2ec5e7789c",
+          "frontendDeployment": "6973619586",
+          "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/8",
+          "test": "33 FE tests; format/lint/typecheck/production build and PR/main CI PASS. Live Enter shows pending bubble before server response; KTV reply received; mute survives reload; mobile320/390 no page overflow and composer visible. Audio HTTP200/audio-mpeg/16128 bytes/exact SHA256; Vercel cache HIT and public max-age31536000 immutable; browser resource inventory confirms MP3 fetch.",
+          "businessData": "Two explicitly labelled QA messages in existing owner-created customer/Linh Anh thread. No backend/schema, booking, review or eligibility changes.",
+          "limits": "Incoming transport remains REST polling5s active/8s inbox. Sound applies while chat page mounted after user gesture; no background push or recipient-delivered claim."
+        }
       }
     },
     {
@@ -821,7 +837,15 @@
         "migration": "ChatBlocksReviews1791662000000",
         "frontendDeployment": "6960250016",
         "test": "25 BE unit +65 disposable PostgreSQL integrations; migration rollback/reapply; FE21 tests/full quality/build; 320/390px local browser QA; production schema16→17, health200/private401/public ratings200; backend/FE CI and production Vercel deployment PASS",
-        "businessData": "No production fixtures or approval/booking writes. Real eligible KTV count0. Verified review submission depends on existing separately owned E2 completion workflow."
+        "businessData": "No production fixtures or approval/booking writes. Real eligible KTV count0. Verified review submission depends on existing separately owned E2 completion workflow.",
+        "instantSoundRelease": {
+          "frontend": "7b74524c85bf9f4c90bf5b69b40bbc2ec5e7789c",
+          "frontendDeployment": "6973619586",
+          "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/8",
+          "test": "33 FE tests; format/lint/typecheck/production build and PR/main CI PASS. Live Enter shows pending bubble before server response; KTV reply received; mute survives reload; mobile320/390 no page overflow and composer visible. Audio HTTP200/audio-mpeg/16128 bytes/exact SHA256; Vercel cache HIT and public max-age31536000 immutable; browser resource inventory confirms MP3 fetch.",
+          "businessData": "Two explicitly labelled QA messages in existing owner-created customer/Linh Anh thread. No backend/schema, booking, review or eligibility changes.",
+          "limits": "Incoming transport remains REST polling5s active/8s inbox. Sound applies while chat page mounted after user gesture; no background push or recipient-delivered claim."
+        }
       }
     },
     {

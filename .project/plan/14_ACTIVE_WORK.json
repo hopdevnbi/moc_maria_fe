@@ -318,7 +318,7 @@
     },
     {
       "agent": "Codex instant chat and notification sound 2026-10-10",
-      "status": "ACTIVE",
+      "status": "RELEASED",
       "frontendBranch": "codex/chat-instant-send-sound",
       "frontendWorktree": "C:\\Users\\admin\\Desktop\\DỰ ÁN GIÁO LÝ VIÊN\\moc_maria_fe_chat",
       "taskIds": [
@@ -333,7 +333,15 @@
         "Plan own scoped evidence",
         "FE/next.config.ts (versioned chat audio cache header only)"
       ],
-      "note": "Immediate local outgoing message rendering, idempotent retry/reconciliation and incoming notification sound. Existing E2a booking and shared socket scope preserved."
+      "note": "Immediate local outgoing message rendering, idempotent retry/reconciliation and incoming notification sound. Existing E2a booking and shared socket scope preserved.",
+      "release": {
+        "frontend": "7b74524c85bf9f4c90bf5b69b40bbc2ec5e7789c",
+        "frontendDeployment": "6973619586",
+        "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/8",
+        "test": "33 FE tests; format/lint/typecheck/production build and PR/main CI PASS. Live Enter shows pending bubble before server response; KTV reply received; mute survives reload; mobile320/390 no page overflow and composer visible. Audio HTTP200/audio-mpeg/16128 bytes/exact SHA256; Vercel cache HIT and public max-age31536000 immutable; browser resource inventory confirms MP3 fetch.",
+        "businessData": "Two explicitly labelled QA messages in existing owner-created customer/Linh Anh thread. No backend/schema, booking, review or eligibility changes.",
+        "limits": "Incoming transport remains REST polling5s active/8s inbox. Sound applies while chat page mounted after user gesture; no background push or recipient-delivered claim."
+      }
     }
   ]
 }
