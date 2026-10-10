@@ -10,6 +10,7 @@ export default function AdminPage() {
     <AdminShell title="Chăm sóc từng trải nghiệm.">
       <div className="market-grid">
         {[
+          { href: "/quan-tri/thong-bao", title: "Email nhận thông báo", text: "Thiết lập các địa chỉ email nhận thông báo khi khách đặt lịch." },
           {
             href: "/quan-tri/dich-vu",
             title: "Dịch vụ & bảng giá",
