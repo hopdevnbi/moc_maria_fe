@@ -7,6 +7,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { MobileHeader, MobileNavigation } from "./experience";
 import { BookingReassurance } from "./booking-reassurance";
+import { bookingHref, chatHref } from "./links";
 import { MOC_MARIA_PRIMARY_ADDRESS } from "./booking-location";
 import { formatPrice } from "@/features/marketplace/format";
 import "./booking-location.css";
@@ -171,7 +172,7 @@ export function AppointmentRequest({
             </Link>
             <Link
               className="mm-outline-cta"
-              href={"/tin-nhan?provider=" + (chosen?.chatProviderId || chosen?.id)}
+              href={chatHref(chosen?.id || chosen?.chatProviderId || "")}
             >
               Chat với KTV
             </Link>
@@ -404,9 +405,7 @@ export function AppointmentRequest({
                   }}
                   href={
                     "/dang-nhap?returnTo=" +
-                    encodeURIComponent(
-                      "/dat-lich" + "?provider=" + providerId + "&service=" + serviceId,
-                    )
+                    encodeURIComponent(bookingHref(providerId, serviceId || undefined))
                   }
                 >
                   Đăng nhập để gửi yêu cầu <ArrowRight size={17} />
