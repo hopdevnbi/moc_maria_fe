@@ -405,7 +405,9 @@ export function AppointmentRequest({
                   }}
                   href={
                     "/dang-nhap?returnTo=" +
-                    encodeURIComponent(bookingHref(providerId, serviceId || undefined))
+                    encodeURIComponent(
+                      bookingHref({ provider: providerId, service: serviceId || undefined }),
+                    )
                   }
                 >
                   Đăng nhập để gửi yêu cầu <ArrowRight size={17} />
