@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { LogOut, UserRound } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 export function AccountNav() {
   const { status, user, logout } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   if (status === "loading") {
     return <div className="h-10 w-32 animate-pulse rounded-full bg-white/60" />;
@@ -41,12 +44,25 @@ export function AccountNav() {
       </Link>
       <button
         type="button"
-        onClick={() => void logout()}
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setError("");
+          try {
+            await logout();
+          } catch {
+            setError("Chưa đăng xuất được. Thử lại.");
+          } finally {
+            setBusy(false);
+          }
+        }}
         aria-label="Đăng xuất"
         className="rounded-full border border-[var(--moc-border)] bg-white/85 p-2.5 text-[var(--moc-muted)]"
       >
         <LogOut size={16} />
+        <span>{busy ? "Đang thoát..." : "Đăng xuất"}</span>
       </button>
+      {error && <span role="alert">{error}</span>}
     </div>
   );
 }

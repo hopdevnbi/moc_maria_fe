@@ -106,6 +106,9 @@ export function MobileHeader() {
           <Link href="/tin-nhan">Chat KTV</Link>
           <Link href="/tro-thanh-ktv">Trở thành KTV</Link>
           <Link href="/hoi-vien">Hội viên</Link>
+          <Link href="/dat-lich" className="mm-header-booking">
+            <CalendarDays size={17} /> Đặt lịch ngay
+          </Link>
         </nav>
         <div className="mm-account">
           <AccountNav />

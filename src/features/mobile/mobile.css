@@ -1851,3 +1851,44 @@
     padding: 17px;
   }
 }
+.mm-header .mm-desktop-menu {
+  gap: 18px;
+}
+.mm-header .mm-header-booking {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 12px;
+  background: #315f46;
+  color: #fffefb;
+  padding: 12px 15px;
+  min-height: 44px;
+  box-shadow: 0 4px 12px #315f4626;
+  white-space: nowrap;
+}
+.mm-header .mm-header-booking:hover {
+  background: #234b38;
+  color: white;
+}
+.mm-account button[aria-label="Đăng xuất"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+@media (min-width: 701px) and (max-width: 1100px) {
+  .mm-header .mm-desktop-menu {
+    gap: 10px;
+    font-size: 11px;
+  }
+  .mm-header .mm-header-booking {
+    padding: 10px;
+  }
+  .mm-header-inner {
+    gap: 10px;
+  }
+  .mm-account a {
+    max-width: 140px;
+    overflow-wrap: anywhere;
+  }
+}

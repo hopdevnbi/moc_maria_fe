@@ -158,3 +158,221 @@
     padding: 20px;
   }
 }
+.mm-account-toolbar,
+.mm-inquiry-actions,
+.mm-inquiry-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mm-account-toolbar {
+  padding: 14px 18px;
+  border: 1px solid #dce5d7;
+  border-radius: 16px;
+  background: #fffefb;
+}
+.mm-account-toolbar a {
+  padding: 10px;
+  color: #315f46;
+  font-weight: 600;
+  min-height: 44px;
+}
+.mm-account-signout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #315f46;
+  color: white;
+  margin-left: auto;
+  cursor: pointer;
+}
+.mm-account-booking {
+  justify-self: start;
+  min-height: 48px;
+  box-shadow: 0 6px 20px #315f4630;
+}
+.mm-description-editor {
+  display: grid;
+  gap: 14px;
+}
+.mm-description-editor p {
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.mm-description-editor form,
+.mm-profile-edit {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.mm-description-editor label,
+.mm-profile-edit label {
+  display: grid;
+  gap: 8px;
+  color: #315f46;
+  font-weight: 600;
+  font-size: 13px;
+}
+.mm-description-editor :is(textarea, input, select),
+.mm-profile-edit input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d9e3d2;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  color: #233b30;
+  font: inherit;
+}
+.mm-description-editor textarea {
+  resize: vertical;
+}
+.mm-description-editor small {
+  color: #708171;
+  line-height: 1.6;
+}
+.mm-preserve-lines {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.mm-inquiry-heading {
+  justify-content: space-between;
+}
+.mm-inquiry-card {
+  border-top: 1px solid #dce5d7;
+  padding-top: 20px;
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+.mm-inquiry-card p {
+  line-height: 1.7;
+  margin: 0;
+}
+.mm-inquiry-card .mm-account-role {
+  justify-self: start;
+}
+.mm-quick-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.mm-quick-results a {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid #dce5d7;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.mm-quick-results small {
+  color: #708171;
+}
+#doi-mat-khau,
+#thong-tin-tai-khoan,
+#mo-ta-ktv,
+#yeu-cau-dat-lich {
+  scroll-margin-top: 100px;
+}
+.mm-request-providers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mm-request-provider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #dce5d7;
+  border-radius: 14px;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+}
+.mm-request-provider img {
+  width: 56px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.mm-request-provider > span {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.mm-request-provider small {
+  color: #708171;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.mm-request-provider.selected,
+.mm-request-location .selected {
+  border: 2px solid #45785a;
+  background: #eff6ec;
+}
+.mm-request-provider > svg {
+  flex-shrink: 0;
+}
+.mm-request-search {
+  margin-bottom: 16px;
+}
+.mm-request-price {
+  margin-top: 14px;
+  color: #315f46;
+  font-weight: 600;
+}
+.mm-request-location {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.mm-request-location button {
+  flex: 1;
+  min-height: 48px;
+  border: 1px solid #dce5d7;
+  border-radius: 12px;
+  background: white;
+  padding: 12px;
+  cursor: pointer;
+}
+.mm-request-form .mm-booking-field {
+  margin-top: 16px;
+}
+.mm-request-form .mm-booking-summary {
+  align-self: start;
+}
+.mm-request-form input,
+.mm-request-form textarea,
+.mm-request-form select {
+  font-size: 16px;
+}
+@media (max-width: 700px) {
+  .mm-request-providers,
+  .mm-quick-results {
+    grid-template-columns: 1fr;
+  }
+  .mm-account-signout {
+    margin-left: 0;
+  }
+  .mm-request-location {
+    flex-direction: column;
+  }
+  .mm-account-toolbar {
+    gap: 6px;
+  }
+  .mm-inquiry-actions > * {
+    flex: 1;
+    justify-content: center;
+  }
+}

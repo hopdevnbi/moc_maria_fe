@@ -391,6 +391,25 @@
         "scope": "UI only; existing 10 owner photos with 480/960 WebP CDN variants reused; no service data, prices, eligibility, booking/chat or backend change.",
         "releasedAt": "2026-10-10T03:34:03.017Z"
       }
+    },
+    {
+      "agent": "Codex account booking profile review 2026-10-10",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/account-booking-profile-review",
+      "backendBranch": "codex/account-booking-profile-review",
+      "ownedPaths": [
+        "FE/src/features/mobile/account*, booking*, experience.tsx (header only), data.ts (approved presentation overlay)",
+        "FE/src/features/auth/components/AccountNav.tsx",
+        "FE/src/app/tai-khoan/page.tsx; dat-lich/page.tsx; new review/inquiry pages",
+        "BE new provider-presentation and consultation-requests modules only",
+        "BE/src/app.module.ts (module registration only)",
+        "Own scoped tests/docs/Plan evidence",
+        "FE/src/features/mobile/profile-editor*, presentation-*, inquiries*, appointment-request*, account-search*; seed KTV request CTA only",
+        "FE/src/app/api/mobile/directory and quan-tri/mo-ta-ktv; chuyen-vien/[id] approved description overlay; ktv/ho-so editor embed",
+        "BE/src/modules/customer-experience/**; own test/customer-experience.e2e-spec.ts",
+        "BE/src/modules/ktv-chat/ktv-chat.module.ts (read-only directory service export only)"
+      ],
+      "note": "Owner explicitly requested account/logout, SUPER_ADMIN moderated description revisions and Hanoi appointment flow. Preserve E2a booking transactions, provider eligibility locks and all concurrent main changes. Separate presentation revision and appointment inquiry stores; no fake approvals/certificates/reservations, no writes to legacy booking modules."
     }
   ]
 }

@@ -9,7 +9,11 @@ import {
   Flower2,
   UserRound,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
+import { CustomerProfileEditor, ProviderDescriptionEditor } from "@/features/mobile/profile-editor";
+import { AppointmentInquiries } from "@/features/mobile/inquiries";
+import { AccountSearch } from "@/features/mobile/account-search";
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -30,7 +34,7 @@ export default function AccountPage() {
   );
 }
 function AccountContent() {
-  const { user, logoutAll } = useAuth();
+  const { user, logout, logoutAll } = useAuth();
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   if (!user) return null;
@@ -51,7 +55,12 @@ function AccountContent() {
           text: "Xem các ca đã được phân công",
           Icon: CalendarDays,
         },
-        { href: "/ktv/ho-so", title: "Hồ sơ KTV", text: "Theo dõi hồ sơ của bạn", Icon: UserRound },
+        {
+          href: "#mo-ta-ktv",
+          title: "Mô tả & hồ sơ KTV",
+          text: "Cập nhật giới thiệu và gửi super admin duyệt",
+          Icon: UserRound,
+        },
         {
           href: "/ktv/dao-tao",
           title: "Đào tạo & chứng nhận",
@@ -109,6 +118,36 @@ function AccountContent() {
           <ArrowRight size={16} />
         </Link>
       </section>
+      <div className="mm-account-toolbar">
+        <Link href="#thong-tin-tai-khoan">Thông tin của tôi</Link>
+        <Link href="#doi-mat-khau">Đổi mật khẩu</Link>
+        <button
+          type="button"
+          className="mm-account-signout"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            setNotice("");
+            try {
+              await logout();
+            } catch {
+              setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <LogOut size={17} />
+          {busy ? "Đang đăng xuất..." : "Đăng xuất"}
+        </button>
+      </div>
+      {notice && <p role="alert">{notice}</p>}
+      {!technician && (
+        <Link className="mm-primary-cta mm-account-booking" href="/dat-lich">
+          <CalendarDays size={20} /> Đặt lịch chăm sóc <ArrowRight size={17} />
+        </Link>
+      )}
+      {!technician && <AccountSearch />}
       <nav className="mm-account-actions" aria-label="Tiện ích tài khoản">
         {actions.map(({ href, title, text, Icon }) => (
           <Link href={href} key={title}>
@@ -126,6 +165,11 @@ function AccountContent() {
           <ShieldCheck size={18} /> Mở khu vực quản trị
         </Link>
       )}
+      {user.roles.includes("SUPER_ADMIN") && (
+        <Link className="mm-outline-cta" href="/quan-tri/mo-ta-ktv">
+          Duyệt mô tả KTV
+        </Link>
+      )}
       {customer && (
         <Link className="mm-text-link" href="/hoi-vien">
           Hội viên & quyền lợi của bạn <ArrowRight size={15} />
@@ -136,8 +180,10 @@ function AccountContent() {
           <OwnProviderPlanning />
         </div>
       )}
+      <AppointmentInquiries />
+      {technician && <ProviderDescriptionEditor />}
       <section className="mm-account-settings">
-        <article className="mm-account-profile">
+        <article className="mm-account-profile" id="thong-tin-tai-khoan">
           <h2>Thông tin tài khoản</h2>
           <p className="mm-account-role">
             {technician ? "Kỹ thuật viên" : customer ? "Khách hàng" : "Thành viên Mộc Maria"}
@@ -156,6 +202,7 @@ function AccountContent() {
               <dd>{user.phone || "Chưa cập nhật"}</dd>
             </div>
           </dl>
+          {customer && <CustomerProfileEditor />}
           {user.mustChangePassword && (
             <p className="mm-account-notice">
               Bạn đang dùng mật khẩu ban đầu. Hãy đổi mật khẩu của riêng mình.
@@ -180,7 +227,9 @@ function AccountContent() {
           </button>
           {notice && <p role="alert">{notice}</p>}
         </article>
-        <ChangePasswordForm />
+        <div id="doi-mat-khau">
+          <ChangePasswordForm />
+        </div>
       </section>
     </main>
   );
