@@ -34,6 +34,52 @@ function mount() {
   render(<AppointmentRequest providers={providers} services={demoServices} initial={{}} />);
 }
 describe("appointment request flow", () => {
+  it.each([providers[3].id, providers[3].chatProviderId])(
+    "preselects the linked KTV by %s and allows an explicit change",
+    (provider) => {
+      render(
+        <AppointmentRequest providers={providers} services={demoServices} initial={{ provider }} />,
+      );
+      expect(screen.getByRole("button", { name: /Bảo Ngọc/ })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.queryByLabelText("Tìm kỹ thuật viên")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Mai Anh/ })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Đổi KTV" }));
+      fireEvent.click(screen.getByRole("button", { name: /Mai Anh/ }));
+      expect(screen.getByRole("button", { name: /Mai Anh/ })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    },
+  );
+  it("does not let an older sign-in draft override a newly linked provider", async () => {
+    sessionStorage.setItem(
+      "mocmaria.booking.signin-draft",
+      JSON.stringify({
+        providerId: providers[1].id,
+        serviceId: "demo-neck",
+        location: "AT_HOME",
+        address: "12 Nguyễn Trãi, Hà Nội",
+        savedAt: Date.now(),
+      }),
+    );
+    render(
+      <AppointmentRequest
+        providers={providers}
+        services={demoServices}
+        initial={{ provider: providers[3].id }}
+      />,
+    );
+    await waitFor(() => expect(sessionStorage.getItem("mocmaria.booking.signin-draft")).toBeNull());
+    expect(screen.getByRole("button", { name: /Bảo Ngọc/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByLabelText("Dịch vụ chăm sóc")).toHaveValue("");
+    expect(screen.queryByLabelText("Địa chỉ nhận dịch vụ")).not.toBeInTheDocument();
+  });
   it("finds KTV by unaccented service search without making unset schedules look available", () => {
     mount();
     fireEvent.change(screen.getByLabelText("Tìm kỹ thuật viên"), {

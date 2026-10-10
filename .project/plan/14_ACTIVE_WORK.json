@@ -418,6 +418,17 @@
         "validation": "Full quality and main CI PASS: 58 tests, format/lint/typecheck/build. Production mobile 320/390/768 and desktop 1440 no overflow; fanpage href correct, 48px mobile action above tab bar; both note and 10 KTV receivers visible.",
         "releasedAt": "2026-10-10T05:07:10.969Z"
       }
+    },
+    {
+      "agent": "Codex booking provider preselection 2026-10-10",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/booking-provider-preselection",
+      "ownedPaths": [
+        "FE/src/app/dat-lich/page.tsx (inquiry form identity only)",
+        "FE/src/features/mobile/appointment-request.tsx; appointment-request.test.tsx; account.css (selected KTV flow only)",
+        "Own scoped docs/Plan evidence"
+      ],
+      "note": "Keep clicked provider authoritative across client navigation and sign-in drafts; show selected provider with optional change. Preserve all booking APIs and concurrent changes."
     }
   ]
 }
