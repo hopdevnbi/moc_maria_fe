@@ -238,3 +238,8 @@ SOCIAL / BOOKING REASSURANCE RELEASE — 2026-10-10
 FE bb4ae2bcf0230e76884944abde32e67f11475ee2; production deployment 6976411739.
 Full quality and main CI PASS: 58 tests, format/lint/typecheck/build. Production mobile 320/390/768 and desktop 1440 no overflow; fanpage href correct, 48px mobile action above tab bar; both note and 10 KTV receivers visible.
 UI content only; previous accounts, moderation, inquiries and verified booking behavior preserved.
+
+BOOKING PROVIDER PRESELECTION RELEASE — 2026-10-10
+FE fa62d846e939c6c2ad08befedb723c9604609bb2; production deployment 6976629615.
+Full quality and PR CI PASS: 61 tests, format/lint/typecheck/build. Production browser client navigation Mai Anh to home to Bao Ngoc: URL demo-ktv-04 selects Bao Ngoc only, compatible services visible. Desktop 1440 and mobile 390 correct selection, no overflow. No production appointment submitted.
+Clicked provider overrides unrelated sign-in drafts. Existing API and confirmation behavior unchanged.

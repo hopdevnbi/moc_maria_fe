@@ -1400,5 +1400,12 @@
     "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/20",
     "validation": "Full quality and main CI PASS: 58 tests, format/lint/typecheck/build. Production mobile 320/390/768 and desktop 1440 no overflow; fanpage href correct, 48px mobile action above tab bar; both note and 10 KTV receivers visible.",
     "releasedAt": "2026-10-10T05:07:10.969Z"
+  },
+  "bookingProviderPreselectionRelease": {
+    "frontend": "fa62d846e939c6c2ad08befedb723c9604609bb2",
+    "deployment": 6976629615,
+    "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/22",
+    "validation": "Full quality and PR CI PASS: 61 tests, format/lint/typecheck/build. Production browser client navigation Mai Anh to home to Bao Ngoc: URL demo-ktv-04 selects Bao Ngoc only, compatible services visible. Desktop 1440 and mobile 390 correct selection, no overflow. No production appointment submitted.",
+    "releasedAt": "2026-10-10T05:32:14.941Z"
   }
 }
