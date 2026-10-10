@@ -725,7 +725,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                       {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                     </button>
                   </header>
-                  {customer && (
+                  {customer && current.customer_user_id === user.id && (
                     <ChatPrivacyControls
                       key={current.id}
                       thread={{ ...current, history_locked: locked }}

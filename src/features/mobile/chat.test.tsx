@@ -53,6 +53,7 @@ function mount(provider?: string, service?: string) {
 }
 beforeEach(() => {
   state.status = "authenticated";
+  state.user = { id: "customer", permissions: ["customer.portal"] };
   state.fetch.mockReset().mockImplementation(async (path: string, init?: RequestInit) => {
     if (path === "/ktv-chat/threads") return init?.method === "POST" ? first : [first, second];
     if (path === "/ktv-chat/providers")
@@ -72,6 +73,19 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it("keeps customer password controls off a provider's chat even with dual-role permissions", async () => {
+    state.user = { id: "provider", permissions: ["customer.portal", "provider.portal"] };
+    state.fetch.mockImplementation(async (path: string) => {
+      if (path === "/ktv-chat/threads")
+        return [{ ...first, provider_user_id: "provider", customer_name: "Khách hội thoại" }];
+      if (path.endsWith("/read")) return undefined;
+      return [];
+    });
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Khách hội thoại/ }));
+    await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
+    expect(screen.queryByRole("button", { name: "Đặt mật khẩu chat" })).not.toBeInTheDocument();
+  });
   it("does not fetch/render cached history or a stale preview for a password-protected chat", async () => {
     const original = state.fetch.getMockImplementation()!;
     state.fetch.mockImplementation(async (path: string, init?: RequestInit) =>
