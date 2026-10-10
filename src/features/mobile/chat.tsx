@@ -15,6 +15,8 @@ import {
   Send,
   ShieldCheck,
   Smile,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { ChatProvider } from "@/features/marketplace/types";
@@ -22,6 +24,7 @@ import { chatHref } from "./links";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
+import { IncomingChatTracker, useChatSound } from "./chat-sound";
 
 type Thread = ChatBlockState & {
   id: string;
@@ -40,6 +43,7 @@ type ChatMessage = {
   sender_user_id: string;
   body: string;
   created_at: string;
+  delivery?: "sending" | "failed" | "sent";
 };
 const json = (body: unknown): RequestInit => ({
   method: "POST",
@@ -96,6 +100,9 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const [choosing, setChoosing] = useState(false);
   const [search, setSearch] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [outbox, setOutbox] = useState<ChatMessage[]>([]);
+  const { muted, toggle: toggleSound, play: playSound } = useChatSound(user?.id);
+  const incoming = useMemo(() => new IncomingChatTracker(user?.id), [user?.id]);
   const [serviceSelections, setServiceSelections] = useState<Record<string, string>>({});
   const [emojiFor, setEmojiFor] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -151,7 +158,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   });
   const messages = useMemo(() => {
     const seen = new Set<string>();
-    return [...(history.data?.pages ?? [])]
+    const saved = [...(history.data?.pages ?? [])]
       .reverse()
       .flat()
       .filter((item) => {
@@ -159,8 +166,16 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
         seen.add(item.id);
         return true;
       });
-  }, [history.data]);
+    return [...saved, ...outbox.filter((m) => m.thread_id === selectedId && !seen.has(m.id))];
+  }, [history.data, outbox, selectedId]);
   const latestMessageId = history.data?.pages[0]?.at(-1)?.id;
+  useEffect(() => {
+    if (threads.data && incoming.inbox(threads.data, choosing ? null : selectedId)) playSound();
+  }, [threads.data, selectedId, choosing, incoming, playSound]);
+  useEffect(() => {
+    const page = history.data?.pages[0];
+    if (selectedId && user && page && incoming.history(selectedId, page, user.id)) playSound();
+  }, [history.data, selectedId, user, incoming, playSound]);
   const open = useMutation({
     mutationFn: (id: string) =>
       authFetch<Thread>("/ktv-chat/threads", json({ providerApplicationId: id })),
@@ -229,24 +244,50 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   useEffect(() => {
     if (nearBottom.current && messagesRef.current)
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-  }, [latestMessageId, selectedId, choosing]);
+  }, [messages, selectedId, choosing]);
   const send = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: string }) => {
-      const pending = pendingSend.current[id];
+    onMutate: ({ id, body }: { id: string; body: string }) => {
+      const pending = pendingSend.current[`${id}:${body}`];
       const input =
         pending?.body === body ? pending : { body, clientMessageId: crypto.randomUUID() };
-      pendingSend.current[id] = input;
-      return authFetch<ChatMessage>(`/ktv-chat/threads/${id}/messages`, json(input));
-    },
-    onSuccess: (_message, { id, body }) => {
-      delete pendingSend.current[id];
-      setDrafts((old) => (old[id]?.trim() === body ? { ...old, [id]: "" } : old));
-      setActionError("");
+      pendingSend.current[`${id}:${body}`] = input;
       nearBottom.current = true;
+      setActionError("");
+      setDrafts((old) => (old[id]?.trim() === body ? { ...old, [id]: "" } : old));
+      setOutbox((old) => [
+        ...old.filter((m) => m.id !== input.clientMessageId),
+        {
+          id: input.clientMessageId,
+          thread_id: id,
+          sender_user_id: user!.id,
+          body,
+          created_at: new Date().toISOString(),
+          delivery: "sending",
+        },
+      ]);
+      return input;
+    },
+    mutationFn: ({ id, body }: { id: string; body: string }) =>
+      authFetch<ChatMessage>(
+        `/ktv-chat/threads/${id}/messages`,
+        json(pendingSend.current[`${id}:${body}`]),
+      ),
+    onSuccess: (message, { id, body }, input) => {
+      delete pendingSend.current[`${id}:${body}`];
+      setOutbox((old) =>
+        old.map((m) => (m.id === input?.clientMessageId ? { ...message, delivery: "sent" } : m)),
+      );
+      if (selectedId === id) setActionError("");
       void client.invalidateQueries({ queryKey: ["ktv-chat", user?.id, "messages", id] });
       void client.invalidateQueries({ queryKey: ["ktv-chat", user?.id, "threads"] });
     },
-    onError: (error) => setActionError(chatError(error)),
+    onError: (error, { id, body }, input) => {
+      if (selectedId === id) setActionError(chatError(error));
+      setDrafts((old) => (old[id] ? old : { ...old, [id]: body }));
+      setOutbox((old) =>
+        old.map((m) => (m.id === input?.clientMessageId ? { ...m, delivery: "failed" } : m)),
+      );
+    },
   });
   const showDirectory = choosing || !threads.data?.length;
   const query = normalize(search);
@@ -342,6 +383,15 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
             <aside className="ktv-chat-sidebar" aria-label="Danh sách hội thoại và KTV">
               <div className="ktv-chat-sidebar-heading">
                 <h2>{choosing ? "Chọn kỹ thuật viên" : "Tin nhắn"}</h2>
+                <button
+                  type="button"
+                  className="ktv-chat-icon-button"
+                  onClick={toggleSound}
+                  aria-label={muted ? "Bật âm báo tin nhắn" : "Tắt âm báo tin nhắn"}
+                  aria-pressed={!muted}
+                >
+                  {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
+                </button>
                 {customer && (
                   <button
                     className="ktv-chat-icon-button"
@@ -526,6 +576,15 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                         Xem hồ sơ <ChevronRight size={15} />
                       </Link>
                     )}
+                    <button
+                      type="button"
+                      className="ktv-chat-icon-button"
+                      onClick={toggleSound}
+                      aria-label={muted ? "Bật âm báo hội thoại" : "Tắt âm báo hội thoại"}
+                      aria-pressed={!muted}
+                    >
+                      {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                    </button>
                   </header>
                   {customer && !!currentProvider?.services?.length && (
                     <label className="ktv-chat-service">
@@ -622,6 +681,26 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           >
                             <p>{item.body}</p>
                             <time dateTime={item.created_at}>{time(item.created_at)}</time>
+                            {item.delivery && (
+                              <small className="ktv-chat-delivery">
+                                {item.delivery === "sending"
+                                  ? "Đang gửi…"
+                                  : item.delivery === "sent"
+                                    ? "Đã gửi"
+                                    : "Chưa gửi được"}
+                                {item.delivery === "failed" && (
+                                  <button
+                                    type="button"
+                                    disabled={paused || send.isPending}
+                                    onClick={() =>
+                                      send.mutate({ id: item.thread_id, body: item.body })
+                                    }
+                                  >
+                                    Gửi lại
+                                  </button>
+                                )}
+                              </small>
+                            )}
                           </div>
                         </div>
                       ))
@@ -728,7 +807,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                     <button
                       type="button"
                       className="ktv-chat-emoji-toggle"
-                      disabled={paused || send.isPending}
+                      disabled={paused}
                       aria-label="Chọn biểu cảm"
                       aria-expanded={emojiFor === current.id}
                       aria-controls="ktv-chat-emojis"
@@ -746,7 +825,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                       }
                       maxLength={2000}
                       placeholder={`Nhắn cho ${recipient(current)}...`}
-                      disabled={paused || send.isPending}
+                      disabled={paused}
                       onKeyDown={(event) => {
                         if (event.key === "Escape") setEmojiFor(null);
                         if (
