@@ -5,9 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  BadgeCheck,
+  Building2,
   CalendarDays,
   CheckCircle2,
   Clock3,
+  House,
   MapPin,
   ShieldCheck,
   Sparkles,
@@ -17,8 +20,17 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { formatPrice } from "@/features/marketplace/format";
 import type { Branch, Provider, ServiceDetail, ServiceItem } from "@/features/marketplace/types";
+import {
+  homeTerritories,
+  isEligibleForMode,
+  isPrimaryBranch,
+  MOC_MARIA_MAP_URL,
+  MOC_MARIA_PRIMARY_ADDRESS,
+  type BookingLocationMode,
+} from "./booking-location";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./mobile.css";
+import "./booking-location.css";
 
 type Slot = {
   startsAt: string;
@@ -71,6 +83,9 @@ export function BookingWizard({
   unavailable,
 }: BookingProps) {
   const { user, status, authFetch } = useAuth();
+  const [locationMode, setLocationMode] = useState<BookingLocationMode>("AT_BRANCH");
+  const [homeAddress, setHomeAddress] = useState("");
+  const [homeTerritory, setHomeTerritory] = useState("");
   const [providerId, setProviderId] = useState(initial.provider || "");
   const [serviceId, setServiceId] = useState(initial.service || "");
   const [variantId, setVariantId] = useState(initial.variant || "");
@@ -85,33 +100,41 @@ export function BookingWizard({
   const [notes, setNotes] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
-  const requestIdentity = useRef<{ signature: string; key: string } | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const requestIdentity = useRef<{ signature: string; key: string } | null>(null);
 
-  const chosenProvider = providers.find((provider) => provider.id === providerId);
+  const territories = homeTerritories(providers);
+  const homeReady = !!homeTerritory && homeAddress.trim().length >= 12;
+  const eligibleProviders = providers.filter((provider) =>
+    isEligibleForMode(provider, locationMode, homeTerritory),
+  );
+  const chosenProvider = eligibleProviders.find((provider) => provider.id === providerId);
   const chosenService = services.find((item) => item.service.id === serviceId);
-  const compatibleServices = chosenProvider
-    ? services.filter((item) =>
-        chosenProvider.eligibleServices?.some(
-          (policy) => policy.serviceId === item.service.id && policy.mode === "ON_SITE",
-        ),
-      )
-    : services;
-  const compatibleProviders = serviceId
-    ? providers.filter((provider) =>
-        provider.eligibleServices?.some(
-          (policy) => policy.serviceId === serviceId && policy.mode === "ON_SITE",
-        ),
-      )
-    : providers;
+  const compatibleProviders = eligibleProviders.filter(
+    (provider) => !serviceId || isEligibleForMode(provider, locationMode, homeTerritory, serviceId),
+  );
+  const compatibleServices =
+    locationMode === "AT_HOME" && !homeReady
+      ? []
+      : chosenProvider
+        ? services.filter((item) =>
+            isEligibleForMode(chosenProvider, locationMode, homeTerritory, item.service.id),
+          )
+        : locationMode === "AT_HOME"
+          ? services.filter((item) =>
+              eligibleProviders.some((provider) =>
+                isEligibleForMode(provider, locationMode, homeTerritory, item.service.id),
+              ),
+            )
+          : services;
   const variants =
     detail?.service.id === serviceId
       ? detail.variants.filter((variant) => variant.isActive)
       : chosenService?.variants.filter((variant) => variant.isActive) || [];
-  const allowedBranchIds = (() => {
-    const serviceBranchIds = new Set(detail?.branches.map(({ branch }) => branch.id) || []);
-    if (chosenProvider)
-      return new Set(
+
+  const serviceBranchIds = new Set(detail?.branches.map((entry) => entry.branch.id) || []);
+  const allowedBranchIds = chosenProvider
+    ? new Set(
         chosenProvider.eligibleServices
           ?.filter(
             (policy) =>
@@ -120,25 +143,32 @@ export function BookingWizard({
               serviceBranchIds.has(policy.branchId),
           )
           .map((policy) => policy.branchId) || [],
-      );
-    return serviceBranchIds;
-  })();
+      )
+    : serviceBranchIds;
   const availableBranches = branches.filter(
     (branch) => branch.isActive && allowedBranchIds.has(branch.id),
   );
+  const effectiveBranchId =
+    locationMode === "AT_BRANCH"
+      ? availableBranches.find((branch) => branch.id === branchId)?.id ||
+        availableBranches.find(isPrimaryBranch)?.id ||
+        ""
+      : "";
+  const activeBranch = branches.find((branch) => branch.id === effectiveBranchId);
   const slots =
     availability?.slots.filter(
       (slot) => !providerId || slot.providerApplicationId === providerId,
     ) || [];
 
   useEffect(() => {
-    if (!chosenService) return;
+    if (!chosenService || locationMode !== "AT_BRANCH") return;
     const controller = new AbortController();
     fetch("/api/mobile/service/" + encodeURIComponent(chosenService.service.slug), {
+      cache: "no-store",
       signal: controller.signal,
     })
       .then(async (response) => {
-        if (!response.ok) throw new Error("Chưa tải được cơ sở phục vụ.");
+        if (!response.ok) throw new Error("Chưa tải được thông tin cơ sở phục vụ.");
         setDetail((await response.json()) as ServiceDetail);
         setDetailError("");
       })
@@ -149,12 +179,18 @@ export function BookingWizard({
         }
       });
     return () => controller.abort();
-  }, [chosenService]);
+  }, [chosenService, locationMode]);
 
   useEffect(() => {
-    if (!variantId || !branchId || !day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return;
+    if (
+      locationMode !== "AT_BRANCH" ||
+      !variantId ||
+      !effectiveBranchId ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(day)
+    )
+      return;
     const controller = new AbortController();
-    const query = new URLSearchParams({ variantId, branchId, date: day });
+    const query = new URLSearchParams({ variantId, branchId: effectiveBranchId, date: day });
     if (providerId) query.set("providerApplicationId", providerId);
     queueMicrotask(() => {
       if (controller.signal.aborted) return;
@@ -165,12 +201,7 @@ export function BookingWizard({
     });
     fetch("/api/mobile/availability?" + query, { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
-        if (!response.ok)
-          throw new Error(
-            response.status === 404
-              ? "Cơ sở chưa mở đặt lịch cho gói này."
-              : "Chưa kiểm tra được lịch trống.",
-          );
+        if (!response.ok) throw new Error("Chưa kiểm tra được lịch trống.");
         setAvailability((await response.json()) as Availability);
       })
       .catch((error: unknown) => {
@@ -181,59 +212,86 @@ export function BookingWizard({
         if (!controller.signal.aborted) setLoadingSlots(false);
       });
     return () => controller.abort();
-  }, [branchId, variantId, day, providerId]);
+  }, [locationMode, effectiveBranchId, variantId, day, providerId]);
 
+  const clearChoice = () => {
+    setProviderId("");
+    setServiceId("");
+    setVariantId("");
+    setBranchId("");
+    setDetail(null);
+    setAvailability(null);
+    setSelectedSlot(null);
+    setSendError("");
+  };
+  const changeLocationMode = (mode: BookingLocationMode) => {
+    if (mode !== locationMode) {
+      clearChoice();
+      setLocationMode(mode);
+    }
+  };
+  const changeHomeTerritory = (code: string) => {
+    setHomeTerritory(code);
+    clearChoice();
+  };
   const changeProvider = (id: string) => {
     setProviderId(id);
+    const provider = providers.find((item) => item.id === id);
     if (
       id &&
       serviceId &&
-      !providers
-        .find((provider) => provider.id === id)
-        ?.eligibleServices?.some((policy) => policy.serviceId === serviceId)
+      (!provider || !isEligibleForMode(provider, locationMode, homeTerritory, serviceId))
     ) {
       setServiceId("");
       setVariantId("");
-      setDetail(null);
       setBranchId("");
+      setDetail(null);
     }
     setSelectedSlot(null);
+    setAvailability(null);
   };
   const changeService = (id: string) => {
     setServiceId(id);
     setVariantId("");
-    setDetail(null);
     setBranchId("");
+    setDetail(null);
     setSelectedSlot(null);
+    setAvailability(null);
+    const provider = providers.find((item) => item.id === providerId);
+    if (id && provider && !isEligibleForMode(provider, locationMode, homeTerritory, id)) {
+      setProviderId("");
+    }
   };
-  const changeVariant = (id: string) => {
-    setVariantId(id);
-    setSelectedSlot(null);
-  };
-
   const requestBooking = async () => {
-    if (!selectedSlot || !variantId || !branchId || !user || !availability?.requestEnabled) return;
+    if (
+      locationMode !== "AT_BRANCH" ||
+      !selectedSlot ||
+      !variantId ||
+      !effectiveBranchId ||
+      !user ||
+      !availability?.requestEnabled
+    )
+      return;
     setSending(true);
     setSendError("");
     try {
       const signature = [
         variantId,
-        branchId,
+        effectiveBranchId,
         selectedSlot.startsAt,
         selectedSlot.providerApplicationId,
         selectedSlot.totalVnd,
         notes.trim(),
       ].join("|");
-      if (requestIdentity.current?.signature !== signature) {
+      if (requestIdentity.current?.signature !== signature)
         requestIdentity.current = { signature, key: crypto.randomUUID().replace(/-/g, "") };
-      }
       await authFetch("/bookings/requests", {
         method: "POST",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           variantId,
-          branchId,
+          branchId: effectiveBranchId,
           startsAt: selectedSlot.startsAt,
           providerApplicationId: selectedSlot.providerApplicationId,
           idempotencyKey: requestIdentity.current.key,
@@ -251,6 +309,10 @@ export function BookingWizard({
       setSending(false);
     }
   };
+  const displayAddress =
+    locationMode === "AT_BRANCH"
+      ? activeBranch?.address || MOC_MARIA_PRIMARY_ADDRESS
+      : homeAddress.trim() || "Chưa nhập địa chỉ";
 
   return (
     <div className="mobile-experience mm-booking-page">
@@ -260,13 +322,13 @@ export function BookingWizard({
           <ArrowLeft size={16} /> Về trang chủ
         </Link>
         <div className="mm-booking-heading">
-          <span className="mm-overline">LỊCH HẸN CỦA BẠN</span>
+          <span className="mm-overline">MỘC MARIA · ĐẶT LỊCH CHĂM SÓC</span>
           <h1>
-            Đặt lịch <em>thật dễ dàng.</em>
+            Khoảnh khắc an yên <em>bắt đầu từ đây.</em>
           </h1>
           <p>
-            Chọn dịch vụ và KTV theo thứ tự bạn thích. Giờ còn trống được kiểm tra trực tiếp với Mộc
-            Maria.
+            Ưu tiên trải nghiệm tại Mộc Maria. Chọn nơi phục vụ trước, sau đó tìm dịch vụ và kỹ
+            thuật viên phù hợp.
           </p>
         </div>
         {submitted ? (
@@ -288,31 +350,132 @@ export function BookingWizard({
         ) : (
           <div className="mm-booking-grid">
             <div className="mm-booking-steps">
-              <section className="mm-booking-section">
+              <section
+                className="mm-booking-section mm-booking-place"
+                aria-label="Chọn địa điểm trải nghiệm"
+              >
                 <div className="mm-booking-step">
                   <span>01</span>
                   <div>
+                    <h2>Bạn muốn trải nghiệm ở đâu?</h2>
+                    <p>Chọn địa điểm để xem đúng dịch vụ và KTV.</p>
+                  </div>
+                </div>
+                <div className="mm-place-grid" role="group" aria-label="Hình thức phục vụ">
+                  <button
+                    type="button"
+                    className={
+                      "mm-place-option" + (locationMode === "AT_BRANCH" ? " selected" : "")
+                    }
+                    aria-pressed={locationMode === "AT_BRANCH"}
+                    onClick={() => changeLocationMode("AT_BRANCH")}
+                  >
+                    <span className="mm-place-symbol">
+                      <Building2 size={23} />
+                    </span>
+                    <span className="mm-place-body">
+                      <span className="mm-place-tag">ĐỀ XUẤT · ĐƯỢC ƯU TIÊN</span>
+                      <strong>Đến Mộc Maria</strong>
+                      <small>Không gian thư giãn, tiện nghi và chăm sóc trọn vẹn.</small>
+                    </span>
+                    <CheckCircle2 size={19} className="mm-place-check" />
+                  </button>
+                  <button
+                    type="button"
+                    className={"mm-place-option" + (locationMode === "AT_HOME" ? " selected" : "")}
+                    aria-pressed={locationMode === "AT_HOME"}
+                    onClick={() => changeLocationMode("AT_HOME")}
+                  >
+                    <span className="mm-place-symbol">
+                      <House size={23} />
+                    </span>
+                    <span className="mm-place-body">
+                      <span className="mm-place-tag mm-place-muted-tag">PHỤC VỤ THEO KHU VỰC</span>
+                      <strong>Tại địa chỉ của bạn</strong>
+                      <small>Nhập địa chỉ để tìm KTV có thể phục vụ tại nhà.</small>
+                    </span>
+                    <CheckCircle2 size={19} className="mm-place-check" />
+                  </button>
+                </div>
+                {locationMode === "AT_BRANCH" ? (
+                  <div className="mm-primary-location">
+                    <span className="mm-primary-location-icon">
+                      <MapPin size={21} />
+                    </span>
+                    <div>
+                      <strong>Cơ sở chính · Tân Tây Đô</strong>
+                      <p>{MOC_MARIA_PRIMARY_ADDRESS}</p>
+                      <a href={MOC_MARIA_MAP_URL} target="_blank" rel="noopener noreferrer">
+                        Xem đường đi <ArrowRight size={14} />
+                      </a>
+                    </div>
+                    <BadgeCheck size={20} className="mm-primary-location-check" />
+                  </div>
+                ) : (
+                  <div className="mm-home-address">
+                    <label className="mm-booking-field" htmlFor="mm-home-region">
+                      Khu vực phục vụ *
+                      <select
+                        id="mm-home-region"
+                        value={homeTerritory}
+                        onChange={(e) => changeHomeTerritory(e.target.value)}
+                      >
+                        <option value="">Chọn khu vực / quận huyện</option>
+                        {territories.map((area) => (
+                          <option key={area.code} value={area.code}>
+                            {area.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="mm-booking-field" htmlFor="mm-home-address">
+                      Địa chỉ nhận dịch vụ *
+                      <input
+                        id="mm-home-address"
+                        type="text"
+                        autoComplete="street-address"
+                        value={homeAddress}
+                        maxLength={300}
+                        placeholder="Số nhà, tên đường, phường/xã, quận/huyện..."
+                        onChange={(event) => setHomeAddress(event.target.value)}
+                      />
+                    </label>
+                    <p className="mm-place-instruction">
+                      {territories.length
+                        ? "Vui lòng nhập địa chỉ đầy đủ. Chỉ những KTV được duyệt phục vụ khu vực này mới được hiển thị."
+                        : "Chưa có KTV được xác minh để nhận lịch tại nhà. Bạn vẫn có thể đến cơ sở Mộc Maria."}
+                    </p>
+                  </div>
+                )}
+              </section>
+
+              <section className="mm-booking-section">
+                <div className="mm-booking-step">
+                  <span>02</span>
+                  <div>
                     <h2>Chọn kỹ thuật viên</h2>
-                    <p>Bạn cũng có thể chọn dịch vụ trước.</p>
+                    <p>
+                      {locationMode === "AT_HOME"
+                        ? "Chỉ hiển thị KTV được duyệt trong khu vực bạn chọn."
+                        : "Bạn cũng có thể chọn dịch vụ trước."}
+                    </p>
                   </div>
                 </div>
                 <div className="mm-booking-options mm-compact-options">
                   <button
                     type="button"
                     className={!providerId ? "selected" : ""}
+                    disabled={locationMode === "AT_HOME" && !homeReady}
                     onClick={() => changeProvider("")}
                   >
                     <Users size={18} /> Bất kỳ KTV phù hợp
                   </button>
-                  {providers.map((provider) => (
+                  {compatibleProviders.map((provider) => (
                     <button
                       key={provider.id}
                       type="button"
                       className={providerId === provider.id ? "selected" : ""}
-                      disabled={
-                        !!serviceId &&
-                        !compatibleProviders.some((candidate) => candidate.id === provider.id)
-                      }
+                      disabled={locationMode === "AT_HOME" && !homeReady}
                       onClick={() => changeProvider(provider.id)}
                     >
                       <UserRound size={18} />
@@ -321,25 +484,34 @@ export function BookingWizard({
                         <small>
                           {provider.yearsExperience != null
                             ? provider.yearsExperience + " năm kinh nghiệm"
-                            : provider.title || "Chuyên viên"}
+                            : provider.title || "Kỹ thuật viên"}
                         </small>
                       </span>
                       {providerId === provider.id && <CheckCircle2 size={16} />}
                     </button>
                   ))}
                 </div>
-                {!providers.length && (
+                {!compatibleProviders.length && (
                   <p className="mm-hint">
-                    Chưa có hồ sơ KTV được công bố. Lịch sẽ chỉ mở khi có KTV đủ điều kiện.
+                    {locationMode === "AT_HOME"
+                      ? homeReady
+                        ? "Chưa có KTV phù hợp trong khu vực này."
+                        : "Chọn khu vực và nhập địa chỉ tại bước 01 để xem KTV phù hợp."
+                      : "Chưa có KTV được công bố hoặc đủ điều kiện nhận lịch."}
                   </p>
                 )}
               </section>
+
               <section className="mm-booking-section">
                 <div className="mm-booking-step">
-                  <span>02</span>
+                  <span>03</span>
                   <div>
-                    <h2>Chọn dịch vụ và thời lượng</h2>
-                    <p>Chỉ hiển thị dịch vụ KTV đã được phép cung cấp.</p>
+                    <h2>Dịch vụ & thời lượng</h2>
+                    <p>
+                      {locationMode === "AT_HOME"
+                        ? "Chỉ hiển thị dịch vụ KTV có thể phục vụ tại địa chỉ của bạn."
+                        : "Chọn liệu trình và thời lượng bạn yêu thích."}
+                    </p>
                   </div>
                 </div>
                 {chosenProvider && !compatibleServices.length && (
@@ -367,9 +539,13 @@ export function BookingWizard({
                     {variants.map((variant) => (
                       <button
                         key={variant.id}
-                        className={variantId === variant.id ? "selected" : ""}
-                        onClick={() => changeVariant(variant.id)}
                         type="button"
+                        className={variantId === variant.id ? "selected" : ""}
+                        onClick={() => {
+                          setVariantId(variant.id);
+                          setSelectedSlot(null);
+                          setAvailability(null);
+                        }}
                       >
                         <span>
                           {variant.name} · {variant.durationMinutes} phút
@@ -379,40 +555,59 @@ export function BookingWizard({
                     ))}
                   </div>
                 )}
+                {locationMode === "AT_HOME" && !homeReady && (
+                  <p className="mm-hint">Hoàn tất địa chỉ để xem danh sách dịch vụ phù hợp.</p>
+                )}
               </section>
+
               <section className="mm-booking-section">
                 <div className="mm-booking-step">
-                  <span>03</span>
+                  <span>04</span>
                   <div>
-                    <h2>Chọn cơ sở và thời gian</h2>
-                    <p>Lịch thực tế thay đổi theo từng ngày.</p>
+                    <h2>{locationMode === "AT_BRANCH" ? "Cơ sở & thời gian" : "Ngày mong muốn"}</h2>
+                    <p>Giờ phục vụ được kiểm tra theo lịch KTV thực tế.</p>
                   </div>
                 </div>
-                {detailError && (
-                  <p className="mm-hint" role="alert">
-                    {detailError}
-                  </p>
+                {locationMode === "AT_BRANCH" && (
+                  <>
+                    {detailError && (
+                      <p className="mm-hint" role="alert">
+                        {detailError}
+                      </p>
+                    )}
+                    <label className="mm-booking-field">
+                      Cơ sở phục vụ
+                      <select
+                        value={effectiveBranchId}
+                        disabled={!variantId}
+                        onChange={(e) => {
+                          setBranchId(e.target.value);
+                          setSelectedSlot(null);
+                          setAvailability(null);
+                        }}
+                      >
+                        <option value="">Chọn cơ sở</option>
+                        {availableBranches.map((branch) => (
+                          <option value={branch.id} key={branch.id}>
+                            {branch.name} — {branch.address}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {variantId && !availableBranches.length && !detailError && (
+                      <p className="mm-hint">Cơ sở chính chưa mở đặt lịch cho dịch vụ này.</p>
+                    )}
+                  </>
                 )}
-                <label className="mm-booking-field">
-                  Cơ sở phục vụ
-                  <select
-                    value={branchId}
-                    disabled={!variantId}
-                    onChange={(event) => {
-                      setBranchId(event.target.value);
-                      setSelectedSlot(null);
-                    }}
-                  >
-                    <option value="">Chọn cơ sở</option>
-                    {availableBranches.map((branch) => (
-                      <option value={branch.id} key={branch.id}>
-                        {branch.name} — {branch.address}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {variantId && !availableBranches.length && !detailError && (
-                  <p className="mm-hint">Chưa có cơ sở phù hợp hoặc gói chưa được mở phục vụ.</p>
+                {locationMode === "AT_HOME" && (
+                  <div className="mm-home-pending">
+                    <House size={21} />
+                    <p>
+                      <strong>Phục vụ tại nhà cần xác nhận riêng.</strong>
+                      Hệ thống chưa mở đặt lịch tại nhà trực tuyến. Sau khi chọn dịch vụ và KTV, bạn
+                      có thể nhắn tin để trao đổi lịch và chi phí di chuyển.
+                    </p>
+                  </div>
                 )}
                 <label className="mm-booking-field">
                   Ngày mong muốn
@@ -420,13 +615,13 @@ export function BookingWizard({
                     type="date"
                     min={vietnamToday()}
                     value={day}
-                    onChange={(event) => {
-                      setDay(event.target.value);
+                    onChange={(e) => {
+                      setDay(e.target.value);
                       setSelectedSlot(null);
                     }}
                   />
                 </label>
-                {branchId && variantId && (
+                {locationMode === "AT_BRANCH" && effectiveBranchId && variantId && (
                   <div className="mm-slot-area">
                     <h3>
                       <Clock3 size={17} /> Giờ còn trống
@@ -462,68 +657,98 @@ export function BookingWizard({
                       </p>
                     )}
                     {availability && !availability.requestEnabled && (
-                      <p className="mm-hint">Cơ sở chưa mở chức năng gửi yêu cầu đặt lịch.</p>
+                      <p className="mm-hint">
+                        Cơ sở chưa mở chức năng gửi yêu cầu đặt lịch trực tuyến.
+                      </p>
                     )}
                   </div>
                 )}
               </section>
             </div>
+
             <aside className="mm-booking-summary">
               <span className="mm-overline">TÓM TẮT LỊCH HẸN</span>
               <h2>Khoảng thời gian của bạn</h2>
               <div className="mm-summary-lines">
                 <p>
-                  <Sparkles size={17} />{" "}
+                  <MapPin size={17} />
+                  <span>
+                    <strong>
+                      {locationMode === "AT_BRANCH" ? "Tại Mộc Maria" : "Tại địa chỉ riêng"}
+                    </strong>{" "}
+                    · {displayAddress}
+                  </span>
+                </p>
+                <p>
+                  <Sparkles size={17} />
                   <span>{chosenService?.service.name || "Chưa chọn dịch vụ"}</span>
                 </p>
                 <p>
-                  <UserRound size={17} />{" "}
+                  <UserRound size={17} />
                   <span>
                     {selectedSlot?.providerName || chosenProvider?.publicName || "KTV phù hợp"}
                   </span>
                 </p>
                 <p>
-                  <MapPin size={17} />{" "}
-                  <span>
-                    {branches.find((branch) => branch.id === branchId)?.name || "Chưa chọn cơ sở"}
-                  </span>
-                </p>
-                <p>
-                  <CalendarDays size={17} />{" "}
+                  <CalendarDays size={17} />
                   <span>
                     {selectedSlot
                       ? displayTime(selectedSlot.startsAt) + " · " + day
-                      : "Chưa chọn giờ"}
+                      : "Ngày " + day + " · Chưa chọn giờ"}
                   </span>
                 </p>
               </div>
               <div className="mm-summary-price">
-                <span>Giá dự kiến theo lịch</span>
-                <strong>{selectedSlot ? formatPrice(selectedSlot.totalVnd) : "—"}</strong>
+                <span>
+                  {locationMode === "AT_HOME" ? "Giá & phí di chuyển" : "Giá dự kiến theo lịch"}
+                </span>
+                <strong>
+                  {locationMode === "AT_HOME"
+                    ? "KTV xác nhận"
+                    : selectedSlot
+                      ? formatPrice(selectedSlot.totalVnd)
+                      : "—"}
+                </strong>
               </div>
               <p className="mm-hint">
-                Giá cuối cùng được thể hiện trong báo giá. Yêu cầu chỉ được xác nhận theo quy trình
-                của Mộc.
+                {locationMode === "AT_HOME"
+                  ? "Tin nhắn tư vấn chưa phải xác nhận lịch hoặc báo giá. Không thanh toán trước qua chat."
+                  : "Giá cuối cùng được thể hiện trong báo giá. Yêu cầu chỉ xác nhận theo quy trình của Mộc."}
               </p>
-              <label className="mm-booking-field">
-                Ghi chú (không bắt buộc)
-                <textarea
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  maxLength={500}
-                  rows={3}
-                  placeholder="Lưu ý cần trao đổi với KTV..."
-                />
-              </label>
-              {status === "loading" ? (
+              {locationMode === "AT_BRANCH" && (
+                <label className="mm-booking-field">
+                  Ghi chú (không bắt buộc)
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Lưu ý cần trao đổi với KTV..."
+                  />
+                </label>
+              )}
+              {locationMode === "AT_HOME" ? (
+                chosenProvider && chosenService && homeReady ? (
+                  <Link
+                    className="mm-primary-cta mm-full-cta"
+                    href={"/tin-nhan?provider=" + encodeURIComponent(chosenProvider.id)}
+                  >
+                    Trao đổi với KTV <ArrowRight size={17} />
+                  </Link>
+                ) : (
+                  <p className="mm-hint mm-home-cta-hint">
+                    Chọn địa chỉ, dịch vụ và một KTV để trao đổi thời gian phục vụ tại nhà.
+                  </p>
+                )
+              ) : status === "loading" ? (
                 <p>Đang kiểm tra tài khoản...</p>
               ) : !user ? (
                 <Link
+                  className="mm-primary-cta mm-full-cta"
                   href={
                     "/dang-nhap?returnTo=" +
                     encodeURIComponent("/dat-lich" + (providerId ? "?provider=" + providerId : ""))
                   }
-                  className="mm-primary-cta mm-full-cta"
                 >
                   Đăng nhập để gửi yêu cầu <ArrowRight size={17} />
                 </Link>
@@ -549,8 +774,10 @@ export function BookingWizard({
                 </p>
               )}
               <p className="mm-privacy">
-                <ShieldCheck size={15} /> Thời gian và giá được kiểm tra lại trên máy chủ trước khi
-                tiếp nhận.
+                <ShieldCheck size={15} />
+                {locationMode === "AT_BRANCH"
+                  ? "Thời gian và giá được kiểm tra trên máy chủ trước khi tiếp nhận."
+                  : "Địa chỉ riêng chỉ được nhập trên trình duyệt ở bước này; chưa được gửi đi khi chưa đặt lịch."}
               </p>
             </aside>
           </div>
