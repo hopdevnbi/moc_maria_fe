@@ -171,3 +171,5 @@ F. CUSTOMER FEEDBACK AND KTV APPEALS
 PRIVATE CHAT RELEASE 2026-10-09: dedicated Mộc Maria REST/DB chat deployed. See docs/PRIVATE_KTV_CHAT.md. Shared socket gates remain open.
 
 F2 RELEASE 2026-10-09: reciprocal blocks and verified service ratings deployed. Reporting/socket work and E2 completion remain open; see docs/PRIVATE_KTV_CHAT.md.
+
+2026-10-10 scoped instant-send/audio release: FE7b74524/Vercel6973619586 verified. 33 FE tests/full quality/build and CI PASS; immediate local pending bubble, stable retries, per-account incoming sound and CDN immutable asset. REST polling/shared socket broader acceptance stays open. See PRIVATE_KTV_CHAT.md.
