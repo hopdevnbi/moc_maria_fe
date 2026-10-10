@@ -225,7 +225,7 @@ export function AppointmentRequest({
                     </h2>
                     <p>
                       {!showProviderPicker && chosen
-                        ? "Tiếp tục chọn dịch vụ và địa chỉ bên dưới."
+                        ? "KTV này sẽ nhận yêu cầu đặt lịch của bạn."
                         : "Tìm theo tên, dịch vụ hoặc khu vực."}
                     </p>
                   </div>
