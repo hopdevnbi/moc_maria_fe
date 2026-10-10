@@ -183,7 +183,7 @@ export function ProviderTile({ provider }: { provider: Provider }) {
   );
 }
 
-export function ServiceTile({ item }: { item: ServiceItem }) {
+export function ServiceTile({ item, eager = false }: { item: ServiceItem; eager?: boolean }) {
   const variants = item.variants.filter((variant) => variant.isActive);
   const prices = variants
     .map((variant) => Number(variant.priceVnd))
@@ -197,15 +197,16 @@ export function ServiceTile({ item }: { item: ServiceItem }) {
               <source
                 type="image/webp"
                 srcSet={item.imageSrcSet}
-                sizes="(max-width: 700px) 95px, 33vw"
+                sizes="(max-width: 360px) calc(100vw - 22px), (max-width: 590px) calc(100vw - 30px), (max-width: 700px) 560px, (max-width: 1000px) calc((100vw - 60px) / 2), (max-width: 1180px) calc((100vw - 80px) / 3), 367px"
               />
             )}
             <Image
               src={item.imageUrl}
               alt={item.imageAlt || "Ảnh dịch vụ " + item.service.name}
-              width={680}
-              height={400}
-              sizes="(max-width: 700px) 95px, 33vw"
+              width={960}
+              height={560}
+              sizes="(max-width: 360px) calc(100vw - 22px), (max-width: 590px) calc(100vw - 30px), (max-width: 700px) 560px, (max-width: 1000px) calc((100vw - 60px) / 2), (max-width: 1180px) calc((100vw - 80px) / 3), 367px"
+              loading={eager ? "eager" : "lazy"}
               unoptimized={item.isDemo}
             />
           </picture>
@@ -243,6 +244,7 @@ export function ServiceTile({ item }: { item: ServiceItem }) {
             aria-label={"Chọn dịch vụ " + item.service.name}
             className="mm-round-action"
           >
+            <span>{item.isDemo ? "Xem dịch vụ" : "Chọn dịch vụ"}</span>
             <ArrowRight size={19} />
           </Link>
         </div>
@@ -473,7 +475,9 @@ export function MobileExperience({
                     .map((provider) => <ProviderTile key={provider.id} provider={provider} />)
                 : serviceItems
                     .slice(0, isHome ? 6 : undefined)
-                    .map((service) => <ServiceTile key={service.service.id} item={service} />)}
+                    .map((service, index) => (
+                      <ServiceTile key={service.service.id} item={service} eager={index < 3} />
+                    ))}
             </div>
           ) : (
             <div className="mm-empty">

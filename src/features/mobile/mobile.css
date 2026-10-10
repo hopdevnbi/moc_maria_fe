@@ -482,7 +482,7 @@
 .mm-service-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 20px;
 }
 .mm-service-card {
   display: flex;
@@ -492,12 +492,14 @@
   background: #fffefb;
   min-width: 0;
   overflow: hidden;
+  box-shadow: 0 4px 18px #233b3005;
 }
 .mm-service-decor {
-  height: 82px;
+  aspect-ratio: 16 / 10;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding-left: 21px;
+  justify-content: center;
   color: #6b906d;
   background:
     radial-gradient(circle at 82% 5%, #f4e9cd, transparent 50%),
@@ -509,11 +511,19 @@
   position: relative;
   background: #e2e8dc;
 }
+.mm-service-photo picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 .mm-service-photo img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 .mm-demo-service-card {
   border-color: #e7e2d5;
@@ -590,18 +600,20 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 17px;
+  padding: 20px;
+  min-width: 0;
 }
 .mm-service-body h3 {
   font:
-    600 19px/1.4 var(--font-wellness-serif),
+    600 22px/1.35 var(--font-wellness-serif),
     Georgia,
     serif;
-  margin: 8px 0;
+  margin: 9px 0;
+  overflow-wrap: anywhere;
 }
 .mm-service-body > p {
   color: #728077;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.65;
   overflow: hidden;
   display: -webkit-box;
@@ -613,12 +625,14 @@
   align-items: center;
   gap: 6px;
   color: #6a806d;
-  font-size: 11px;
-  margin: 13px 0;
+  font-size: 12px;
+  margin: 15px 0;
+  flex-wrap: wrap;
 }
 .mm-service-bottom {
   display: flex;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   border-top: 1px solid var(--mm-line);
@@ -628,13 +642,29 @@
 .mm-service-bottom div {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 .mm-service-bottom small {
   color: #829082;
-  font-size: 10px;
+  font-size: 11px;
 }
 .mm-service-bottom strong {
-  font-size: 13px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.mm-service-bottom .mm-round-action {
+  width: auto;
+  min-height: 44px;
+  height: auto;
+  padding: 0 12px;
+  display: inline-flex;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.mm-service-bottom .mm-round-action svg {
+  flex-shrink: 0;
 }
 .mm-round-action {
   width: 38px;
@@ -886,24 +916,19 @@
   }
   .mm-service-grid {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 18px;
   }
   .mm-service-card {
-    display: grid;
-    grid-template-columns: 94px 1fr;
-    border-radius: 17px;
+    border-radius: 20px;
   }
   .mm-service-decor {
-    height: 100%;
-    min-height: 172px;
-    justify-content: center;
-    padding: 0;
+    min-height: 0;
   }
   .mm-service-body {
-    padding: 14px;
+    padding: 18px;
   }
   .mm-service-body h3 {
-    font-size: 17px;
+    font-size: 22px;
   }
   .mm-member-teaser,
   .mm-provider-invite {

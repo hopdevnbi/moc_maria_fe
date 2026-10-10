@@ -369,6 +369,20 @@
         "businessData": "No production chat password or new messages set by agent; customers opt in per thread. No migration or booking/review/identity eligibility changes.",
         "releasedAt": "2026-10-10T00:57:41.249Z"
       }
+    },
+    {
+      "agent": "Codex services responsive UI 2026-10-10",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/services-responsive-ui",
+      "frontendWorktree": "C:/Users/admin/Desktop/DỰ ÁN GIÁO LÝ VIÊN/moc_maria_fe_chat",
+      "ownedPaths": [
+        "FE/src/features/mobile/experience.tsx (ServiceTile markup only)",
+        "FE/src/features/mobile/mobile.css (.mm-service-* selectors only)",
+        "FE/src/features/mobile/service-photo* (visual focal points only)",
+        "FE/docs/SERVICE_RESPONSIVE_UI.md",
+        "Plan own scoped release evidence"
+      ],
+      "note": "Service list photo fill/cropping and responsive card presentation only. Preserve service data/prices/IDs, search, links and booking/chat logic; E2a and other worktree changes retained."
     }
   ]
 }
