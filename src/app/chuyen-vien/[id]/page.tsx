@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
+  CalendarClock,
   CheckCircle2,
   MapPin,
   MessageCircle,
@@ -103,15 +104,22 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
                   )}
                 </div>
                 <p>{provider.introduction || "Thông tin giới thiệu đang được cập nhật."}</p>
-                <Link className="mm-primary-cta" href={bookingHref({ provider: provider.id })}>
-                  Chọn KTV & đặt lịch <ArrowRight size={18} />
-                </Link>
-                <Link
-                  className="mm-outline-cta"
-                  href={"/tin-nhan?provider=" + encodeURIComponent(provider.id)}
-                >
-                  <MessageCircle size={17} /> Chat với KTV
-                </Link>
+                <div className="mm-profile-cta-row">
+                  <Link
+                    className="mm-profile-cta mm-profile-cta-primary"
+                    href={bookingHref({ provider: provider.id })}
+                  >
+                    <CalendarClock size={15} aria-hidden="true" />
+                    <span>Đặt lịch với KTV</span>
+                  </Link>
+                  <Link
+                    className="mm-profile-cta mm-profile-cta-secondary"
+                    href={"/tin-nhan?provider=" + encodeURIComponent(provider.id)}
+                  >
+                    <MessageCircle size={15} aria-hidden="true" />
+                    <span>Chat với KTV</span>
+                  </Link>
+                </div>
               </div>
             </div>
             <section className="mm-detail-section">

@@ -1,6 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Clock3, MapPin, Sparkles, UserRound, MessageCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarClock,
+  Clock3,
+  MapPin,
+  Sparkles,
+  UserRound,
+  MessageCircle,
+} from "lucide-react";
 import type { Provider } from "@/features/marketplace/types";
 import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "./experience";
@@ -51,14 +59,22 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
               {provider.scheduleOpen ? "Đã mở lịch làm việc" : "Chưa mở lịch"}
             </p>
             {provider.chatEnabled && provider.chatProviderId && (
-              <Link className="mm-primary-cta" href={bookingHref({ provider: provider.id })}>
-                Yêu cầu đặt lịch <MessageCircle size={18} />
-              </Link>
-            )}
-            {provider.chatEnabled && provider.chatProviderId && (
-              <Link className="mm-primary-cta" href={chatHref(provider.chatProviderId)}>
-                <MessageCircle size={18} /> Chat riêng với {provider.publicName}
-              </Link>
+              <div className="mm-profile-cta-row">
+                <Link
+                  className="mm-profile-cta mm-profile-cta-primary"
+                  href={bookingHref({ provider: provider.id })}
+                >
+                  <CalendarClock size={15} aria-hidden="true" />
+                  <span>Yêu cầu đặt lịch</span>
+                </Link>
+                <Link
+                  className="mm-profile-cta mm-profile-cta-secondary"
+                  href={chatHref(provider.chatProviderId)}
+                >
+                  <MessageCircle size={15} aria-hidden="true" />
+                  <span>Chat riêng với {provider.publicName}</span>
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -104,6 +120,17 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
               </article>
             ))}
           </div>
+        </section>
+        <section
+          className="mm-detail-section mm-demo-review-info"
+          aria-label="Đánh giá kỹ thuật viên"
+        >
+          <h2>Đánh giá từ khách hàng</h2>
+          <p>
+            Hồ sơ này đang dùng nội dung minh họa. Chưa có đánh giá khách hàng được xác minh. Khi
+            KTV được phê duyệt và hoàn thành lịch dịch vụ thật, khách có thể chấm 1–5 sao và gửi
+            nhận xét. Mọi nhận xét đều được Admin kiểm duyệt trước khi công khai.
+          </p>
         </section>
       </main>
       <MobileNavigation active="providers" />
