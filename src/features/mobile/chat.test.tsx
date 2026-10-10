@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KtvChatPage } from "./chat";
+import { ApiError } from "@/features/auth/auth-api";
 
 const state = vi.hoisted(() => ({
   fetch: vi.fn(),
@@ -71,6 +72,149 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it("does not fetch/render cached history or a stale preview for a password-protected chat", async () => {
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation(async (path: string, init?: RequestInit) =>
+      path === "/ktv-chat/threads"
+        ? [
+            {
+              ...first,
+              privacy_enabled: true,
+              history_locked: true,
+              last_message: "PRIVATE PREVIEW",
+            },
+            second,
+          ]
+        : original(path, init),
+    );
+    const { client } = mount();
+    client.setQueryData(["ktv-chat", "customer", "messages", "a"], {
+      pages: [
+        [
+          {
+            id: "secret",
+            thread_id: "a",
+            sender_user_id: "provider",
+            body: "PRIVATE HISTORY",
+            created_at: first.updated_at,
+          },
+        ],
+      ],
+      pageParams: [undefined],
+    });
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    expect(screen.getByRole("heading", { name: "Hội thoại đã khóa" })).toBeInTheDocument();
+    expect(screen.queryByText("PRIVATE HISTORY")).not.toBeInTheDocument();
+    expect(screen.queryByText("PRIVATE PREVIEW")).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Nội dung tin nhắn" })).not.toBeInTheDocument();
+    expect(
+      state.fetch.mock.calls.some(
+        ([path]) => path.includes("/a/messages") || path.endsWith("/read"),
+      ),
+    ).toBe(false);
+  });
+  it("keeps unlock proof only in memory, passes it to history/read, and locks when leaving", async () => {
+    const protectedThread = { ...first, privacy_enabled: true, history_locked: true };
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (path === "/ktv-chat/threads") return [protectedThread, second];
+      if (path.endsWith("/privacy/unlock"))
+        return {
+          ...protectedThread,
+          history_locked: false,
+          unlock_token: "memory-only-proof",
+          unlock_expires_at: new Date(Date.now() + 900000).toISOString(),
+        };
+      if (path.endsWith("/privacy/lock")) return protectedThread;
+      if (path === "/ktv-chat/threads/a/messages")
+        return [
+          {
+            id: "private",
+            thread_id: "a",
+            sender_user_id: "provider",
+            body: "UNLOCKED HISTORY",
+            created_at: first.updated_at,
+          },
+        ];
+      return original(path, init);
+    });
+    const { client } = mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    fireEvent.change(screen.getByLabelText("Mật khẩu chat", { exact: true }), {
+      target: { value: "private passphrase" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Mở khóa hội thoại" }));
+    await screen.findByText("UNLOCKED HISTORY");
+    await waitFor(() =>
+      expect(
+        state.fetch.mock.calls.some(
+          ([path, init]) =>
+            path.endsWith("/read") &&
+            new Headers(init.headers).get("X-Chat-Unlock") === "memory-only-proof",
+        ),
+      ).toBe(true),
+    );
+    expect(
+      state.fetch.mock.calls.find(([path]) => path === "/ktv-chat/threads/a/messages")?.[1].headers[
+        "X-Chat-Unlock"
+      ],
+    ).toBe("memory-only-proof");
+    expect(JSON.stringify(client.getQueryData(["ktv-chat", "customer", "threads"]))).not.toContain(
+      "memory-only-proof",
+    );
+    expect(JSON.stringify(localStorage)).not.toContain("memory-only-proof");
+    fireEvent.click(screen.getByRole("button", { name: /Thanh An/ }));
+    await waitFor(() =>
+      expect(state.fetch.mock.calls.some(([path]) => path.endsWith("/a/privacy/lock"))).toBe(true),
+    );
+    expect(client.getQueryData(["ktv-chat", "customer", "messages", "a"])).toBeUndefined();
+    fireEvent.click(screen.getByRole("button", { name: /Ngọc Mai/ }));
+    expect(screen.getByRole("heading", { name: "Hội thoại đã khóa" })).toBeInTheDocument();
+    expect(screen.queryByText("UNLOCKED HISTORY")).not.toBeInTheDocument();
+  });
+  it("removes visible/cached history when the server revokes an unlock", async () => {
+    let revoked = false;
+    const protectedThread = { ...first, privacy_enabled: true, history_locked: true };
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (path === "/ktv-chat/threads") return [protectedThread];
+      if (path.endsWith("/privacy/unlock"))
+        return {
+          ...protectedThread,
+          history_locked: false,
+          unlock_token: "proof",
+          unlock_expires_at: new Date(Date.now() + 900000).toISOString(),
+        };
+      if (path.endsWith("/a/messages")) {
+        if (revoked) throw new ApiError(403, "Hội thoại đã khóa.", { error: "CHAT_LOCKED" });
+        return [
+          {
+            id: "private",
+            thread_id: "a",
+            sender_user_id: "provider",
+            body: "REVOKED HISTORY",
+            created_at: first.updated_at,
+          },
+        ];
+      }
+      return original(path, init);
+    });
+    const { client } = mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    fireEvent.change(screen.getByLabelText("Mật khẩu chat", { exact: true }), {
+      target: { value: "passphrase" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Mở khóa hội thoại" }));
+    await screen.findByText("REVOKED HISTORY");
+    revoked = true;
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: ["ktv-chat", "customer", "messages", "a"] });
+    });
+    await screen.findByRole("heading", { name: "Hội thoại đã khóa" });
+    expect(screen.queryByText("REVOKED HISTORY")).not.toBeInTheDocument();
+    expect(client.getQueryData(["ktv-chat", "customer", "messages", "a"])).toBeUndefined();
+  });
+
   it("shows an outgoing bubble before the network resolves, keeps the next draft and reconciles once", async () => {
     let finish!: (value: unknown) => void;
     const message = {

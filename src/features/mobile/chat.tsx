@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import {
   Smile,
   Volume2,
   VolumeX,
+  LockKeyhole,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { ChatProvider } from "@/features/marketplace/types";
@@ -25,18 +26,20 @@ import { MobileHeader, MobileNavigation } from "./experience";
 import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
 import { IncomingChatTracker, useChatSound } from "./chat-sound";
+import { ChatPrivacyControls, isChatLockedError, type ChatPrivacyState } from "./chat-privacy";
 
-type Thread = ChatBlockState & {
-  id: string;
-  customer_user_id: string;
-  provider_user_id: string;
-  provider_application_id: string;
-  provider_name?: string;
-  customer_name?: string;
-  updated_at: string;
-  last_message?: string | null;
-  unread_count?: number;
-};
+type Thread = ChatBlockState &
+  ChatPrivacyState & {
+    id: string;
+    customer_user_id: string;
+    provider_user_id: string;
+    provider_application_id: string;
+    provider_name?: string;
+    customer_name?: string;
+    updated_at: string;
+    last_message?: string | null;
+    unread_count?: number;
+  };
 type ChatMessage = {
   id: string;
   thread_id: string;
@@ -101,6 +104,8 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const [search, setSearch] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [outbox, setOutbox] = useState<ChatMessage[]>([]);
+  const [unlocked, setUnlocked] = useState<Record<string, boolean>>({});
+  const unlockTokens = useRef<Record<string, string>>({});
   const { muted, toggle: toggleSound, play: playSound } = useChatSound(user?.id);
   const incoming = useMemo(() => new IncomingChatTracker(user?.id), [user?.id]);
   const [serviceSelections, setServiceSelections] = useState<Record<string, string>>({});
@@ -130,6 +135,69 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     retry: 1,
   });
   const current = threads.data?.find((thread) => thread.id === selectedId) ?? null;
+  const locked = !!current?.privacy_enabled && (!!current.history_locked || !unlocked[current.id]);
+  const conceal = useCallback(
+    (id: string) => {
+      delete unlockTokens.current[id];
+      setUnlocked((old) => ({ ...old, [id]: false }));
+      setOutbox((old) => old.filter((m) => m.thread_id !== id));
+      setDrafts((old) => ({ ...old, [id]: "" }));
+      client.setQueryData<Thread[]>(["ktv-chat", user?.id, "threads"], (old) =>
+        old?.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                privacy_enabled: true,
+                history_locked: true,
+                unlock_expires_at: null,
+                last_message: null,
+              }
+            : t,
+        ),
+      );
+      void client.cancelQueries({ queryKey: ["ktv-chat", user?.id, "messages", id] });
+      client.removeQueries({ queryKey: ["ktv-chat", user?.id, "messages", id] });
+    },
+    [client, user?.id],
+  );
+  const applyPrivacy = (state: ChatPrivacyState) => {
+    if (state.unlock_token) unlockTokens.current[state.id] = state.unlock_token;
+    if (state.history_locked || !state.privacy_enabled) delete unlockTokens.current[state.id];
+    setUnlocked((old) => ({ ...old, [state.id]: !state.history_locked && !!state.unlock_token }));
+    client.setQueryData<Thread[]>([...key, "threads"], (old) =>
+      old?.map((t) =>
+        t.id === state.id
+          ? {
+              ...t,
+              privacy_enabled: state.privacy_enabled,
+              history_locked: state.history_locked,
+              unlock_expires_at: state.unlock_expires_at,
+              last_message: state.privacy_enabled ? null : t.last_message,
+            }
+          : t,
+      ),
+    );
+    if (state.history_locked) conceal(state.id);
+  };
+  const leaving = () => {
+    if (current?.privacy_enabled) {
+      conceal(current.id);
+      void authFetch(`/ktv-chat/threads/${current.id}/privacy/lock`, json({})).catch(() => {});
+    }
+  };
+  useEffect(() => {
+    const tokens = unlockTokens.current;
+    return () => {
+      for (const id of Object.keys(tokens)) {
+        void authFetch(`/ktv-chat/threads/${id}/privacy/lock`, {
+          ...json({}),
+          keepalive: true,
+        }).catch(() => {});
+        delete tokens[id];
+      }
+      client.removeQueries({ queryKey: ["ktv-chat", user?.id, "messages"] });
+    };
+  }, [authFetch, client, user?.id]);
   const currentProvider = directory.data?.find((p) => p.id === current?.provider_application_id);
   const selectedService = current
     ? (serviceSelections[current.id] ??
@@ -146,17 +214,29 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const history = useInfiniteQuery({
     queryKey: [...key, "messages", selectedId],
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) =>
-      authFetch<ChatMessage[]>(
-        `/ktv-chat/threads/${selectedId}/messages${pageParam ? "?before=" + pageParam : ""}`,
-        { cache: "no-store" },
-      ),
+    queryFn: async ({ pageParam }) => {
+      try {
+        return await authFetch<ChatMessage[]>(
+          `/ktv-chat/threads/${selectedId}/messages${pageParam ? "?before=" + pageParam : ""}`,
+          {
+            cache: "no-store",
+            headers: unlockTokens.current[selectedId!]
+              ? { "X-Chat-Unlock": unlockTokens.current[selectedId!] }
+              : {},
+          },
+        );
+      } catch (error) {
+        if (selectedId && isChatLockedError(error)) conceal(selectedId);
+        throw error;
+      }
+    },
     getNextPageParam: (page) => (page.length === 50 ? page[0].id : undefined),
-    enabled: enabled && !!selectedId && !choosing,
+    enabled: enabled && !!selectedId && !choosing && !locked,
     refetchInterval: 5000,
     retry: 1,
   });
   const messages = useMemo(() => {
+    if (locked) return [];
     const seen = new Set<string>();
     const saved = [...(history.data?.pages ?? [])]
       .reverse()
@@ -167,7 +247,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
         return true;
       });
     return [...saved, ...outbox.filter((m) => m.thread_id === selectedId && !seen.has(m.id))];
-  }, [history.data, outbox, selectedId]);
+  }, [history.data, outbox, selectedId, locked]);
   useEffect(() => {
     return client.getQueryCache().subscribe((event) => {
       const queryKey = event.query.queryKey;
@@ -194,8 +274,9 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   }, [threads.data, selectedId, choosing, incoming, playSound]);
   useEffect(() => {
     const page = history.data?.pages[0];
-    if (selectedId && user && page && incoming.history(selectedId, page, user.id)) playSound();
-  }, [history.data, selectedId, user, incoming, playSound]);
+    if (!locked && selectedId && user && page && incoming.history(selectedId, page, user.id))
+      playSound();
+  }, [history.data, selectedId, user, incoming, playSound, locked]);
   const open = useMutation({
     mutationFn: (id: string) =>
       authFetch<Thread>("/ktv-chat/threads", json({ providerApplicationId: id })),
@@ -245,9 +326,17 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     return () => viewport.removeEventListener("resize", resize);
   }, []);
   useEffect(() => {
-    if (!enabled || !selectedId || !latestMessageId || choosing) return;
+    if (!enabled || !selectedId || !latestMessageId || choosing || locked) return;
     let disposed = false;
-    void authFetch(`/ktv-chat/threads/${selectedId}/read`, json({ lastMessageId: latestMessageId }))
+    void authFetch(`/ktv-chat/threads/${selectedId}/read`, {
+      ...json({ lastMessageId: latestMessageId }),
+      headers: {
+        "Content-Type": "application/json",
+        ...(unlockTokens.current[selectedId]
+          ? { "X-Chat-Unlock": unlockTokens.current[selectedId] }
+          : {}),
+      },
+    })
       .then(() => {
         if (!disposed)
           client.setQueryData<Thread[]>(["ktv-chat", user?.id, "threads"], (old) =>
@@ -256,11 +345,23 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
             ),
           );
       })
-      .catch(() => {});
+      .catch((error) => {
+        if (isChatLockedError(error)) conceal(selectedId);
+      });
     return () => {
       disposed = true;
     };
-  }, [enabled, selectedId, latestMessageId, choosing, authFetch, client, user?.id]);
+  }, [
+    enabled,
+    selectedId,
+    latestMessageId,
+    choosing,
+    authFetch,
+    client,
+    user?.id,
+    locked,
+    conceal,
+  ]);
   useEffect(() => {
     if (nearBottom.current && messagesRef.current)
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
@@ -288,10 +389,13 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       return input;
     },
     mutationFn: ({ id, body }: { id: string; body: string }) =>
-      authFetch<ChatMessage>(
-        `/ktv-chat/threads/${id}/messages`,
-        json(pendingSend.current[`${id}:${body}`]),
-      ),
+      authFetch<ChatMessage>(`/ktv-chat/threads/${id}/messages`, {
+        ...json(pendingSend.current[`${id}:${body}`]),
+        headers: {
+          "Content-Type": "application/json",
+          ...(unlockTokens.current[id] ? { "X-Chat-Unlock": unlockTokens.current[id] } : {}),
+        },
+      }),
     onSuccess: (message, { id, body }, input) => {
       delete pendingSend.current[`${id}:${body}`];
       setOutbox((old) =>
@@ -302,6 +406,10 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       void client.invalidateQueries({ queryKey: ["ktv-chat", user?.id, "threads"] });
     },
     onError: (error, { id, body }, input) => {
+      if (isChatLockedError(error)) {
+        conceal(id);
+        return;
+      }
       if (selectedId === id) setActionError(chatError(error));
       setDrafts((old) => (old[id] ? old : { ...old, [id]: body }));
       setOutbox((old) =>
@@ -336,12 +444,14 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     actionError ||
     (threads.isError || history.isError ? chatError(threads.error || history.error) : "");
   const select = (thread: Thread) => {
+    if (current?.id !== thread.id) leaving();
     setSelectedId(thread.id);
     setChoosing(false);
     setActionError("");
     nearBottom.current = true;
   };
   const pick = () => {
+    leaving();
     setChoosing(true);
     setSearch("");
     setActionError("");
@@ -535,7 +645,15 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                       <span className="ktv-chat-avatar">{initials(recipient(thread))}</span>
                       <span className="ktv-chat-contact-text">
                         <b>{recipient(thread)}</b>
-                        <small>{thread.last_message || "Gửi lời chào đầu tiên"}</small>
+                        <small>
+                          {thread.privacy_enabled ? (
+                            <>
+                              <LockKeyhole size={12} /> Hội thoại có mật khẩu
+                            </>
+                          ) : (
+                            thread.last_message || "Gửi lời chào đầu tiên"
+                          )}
+                        </small>
                       </span>
                       <span className="ktv-chat-contact-meta">
                         <time>{time(thread.updated_at)}</time>
@@ -571,6 +689,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                       className="ktv-chat-mobile-back ktv-chat-icon-button"
                       aria-label="Quay lại danh sách hội thoại"
                       onClick={() => {
+                        leaving();
                         setSelectedId(null);
                         setActionError("");
                       }}
@@ -606,277 +725,297 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                       {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                     </button>
                   </header>
-                  {customer && !!currentProvider?.services?.length && (
-                    <label className="ktv-chat-service">
-                      <span>Dịch vụ cần tư vấn</span>
-                      <select
-                        aria-label="Chọn dịch vụ để tư vấn"
-                        value={selectedService}
-                        onChange={(e) =>
-                          setServiceSelections((old) => ({ ...old, [current.id]: e.target.value }))
-                        }
-                      >
-                        <option value="">Tư vấn chung</option>
-                        {currentProvider.services.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </select>
-                      {consultationService && (
-                        <button
-                          type="button"
-                          disabled={paused}
-                          onClick={() =>
-                            setDrafts((old) => ({
-                              ...old,
-                              [current.id]: `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}. Bạn giúp tôi chọn thời gian phù hợp nhé.`,
-                            }))
-                          }
-                        >
-                          Soạn câu hỏi
-                        </button>
-                      )}
-                    </label>
-                  )}
-                  <div className="ktv-chat-block-status">
-                    <ChatBlockControls
+                  {customer && (
+                    <ChatPrivacyControls
                       key={current.id}
-                      thread={current}
-                      name={recipient(current)}
+                      thread={{ ...current, history_locked: locked }}
+                      onState={applyPrivacy}
+                      onConceal={() => conceal(current.id)}
                     />
-                    {paused ? (
-                      <p>
-                        {current.blocked_by_me
-                          ? "Bạn đang chặn hội thoại. Mở quản lý chặn để mở lại."
-                          : current.blocked_by_other
-                            ? "Người kia đang chặn hội thoại."
-                            : "Hội thoại tạm ngừng nhận tin nhắn mới."}{" "}
-                        {current.blocked_by_me &&
-                          current.my_block_expires_at &&
-                          `Tự mở lại: ${new Date(current.my_block_expires_at).toLocaleString("vi-VN")}.`}{" "}
-                        {current.blocked_by_me &&
-                          current.blocked_by_other &&
-                          "Người kia cũng đang chặn."}{" "}
-                        Bạn vẫn xem được lịch sử.
-                      </p>
-                    ) : (
-                      <small>Quản lý chặn hội thoại</small>
-                    )}
-                  </div>
-                  <div
-                    className="ktv-chat-messages"
-                    ref={messagesRef}
-                    onScroll={() => {
-                      const el = messagesRef.current;
-                      if (el)
-                        nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-                    }}
-                    role="log"
-                    aria-label="Tin nhắn"
-                    aria-live="polite"
-                  >
-                    {history.hasNextPage && (
-                      <button
-                        className="ktv-chat-older"
-                        disabled={history.isFetchingNextPage}
-                        onClick={() => void history.fetchNextPage()}
-                      >
-                        {history.isFetchingNextPage ? "Đang tải..." : "Xem tin nhắn trước"}
-                      </button>
-                    )}
-                    {history.isPending ? (
-                      <div className="ktv-chat-intro" role="status">
-                        <LoaderCircle className="ktv-chat-spinner" /> Đang tải tin nhắn...
-                      </div>
-                    ) : messages.length ? (
-                      messages.map((item, index) => (
-                        <div className="ktv-chat-message-row" key={item.id}>
-                          {(!index ||
-                            day(messages[index - 1].created_at) !== day(item.created_at)) && (
-                            <p className="ktv-chat-date">{day(item.created_at)}</p>
-                          )}
-                          <div
-                            className={`ktv-chat-bubble${item.sender_user_id === user.id ? " own" : ""}`}
+                  )}
+                  {!locked && (
+                    <>
+                      {customer && !!currentProvider?.services?.length && (
+                        <label className="ktv-chat-service">
+                          <span>Dịch vụ cần tư vấn</span>
+                          <select
+                            aria-label="Chọn dịch vụ để tư vấn"
+                            value={selectedService}
+                            onChange={(e) =>
+                              setServiceSelections((old) => ({
+                                ...old,
+                                [current.id]: e.target.value,
+                              }))
+                            }
                           >
-                            <p>{item.body}</p>
-                            <time dateTime={item.created_at}>{time(item.created_at)}</time>
-                            {item.delivery && (
-                              <small className="ktv-chat-delivery">
-                                {item.delivery === "sending"
-                                  ? "Đang gửi…"
-                                  : item.delivery === "sent"
-                                    ? "Đã gửi"
-                                    : "Chưa gửi được"}
-                                {item.delivery === "failed" && (
-                                  <button
-                                    type="button"
-                                    disabled={paused || send.isPending}
-                                    onClick={() =>
-                                      send.mutate({ id: item.thread_id, body: item.body })
-                                    }
-                                  >
-                                    Gửi lại
-                                  </button>
-                                )}
-                              </small>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      !history.isError && (
-                        <div className="ktv-chat-intro">
-                          <span className="ktv-chat-hero-icon">
-                            <MessageCircle size={28} />
-                          </span>
-                          <h2>Chào {recipient(current)}</h2>
-                          <p>Bạn có thể hỏi về dịch vụ, nhu cầu chăm sóc hoặc thời gian phù hợp.</p>
-                          {customer && !paused && (
+                            <option value="">Tư vấn chung</option>
+                            {currentProvider.services.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name}
+                              </option>
+                            ))}
+                          </select>
+                          {consultationService && (
                             <button
-                              className="ktv-chat-suggestion"
+                              type="button"
+                              disabled={paused}
                               onClick={() =>
                                 setDrafts((old) => ({
                                   ...old,
-                                  [current.id]: consultationService
-                                    ? `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}.`
-                                    : "Chào anh/chị, tôi muốn tìm hiểu thêm về dịch vụ chăm sóc.",
+                                  [current.id]: `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}. Bạn giúp tôi chọn thời gian phù hợp nhé.`,
                                 }))
                               }
                             >
-                              Gửi một lời chào <ArrowRight size={15} />
+                              Soạn câu hỏi
                             </button>
                           )}
-                        </div>
-                      )
-                    )}
-                  </div>
-                  {error && (
-                    <div className="ktv-chat-dialog-error" role="alert">
-                      <p>{error}</p>
-                      <button onClick={retry}>Thử lại</button>
-                    </div>
-                  )}
-                  <form
-                    className="ktv-chat-composer"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      if (
-                        !paused &&
-                        draft.trim() &&
-                        !send.isPending &&
-                        !history.isPending &&
-                        !history.isError
-                      )
-                        send.mutate({ id: current.id, body: draft.trim() });
-                    }}
-                  >
-                    {emojiFor === current.id && !paused && (
-                      <div
-                        className="ktv-chat-emoji-picker"
-                        id="ktv-chat-emojis"
-                        aria-label="Biểu cảm"
-                      >
-                        {[
-                          "😊",
-                          "❤️",
-                          "👍",
-                          "🙏",
-                          "🌿",
-                          "✨",
-                          "😄",
-                          "😍",
-                          "🥰",
-                          "🤗",
-                          "😌",
-                          "💐",
-                          "👌",
-                          "👋",
-                          "💚",
-                          "🎉",
-                          "🤔",
-                          "😅",
-                          "🙌",
-                          "☀️",
-                        ].map((emoji) => (
-                          <button
-                            type="button"
-                            key={emoji}
-                            aria-label={"Chèn biểu cảm " + emoji}
-                            onClick={() => {
-                              const start = inputRef.current?.selectionStart ?? draft.length;
-                              const end = inputRef.current?.selectionEnd ?? draft.length;
-                              const next = draft.slice(0, start) + emoji + draft.slice(end);
-                              if (next.length > 2000) return;
-                              setDrafts((old) => ({ ...old, [current.id]: next }));
-                              setEmojiFor(null);
-                              requestAnimationFrame(() => {
-                                inputRef.current?.focus();
-                                inputRef.current?.setSelectionRange(
-                                  start + emoji.length,
-                                  start + emoji.length,
-                                );
-                              });
-                            }}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      className="ktv-chat-emoji-toggle"
-                      disabled={paused}
-                      aria-label="Chọn biểu cảm"
-                      aria-expanded={emojiFor === current.id}
-                      aria-controls="ktv-chat-emojis"
-                      onClick={() => setEmojiFor((old) => (old === current.id ? null : current.id))}
-                    >
-                      <Smile size={22} />
-                    </button>
-                    <textarea
-                      ref={inputRef}
-                      rows={1}
-                      aria-label="Nội dung tin nhắn"
-                      value={draft}
-                      onChange={(event) =>
-                        setDrafts((old) => ({ ...old, [current.id]: event.target.value }))
-                      }
-                      maxLength={2000}
-                      placeholder={`Nhắn cho ${recipient(current)}...`}
-                      disabled={paused}
-                      onKeyDown={(event) => {
-                        if (event.key === "Escape") setEmojiFor(null);
-                        if (
-                          event.key === "Enter" &&
-                          !event.shiftKey &&
-                          !event.nativeEvent.isComposing
-                        ) {
-                          event.preventDefault();
-                          event.currentTarget.form?.requestSubmit();
-                        }
-                      }}
-                    />
-                    <button
-                      type="submit"
-                      disabled={
-                        paused ||
-                        !draft.trim() ||
-                        send.isPending ||
-                        history.isPending ||
-                        history.isError
-                      }
-                      aria-label="Gửi tin nhắn"
-                    >
-                      {send.isPending ? (
-                        <LoaderCircle size={21} className="ktv-chat-spinner" />
-                      ) : (
-                        <Send size={21} />
+                        </label>
                       )}
-                    </button>
-                    <small>Không chia sẻ mật khẩu hoặc thông tin thanh toán qua chat.</small>
-                  </form>
+                      <div className="ktv-chat-block-status">
+                        <ChatBlockControls
+                          key={current.id}
+                          thread={current}
+                          name={recipient(current)}
+                        />
+                        {paused ? (
+                          <p>
+                            {current.blocked_by_me
+                              ? "Bạn đang chặn hội thoại. Mở quản lý chặn để mở lại."
+                              : current.blocked_by_other
+                                ? "Người kia đang chặn hội thoại."
+                                : "Hội thoại tạm ngừng nhận tin nhắn mới."}{" "}
+                            {current.blocked_by_me &&
+                              current.my_block_expires_at &&
+                              `Tự mở lại: ${new Date(current.my_block_expires_at).toLocaleString("vi-VN")}.`}{" "}
+                            {current.blocked_by_me &&
+                              current.blocked_by_other &&
+                              "Người kia cũng đang chặn."}{" "}
+                            Bạn vẫn xem được lịch sử.
+                          </p>
+                        ) : (
+                          <small>Quản lý chặn hội thoại</small>
+                        )}
+                      </div>
+                      <div
+                        className="ktv-chat-messages"
+                        ref={messagesRef}
+                        onScroll={() => {
+                          const el = messagesRef.current;
+                          if (el)
+                            nearBottom.current =
+                              el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+                        }}
+                        role="log"
+                        aria-label="Tin nhắn"
+                        aria-live="polite"
+                      >
+                        {history.hasNextPage && (
+                          <button
+                            className="ktv-chat-older"
+                            disabled={history.isFetchingNextPage}
+                            onClick={() => void history.fetchNextPage()}
+                          >
+                            {history.isFetchingNextPage ? "Đang tải..." : "Xem tin nhắn trước"}
+                          </button>
+                        )}
+                        {history.isPending ? (
+                          <div className="ktv-chat-intro" role="status">
+                            <LoaderCircle className="ktv-chat-spinner" /> Đang tải tin nhắn...
+                          </div>
+                        ) : messages.length ? (
+                          messages.map((item, index) => (
+                            <div className="ktv-chat-message-row" key={item.id}>
+                              {(!index ||
+                                day(messages[index - 1].created_at) !== day(item.created_at)) && (
+                                <p className="ktv-chat-date">{day(item.created_at)}</p>
+                              )}
+                              <div
+                                className={`ktv-chat-bubble${item.sender_user_id === user.id ? " own" : ""}`}
+                              >
+                                <p>{item.body}</p>
+                                <time dateTime={item.created_at}>{time(item.created_at)}</time>
+                                {item.delivery && (
+                                  <small className="ktv-chat-delivery">
+                                    {item.delivery === "sending"
+                                      ? "Đang gửi…"
+                                      : item.delivery === "sent"
+                                        ? "Đã gửi"
+                                        : "Chưa gửi được"}
+                                    {item.delivery === "failed" && (
+                                      <button
+                                        type="button"
+                                        disabled={paused || send.isPending}
+                                        onClick={() =>
+                                          send.mutate({ id: item.thread_id, body: item.body })
+                                        }
+                                      >
+                                        Gửi lại
+                                      </button>
+                                    )}
+                                  </small>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          !history.isError && (
+                            <div className="ktv-chat-intro">
+                              <span className="ktv-chat-hero-icon">
+                                <MessageCircle size={28} />
+                              </span>
+                              <h2>Chào {recipient(current)}</h2>
+                              <p>
+                                Bạn có thể hỏi về dịch vụ, nhu cầu chăm sóc hoặc thời gian phù hợp.
+                              </p>
+                              {customer && !paused && (
+                                <button
+                                  className="ktv-chat-suggestion"
+                                  onClick={() =>
+                                    setDrafts((old) => ({
+                                      ...old,
+                                      [current.id]: consultationService
+                                        ? `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}.`
+                                        : "Chào anh/chị, tôi muốn tìm hiểu thêm về dịch vụ chăm sóc.",
+                                    }))
+                                  }
+                                >
+                                  Gửi một lời chào <ArrowRight size={15} />
+                                </button>
+                              )}
+                            </div>
+                          )
+                        )}
+                      </div>
+                      {error && (
+                        <div className="ktv-chat-dialog-error" role="alert">
+                          <p>{error}</p>
+                          <button onClick={retry}>Thử lại</button>
+                        </div>
+                      )}
+                      <form
+                        className="ktv-chat-composer"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          if (
+                            !paused &&
+                            draft.trim() &&
+                            !send.isPending &&
+                            !history.isPending &&
+                            !history.isError
+                          )
+                            send.mutate({ id: current.id, body: draft.trim() });
+                        }}
+                      >
+                        {emojiFor === current.id && !paused && (
+                          <div
+                            className="ktv-chat-emoji-picker"
+                            id="ktv-chat-emojis"
+                            aria-label="Biểu cảm"
+                          >
+                            {[
+                              "😊",
+                              "❤️",
+                              "👍",
+                              "🙏",
+                              "🌿",
+                              "✨",
+                              "😄",
+                              "😍",
+                              "🥰",
+                              "🤗",
+                              "😌",
+                              "💐",
+                              "👌",
+                              "👋",
+                              "💚",
+                              "🎉",
+                              "🤔",
+                              "😅",
+                              "🙌",
+                              "☀️",
+                            ].map((emoji) => (
+                              <button
+                                type="button"
+                                key={emoji}
+                                aria-label={"Chèn biểu cảm " + emoji}
+                                onClick={() => {
+                                  const start = inputRef.current?.selectionStart ?? draft.length;
+                                  const end = inputRef.current?.selectionEnd ?? draft.length;
+                                  const next = draft.slice(0, start) + emoji + draft.slice(end);
+                                  if (next.length > 2000) return;
+                                  setDrafts((old) => ({ ...old, [current.id]: next }));
+                                  setEmojiFor(null);
+                                  requestAnimationFrame(() => {
+                                    inputRef.current?.focus();
+                                    inputRef.current?.setSelectionRange(
+                                      start + emoji.length,
+                                      start + emoji.length,
+                                    );
+                                  });
+                                }}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          className="ktv-chat-emoji-toggle"
+                          disabled={paused}
+                          aria-label="Chọn biểu cảm"
+                          aria-expanded={emojiFor === current.id}
+                          aria-controls="ktv-chat-emojis"
+                          onClick={() =>
+                            setEmojiFor((old) => (old === current.id ? null : current.id))
+                          }
+                        >
+                          <Smile size={22} />
+                        </button>
+                        <textarea
+                          ref={inputRef}
+                          rows={1}
+                          aria-label="Nội dung tin nhắn"
+                          value={draft}
+                          onChange={(event) =>
+                            setDrafts((old) => ({ ...old, [current.id]: event.target.value }))
+                          }
+                          maxLength={2000}
+                          placeholder={`Nhắn cho ${recipient(current)}...`}
+                          disabled={paused}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") setEmojiFor(null);
+                            if (
+                              event.key === "Enter" &&
+                              !event.shiftKey &&
+                              !event.nativeEvent.isComposing
+                            ) {
+                              event.preventDefault();
+                              event.currentTarget.form?.requestSubmit();
+                            }
+                          }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={
+                            paused ||
+                            !draft.trim() ||
+                            send.isPending ||
+                            history.isPending ||
+                            history.isError
+                          }
+                          aria-label="Gửi tin nhắn"
+                        >
+                          {send.isPending ? (
+                            <LoaderCircle size={21} className="ktv-chat-spinner" />
+                          ) : (
+                            <Send size={21} />
+                          )}
+                        </button>
+                        <small>Không chia sẻ mật khẩu hoặc thông tin thanh toán qua chat.</small>
+                      </form>
+                    </>
+                  )}
                 </>
               ) : (
                 <div className="ktv-chat-welcome">

@@ -342,6 +342,20 @@
         "businessData": "Two explicitly labelled QA messages in existing owner-created customer/Linh Anh thread. No backend/schema, booking, review or eligibility changes.",
         "limits": "Incoming transport remains REST polling5s active/8s inbox. Sound applies while chat page mounted after user gesture; no background push or recipient-delivered claim."
       }
+    },
+    {
+      "agent": "Codex customer per-chat password 2026-10-10",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/customer-chat-password",
+      "backendBranch": "codex/customer-chat-password",
+      "ownedPaths": [
+        "BE/src/modules/ktv-chat/**",
+        "BE/test/ktv-chat.e2e-spec.ts and scoped privacy tests",
+        "BE app_metadata mocmaria.chat.privacy.* namespace only",
+        "FE/src/features/mobile/chat*",
+        "Plan own release evidence and docs/PRIVATE_KTV_CHAT.md"
+      ],
+      "note": "Customer-owned per-thread password, session-scoped expiring unlock, masked preview/API gates and recovery by own account password. No migration or shared identity/provider/booking writes; use existing private app_metadata store with thread-row transaction locking. Existing E2a ownership preserved."
     }
   ]
 }
