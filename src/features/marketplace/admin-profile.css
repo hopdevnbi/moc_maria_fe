@@ -1,0 +1,301 @@
+﻿.mm-admin-profile-layout {
+  display: grid;
+  grid-template-columns: minmax(270px, 0.74fr) minmax(0, 1.35fr);
+  gap: 20px;
+  align-items: start;
+  color: #294d39;
+}
+.mm-admin-profile-panel,
+.mm-admin-profile-security {
+  border: 1px solid #dfe8dc;
+  background: #fffefa;
+  border-radius: 23px;
+  padding: clamp(19px, 3vw, 30px);
+  box-shadow: 0 14px 40px rgba(38, 73, 45, 0.027);
+}
+.mm-admin-profile-eyebrow {
+  color: #8aaa91;
+  letter-spacing: 1.5px;
+  font-size: 10px;
+  font-weight: 850;
+}
+.mm-admin-avatar-panel {
+  text-align: center;
+  position: relative;
+}
+.mm-admin-profile-image {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  margin: 24px auto 15px;
+}
+.mm-admin-profile-image > img,
+.mm-admin-profile-image > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border: 5px solid #ecf4ea;
+  border-radius: 30px;
+  object-fit: cover;
+  background: #d4e7d7;
+  color: #397149;
+  font:
+    650 43px var(--font-wellness-serif),
+    Georgia,
+    serif;
+  overflow: hidden;
+}
+.mm-admin-avatar-upload-button {
+  position: absolute;
+  bottom: -5px;
+  right: -9px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  width: 41px;
+  height: 41px;
+  border-radius: 14px;
+  background: #2e6747;
+  border: 3px solid white;
+  color: white;
+  box-shadow: 0 3px 12px #2b5d4226;
+}
+.mm-admin-avatar-upload-button:hover {
+  background: #1f5336;
+}
+.mm-admin-avatar-panel h2 {
+  font:
+    600 29px/1.2 var(--font-wellness-serif),
+    Georgia,
+    serif;
+  margin: 14px 0 9px;
+  color: #2e4e38;
+}
+.mm-admin-profile-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  background: #edf4ea;
+  border: 1px solid #d6e6d3;
+  border-radius: 99px;
+  color: #658c69;
+  font-size: 11px;
+  font-weight: 750;
+}
+.mm-admin-profile-hint {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #859886;
+  margin: 19px auto;
+  max-width: 320px;
+}
+.mm-admin-profile-contacts {
+  display: grid;
+  gap: 16px;
+  padding-top: 22px;
+  margin-top: 24px;
+  border-top: 1px solid #e9eee5;
+  text-align: left;
+}
+.mm-admin-profile-contacts > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #52735e;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.mm-admin-profile-contacts svg {
+  flex-shrink: 0;
+}
+.mm-admin-profile-contacts small {
+  display: block;
+  font-size: 10px;
+  font-weight: 750;
+  color: #a0b0a2;
+  margin-bottom: 4px;
+}
+.mm-admin-profile-right {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.mm-admin-profile-section-header {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 21px;
+}
+.mm-admin-profile-section-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  color: #527e5e;
+  background: #e8f2e7;
+}
+.mm-admin-profile-section-header h2 {
+  font:
+    600 24px/1.2 var(--font-wellness-serif),
+    Georgia,
+    serif;
+  color: #31543e;
+}
+.mm-admin-profile-section-header p {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #91a293;
+  margin-top: 5px;
+}
+.mm-admin-profile-form > label {
+  display: grid;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #52725b;
+  margin-bottom: 18px;
+}
+.mm-admin-profile-form :is(input, textarea) {
+  display: block;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #d7e4d7;
+  border-radius: 11px;
+  padding: 12px 14px;
+  color: #294d37;
+  font:
+    400 15px/1.55 var(--font-wellness-sans),
+    Arial,
+    sans-serif;
+  outline-offset: 3px;
+}
+.mm-admin-profile-form textarea {
+  resize: vertical;
+}
+.mm-admin-profile-primary {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 12px 19px;
+  border-radius: 12px;
+  background: #2d6345;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mm-admin-profile-primary:hover {
+  background: #24563a;
+}
+.mm-admin-profile-primary:disabled,
+.mm-admin-profile-logout-row button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.mm-admin-profile-security {
+  background: #fdfefa;
+}
+.mm-admin-profile-security > form {
+  background: #fff;
+  border-color: #dfe9db;
+}
+.mm-admin-profile-logout-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.mm-admin-profile-logout-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #dfe7db;
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 10px 15px;
+  font-size: 12px;
+  font-weight: 750;
+  color: #476950;
+  background: #fff;
+  cursor: pointer;
+}
+.mm-admin-profile-logout-row button:last-child {
+  color: #945b55;
+  border-color: #ead8d4;
+}
+.mm-admin-profile-notice,
+.mm-admin-profile-error,
+.mm-admin-profile-loading {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: #edf6ee;
+  border: 1px solid #cfe2d0;
+  color: #386c46;
+  border-radius: 13px;
+  padding: 14px 17px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.mm-admin-profile-error {
+  background: #fff1ed;
+  border-color: #f0d6ce;
+  color: #9f544b;
+}
+.mm-admin-profile-error button {
+  font-weight: 800;
+  text-decoration: underline;
+}
+.mm-admin-user-link {
+  text-decoration: none;
+  border-radius: 13px;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.mm-admin-user-link:hover {
+  background: #f0f5ee;
+}
+.mm-admin-user-link .mm-admin-avatar {
+  overflow: hidden;
+}
+.mm-admin-user-link .mm-admin-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mm-admin-app :is(input, textarea, button, a):focus-visible {
+  outline: 3px solid #adcbaa;
+  outline-offset: 3px;
+}
+@media (max-width: 1120px) {
+  .mm-admin-profile-layout {
+    grid-template-columns: minmax(250px, 0.8fr) minmax(0, 1.2fr);
+  }
+}
+@media (max-width: 760px) {
+  .mm-admin-profile-layout {
+    grid-template-columns: 1fr;
+  }
+  .mm-admin-profile-panel,
+  .mm-admin-profile-security {
+    border-radius: 18px;
+  }
+  .mm-admin-avatar-panel {
+    padding-top: 23px;
+  }
+  .mm-admin-profile-security .mm-admin-profile-section-header h2 {
+    font-size: 22px;
+  }
+}
+@media (max-width: 460px) {
+  .mm-admin-profile-logout-row button {
+    width: 100%;
+    justify-content: center;
+  }
+}

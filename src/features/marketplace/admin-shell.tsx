@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
+import { AdminUserLink } from "./admin-user-link";
 import "@/app/home.css";
 import "./marketplace.css";
 import "./admin-workspace.css";
@@ -88,6 +89,7 @@ export const adminNavGroups: AdminNavGroup[] = [
   {
     label: "HỆ THỐNG",
     items: [
+      { label: "Hồ sơ cá nhân", icon: UserRoundCheck, href: "/quan-tri/ho-so" },
       {
         label: "Phân quyền & cấu hình",
         icon: Settings2,
@@ -232,11 +234,6 @@ export function AdminShell({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const groups = adminVisibleGroups(user);
-  const roleLabel = user?.roles.includes("SUPER_ADMIN")
-    ? "Super Admin"
-    : user?.roles.includes("ADMIN")
-      ? "Quản trị viên"
-      : "Nhân viên quản lý";
   const pageLabel =
     groups.flatMap((g) => g.items).find((i) => i.href && isActivePath(pathname, i.href))?.label ??
     "Quản trị";
@@ -286,15 +283,7 @@ export function AdminShell({
                 <ArrowLeft size={16} aria-hidden="true" />
                 <span>Trang khách hàng</span>
               </Link>
-              <div className="mm-admin-user">
-                <span className="mm-admin-avatar" aria-hidden="true">
-                  {(user?.displayName || "A").trim().slice(0, 1).toUpperCase()}
-                </span>
-                <span className="mm-admin-user-detail">
-                  <strong>{user?.displayName || "Quản trị viên"}</strong>
-                  <small>{roleLabel}</small>
-                </span>
-              </div>
+              <AdminUserLink />
             </div>
           </header>
           <main id="mm-admin-main" className="mm-admin-main">

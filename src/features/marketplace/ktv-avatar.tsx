@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import { useState } from "react";
@@ -8,19 +8,24 @@ export function KtvAvatar({
   name,
   src,
   size = "small",
+  illustrative = false,
 }: {
   name: string;
   src?: string | null;
   size?: "small" | "large";
+  illustrative?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
-  const usable = !!src && /^https:\/\//i.test(src);
+  const usable =
+    !!src &&
+    (/^https:\/\//i.test(src) || /^\/media\/ktv\/[a-z0-9._-]+\.webp$/i.test(src)) &&
+    !src.includes("..");
   return (
     <span className={"mm-ktv-avatar mm-ktv-avatar-" + size}>
       {usable && !failed ? (
         <Image
           src={src}
-          alt={"Ảnh đại diện " + name}
+          alt={(illustrative ? "Ảnh minh họa hoạt động chăm sóc của " : "Ảnh đại diện ") + name}
           width={size === "large" ? 90 : 48}
           height={size === "large" ? 90 : 48}
           unoptimized
