@@ -14,6 +14,7 @@ describe("Admin sidebar RBAC navigation", () => {
     expect(items.filter((item) => item.href).map((item) => item.href)).toEqual([
       "/quan-tri",
       "/quan-tri/ktv",
+      "/quan-tri/danh-gia-ktv",
       "/quan-tri/dich-vu",
       "/quan-tri/co-so",
       "/quan-tri/ho-so",
@@ -40,6 +41,7 @@ describe("Admin sidebar RBAC navigation", () => {
     expect(groups.flatMap((group) => group.items).map((item) => item.href)).toEqual([
       "/quan-tri",
       "/quan-tri/ktv",
+      "/quan-tri/danh-gia-ktv",
       "/quan-tri/dich-vu",
       "/quan-tri/co-so",
       "/quan-tri/ho-so",

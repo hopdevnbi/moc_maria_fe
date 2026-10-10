@@ -9,11 +9,11 @@ import {
   Flower2,
   UserRound,
   ShieldCheck,
-  LogOut,
 } from "lucide-react";
 import { CustomerProfileEditor, ProviderDescriptionEditor } from "@/features/mobile/profile-editor";
 import { AppointmentInquiries } from "@/features/mobile/inquiries";
 import { AccountSearch } from "@/features/mobile/account-search";
+import { AccountShortcuts } from "@/features/mobile/account-shortcuts";
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -118,40 +118,26 @@ function AccountContent() {
               : "Chọn KTV, tìm hiểu dịch vụ và bắt đầu một cuộc trò chuyện riêng."}
           </p>
         </div>
-        <Link className="mm-primary-cta" href={technician ? "/tin-nhan" : "/chuyen-vien"}>
-          {technician ? <MessageCircle size={18} /> : <Users size={18} />}{" "}
-          {technician ? "Trả lời khách hàng" : "Chọn KTV & Chat"}
-          <ArrowRight size={16} />
-        </Link>
       </section>
-      <div className="mm-account-toolbar">
-        <Link href="#thong-tin-tai-khoan">Thông tin của tôi</Link>
-        <Link href="#doi-mat-khau">Đổi mật khẩu</Link>
-        <button
-          type="button"
-          className="mm-account-signout"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            setNotice("");
-            try {
-              await logout();
-            } catch {
-              setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <LogOut size={17} />
-          {busy ? "Đang đăng xuất..." : "Đăng xuất"}
-        </button>
-      </div>
-      {notice && <p role="alert">{notice}</p>}
-      {!technician && (
-        <Link className="mm-primary-cta mm-account-booking" href="/dat-lich">
-          <CalendarDays size={20} /> Đặt lịch chăm sóc <ArrowRight size={17} />
-        </Link>
+      <AccountShortcuts
+        technician={technician}
+        signingOut={busy}
+        onSignOut={async () => {
+          setBusy(true);
+          setNotice("");
+          try {
+            await logout();
+          } catch {
+            setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
+      {notice && (
+        <p role="alert" className="mm-account-shortcut-notice">
+          {notice}
+        </p>
       )}
       {!technician && <AccountSearch />}
       <nav className="mm-account-actions" aria-label="Tiện ích tài khoản">

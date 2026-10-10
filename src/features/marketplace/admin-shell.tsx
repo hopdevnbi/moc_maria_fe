@@ -17,6 +17,7 @@ import {
   Settings2,
   ShieldCheck,
   Sparkles,
+  Star,
   UsersRound,
   UserRoundCheck,
   X,
@@ -51,6 +52,12 @@ export const adminNavGroups: AdminNavGroup[] = [
         label: "Kỹ thuật viên",
         icon: UserRoundCheck,
         href: "/quan-tri/ktv",
+        permission: "staff.manage",
+      },
+      {
+        label: "Đánh giá KTV",
+        icon: Star,
+        href: "/quan-tri/danh-gia-ktv",
         permission: "staff.manage",
       },
       {

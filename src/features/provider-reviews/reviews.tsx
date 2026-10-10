@@ -27,6 +27,7 @@ type Eligible = {
   stars: number | null;
   comment: string | null;
   visibility: string | null;
+  moderation_status: string | null;
   version: number | null;
   editable_until: string | null;
 };
@@ -137,10 +138,11 @@ function ReviewForm({ item, onDone }: { item: Eligible; onDone: () => void }) {
         />
       </label>
       <small>
-        Nhận xét được công khai dưới tên “Khách đã sử dụng dịch vụ”. Không đưa số điện thoại, địa
-        chỉ hoặc thông tin riêng tư vào nhận xét. Bạn có thể sửa trong 7 ngày kể từ lần gửi đầu
-        tiên.
+        Đánh giá sẽ chờ quản trị viên xét duyệt trước khi được công khai. Trang web chỉ hiển thị
+        nhận xét đã duyệt, dưới tên “Khách đã sử dụng dịch vụ”. Vui lòng không đưa số điện thoại,
+        địa chỉ hoặc thông tin riêng tư vào nhận xét.
       </small>
+
       {save.isError && (
         <p role="alert">
           {save.error instanceof Error &&
@@ -219,7 +221,13 @@ export function MyReviewRequests({ providerId }: { providerId: string }) {
                   {item.review_id ? "Sửa đánh giá" : "Viết đánh giá"}
                 </button>
               ) : (
-                <small>{item.visibility === "HIDDEN" ? "Đang kiểm duyệt" : "Đã hết hạn sửa"}</small>
+                <small>
+                  {item.moderation_status === "PENDING"
+                    ? "Đang chờ Admin duyệt"
+                    : item.visibility === "HIDDEN"
+                      ? "Đánh giá đã bị ẩn"
+                      : "Đã hết hạn sửa"}
+                </small>
               )}
             </div>
           );
