@@ -1373,5 +1373,14 @@
     "test": "FE40 tests/full quality/production build and CI PASS. BE25 unit/full quality/CI PASS; 8 existing integration suites passed, then all20 chat tests passed after isolating pagination timestamps from the production30/min limiter (all76 cases covered). Mobile320/390 no overflow and masked input/dialogs. Live API health/public200/private401; customer/provider normal history200/no-store, invalid password DTO400, provider privacy ownership403; live customer set-password dialog verified without submission.",
     "businessData": "No production chat password or new messages set by agent; customers opt in per thread. No migration or booking/review/identity eligibility changes.",
     "releasedAt": "2026-10-10T00:57:41.249Z"
+  },
+  "serviceResponsiveUiRelease": {
+    "frontend": "1d3c282e34d255180a3dfa7278abaf170863d47c",
+    "implementation": "502a66f",
+    "frontendDeployment": 6975569768,
+    "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/15",
+    "validation": "Local full quality: format, lint, typecheck, 46 tests and build PASS. PR/main CI and Vercel Production SUCCESS. All 10 cards verified at 320/390/768/1024/1440 locally; production 320/390/768/1440 no overflow, covers fill and 44px actions. Search/clear and detail navigation preserved.",
+    "scope": "UI only; existing 10 owner photos with 480/960 WebP CDN variants reused; no service data, prices, eligibility, booking/chat or backend change.",
+    "releasedAt": "2026-10-10T03:34:03.017Z"
   }
 }

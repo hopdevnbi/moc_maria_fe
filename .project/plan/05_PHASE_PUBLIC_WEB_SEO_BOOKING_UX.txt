@@ -1,3 +1,8 @@
+SERVICE RESPONSIVE UI RELEASE - 2026-10-10
+FE 1d3c282e34d255180a3dfa7278abaf170863d47c; Vercel 6975569768 SUCCESS; PR15/main CI PASS.
+Full-width 16:10 owner photos, responsive 1/2/3-column cards, labelled 44px actions. 46 tests/full quality and mobile/tablet/desktop browser checks PASS.
+UI only: prices, service IDs, search, booking/chat and backend preserved. See docs/SERVICE_RESPONSIVE_UI.md.
+
 PHASE 05 - PUBLIC WEBSITE / SEO / BOOKING UX
 ============================================
 

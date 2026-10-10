@@ -1,3 +1,8 @@
+SERVICE RESPONSIVE UI RELEASE - 2026-10-10
+FE 1d3c282e34d255180a3dfa7278abaf170863d47c; Vercel 6975569768 SUCCESS; PR15/main CI PASS.
+Full-width 16:10 owner photos, responsive 1/2/3-column cards, labelled 44px actions. 46 tests/full quality and mobile/tablet/desktop browser checks PASS.
+UI only: prices, service IDs, search, booking/chat and backend preserved. See docs/SERVICE_RESPONSIVE_UI.md.
+
 CUSTOMER PER-CHAT PASSWORD RELEASE — 2026-10-10
 FE 18aa39b29ae1a2c3307765b6b8bab261899ab625; Vercel6974064810 SUCCESS; BE 117f9a084764b03f2a4586e769d9eea4953ac14c; immutable sha256:6797416683911ba1aaafc461302e18ebe37758717fb77bd2bb93eba1d66dcbe3 ready.
 CODE/TEST/COMMIT/DEPLOY complete. Customer-owned passwords, masked previews, API proof gates, lock/change/remove/recovery; 15-minute memory-only unlock. Provider access retained.

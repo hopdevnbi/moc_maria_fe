@@ -372,17 +372,25 @@
     },
     {
       "agent": "Codex services responsive UI 2026-10-10",
-      "status": "ACTIVE",
+      "status": "RELEASED",
       "frontendBranch": "codex/services-responsive-ui",
       "frontendWorktree": "C:/Users/admin/Desktop/DỰ ÁN GIÁO LÝ VIÊN/moc_maria_fe_chat",
       "ownedPaths": [
-        "FE/src/features/mobile/experience.tsx (ServiceTile markup only)",
+        "FE/src/features/mobile/experience.tsx (ServiceTile presentation and image-loading hints only)",
         "FE/src/features/mobile/mobile.css (.mm-service-* selectors only)",
-        "FE/src/features/mobile/service-photo* (visual focal points only)",
         "FE/docs/SERVICE_RESPONSIVE_UI.md",
         "Plan own scoped release evidence"
       ],
-      "note": "Service list photo fill/cropping and responsive card presentation only. Preserve service data/prices/IDs, search, links and booking/chat logic; E2a and other worktree changes retained."
+      "note": "Service list photo fill/cropping and responsive card presentation only. Preserve service data/prices/IDs, search, links and booking/chat logic; E2a and other worktree changes retained.",
+      "release": {
+        "frontend": "1d3c282e34d255180a3dfa7278abaf170863d47c",
+        "implementation": "502a66f",
+        "frontendDeployment": 6975569768,
+        "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/15",
+        "validation": "Local full quality: format, lint, typecheck, 46 tests and build PASS. PR/main CI and Vercel Production SUCCESS. All 10 cards verified at 320/390/768/1024/1440 locally; production 320/390/768/1440 no overflow, covers fill and 44px actions. Search/clear and detail navigation preserved.",
+        "scope": "UI only; existing 10 owner photos with 480/960 WebP CDN variants reused; no service data, prices, eligibility, booking/chat or backend change.",
+        "releasedAt": "2026-10-10T03:34:03.017Z"
+      }
     }
   ]
 }

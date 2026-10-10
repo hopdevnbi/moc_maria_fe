@@ -14,3 +14,7 @@ Browser checks at 320, 390, 768, 1024 and 1440px: all 10 images fill their cover
 
 Local npm run quality passed: formatting, ESLint, TypeScript, 46 tests and production build. Production rollout evidence will be recorded after release. Changes are limited to ServiceTile presentation, responsive service selectors and the image-loading hint. Service IDs, prices, variants, eligibility, search/filter logic, booking/chat paths, API and backend are unchanged.
 
+
+## Production release
+
+PR15 merged as 1d3c282e34d255180a3dfa7278abaf170863d47c. PR/main CI passed; Vercel Production deployment 6975569768 succeeded. Live mocmaria.com/dich-vu checked at 320, 390, 768 and 1440px with no horizontal overflow; photos fill the reserved cover and actions remain 44px. Search and clear return the expected results. Previous customer chat-password release is already committed, pushed, merged and deployed.
