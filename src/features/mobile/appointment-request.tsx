@@ -219,7 +219,7 @@ export function AppointmentRequest({
                     <p>Tìm theo tên, dịch vụ hoặc khu vực.</p>
                   </div>
                 </div>
-                <label className="mm-search mm-request-search">
+                <label className="mm-searchbar mm-request-search">
                   <Search size={18} />
                   <input
                     value={query}

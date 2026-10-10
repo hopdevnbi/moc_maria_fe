@@ -42,7 +42,7 @@ export function AccountSearch() {
   return (
     <section className="mm-account-profile">
       <h2>Tìm nhanh KTV & dịch vụ</h2>
-      <label className="mm-search">
+      <label className="mm-searchbar">
         <Search size={18} />
         <input
           aria-label="Tìm nhanh KTV và dịch vụ"

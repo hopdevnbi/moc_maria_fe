@@ -352,6 +352,27 @@
 .mm-request-form .mm-booking-summary {
   align-self: start;
 }
+.mm-summary-items {
+  display: grid;
+  gap: 14px;
+  padding: 20px 0;
+  margin: 20px 0;
+  border-block: 1px solid #dce5d7;
+}
+.mm-summary-items p {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.mm-summary-items svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #708171;
+}
 .mm-request-form input,
 .mm-request-form textarea,
 .mm-request-form select {
