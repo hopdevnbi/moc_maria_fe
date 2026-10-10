@@ -11,6 +11,16 @@ export default function AdminPage() {
       <div className="market-grid">
         {[
           {
+            href: "/quan-tri/khach-hang",
+            title: "Kh?ch h?ng",
+            text: "Qu?n l? t?i kho?n, tr?ng th?i ho?t ??ng v? h? s? kh?ch h?ng.",
+          },
+          {
+            href: "/quan-tri/hoi-vien",
+            title: "H?i vi?n VIP",
+            text: "X?t duy?t VIP, theo d?i h?i vi?n v? c?u h?nh quy?n l?i ch?nh th?c.",
+          },
+          {
             href: "/quan-tri/dich-vu",
             title: "Dịch vụ & bảng giá",
             text: "Nhập danh mục, gói thời lượng và giá chính thức. Chủ động công bố hoặc tạm ngưng từng gói.",

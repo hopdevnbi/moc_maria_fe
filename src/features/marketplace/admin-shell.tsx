@@ -34,6 +34,13 @@ function AdminNavigation() {
           <Link href="/quan-tri/ktv">Ứng tuyển & đào tạo</Link>
         </>
       )}
+      {user?.permissions.includes("customers.manage") &&
+        user.roles.some((role) => role === "ADMIN" || role === "SUPER_ADMIN") && (
+          <>
+            <Link href="/quan-tri/khach-hang">Kh?ch h?ng</Link>
+            <Link href="/quan-tri/hoi-vien">H?i vi?n VIP</Link>
+          </>
+        )}
     </nav>
   );
 }

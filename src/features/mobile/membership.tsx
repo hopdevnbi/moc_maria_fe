@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
 import "@/features/mobile/mobile.css";
+import { VipApplication } from "./vip-application";
 
 export default function MembershipPage() {
   const { user, status } = useAuth();
@@ -78,7 +79,7 @@ export default function MembershipPage() {
             <div className="mm-members-symbol">
               <Crown size={26} />
             </div>
-            <span className="mm-overline">DỰ KIẾN · CHƯA KÍCH HOẠT</span>
+            <span className="mm-overline">XÉT DUYỆT THEO YÊU CẦU</span>
             <h2>Hội viên VIP</h2>
             <p>
               Không gian dành cho khách hàng gắn bó cùng Mộc, đang được xây dựng chính sách quyền
@@ -100,6 +101,7 @@ export default function MembershipPage() {
             </div>
           </article>
         </section>
+        <VipApplication />
         <p className="mm-members-legal">
           <ShieldCheck size={17} /> Chúng tôi không hiển thị điểm, ưu đãi hay hạng VIP chưa được xác
           minh từ hệ thống.
