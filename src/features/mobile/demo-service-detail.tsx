@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { providerProfileHref } from "./provider-slugs";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock3, MapPin, ShieldAlert, Sparkles } from "lucide-react";
 import type { ServiceItem } from "@/features/marketplace/types";
@@ -78,7 +79,7 @@ export function DemoServiceDetail({ item }: { item: ServiceItem }) {
             {matching.map((provider) => (
               <Link
                 className="mm-demo-provider-tile"
-                href={"/chuyen-vien/" + provider.id}
+                href={providerProfileHref(provider)}
                 key={provider.id}
               >
                 <Image

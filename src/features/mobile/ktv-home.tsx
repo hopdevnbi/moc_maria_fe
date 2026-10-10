@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { providerProfileHref } from "./provider-slugs";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -102,7 +103,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
     <article className="ktv-card">
       <div className="ktv-person">
         <Link
-          href={"/chuyen-vien/" + provider.id}
+          href={providerProfileHref(provider)}
           className="ktv-avatar"
           aria-label={"Xem hồ sơ " + provider.publicName}
         >
@@ -127,7 +128,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
               <CheckCircle2 size={13} /> KTV đã xác minh
             </p>
           )}
-          <Link href={"/chuyen-vien/" + provider.id} className="ktv-name">
+          <Link href={providerProfileHref(provider)} className="ktv-name">
             {provider.publicName}
           </Link>
           <p className="ktv-role">{provider.title || "Kỹ thuật viên massage"}</p>
@@ -150,7 +151,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
       <div className="ktv-offers">
         <div className="ktv-offers-heading">
           <strong>{provider.isDemo ? "Dịch vụ minh họa" : "Dịch vụ massage"}</strong>
-          <Link href={"/chuyen-vien/" + provider.id}>
+          <Link href={providerProfileHref(provider)}>
             Tất cả <ArrowRight size={13} />
           </Link>
         </div>
