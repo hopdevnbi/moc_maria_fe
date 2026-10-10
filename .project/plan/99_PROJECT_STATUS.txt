@@ -1,3 +1,11 @@
+INSTANT CHAT SEND / NOTIFICATION AUDIO RELEASE — 2026-10-10
+FE7b74524; Vercel6973619586 SUCCESS; PR8 merged; PR/main CI PASS.
+Outgoing pending bubble renders before POST response; idempotent failed retry and next-draft preservation.
+33 FE tests/full quality/build PASS; live customer Enter/KTV reply, mute persistence and mobile320/390 PASS.
+Owner MP3 reused (16128 bytes, ~0.50s), Web Audio gesture unlock/preload/reuse, per-account mute. Frontend CDN HTTP200/exact hash/cache HIT; immutable one-year cache.
+No BE/schema/booking changes. Existing REST poll5s/8s and shared socket scope retained; closed-page push is not part of this release.
+See docs/PRIVATE_KTV_CHAT.md.
+
 CUSTOMER REGISTRATION → PRIVATE KTV CONSULTATION RELEASE — 2026-10-10
 FE dc99e8e (core b9e11b8), BE d65b2a7; Vercel6972380799 SUCCESS; API immutable9183dd6d ready.
 10 existing KTV accounts now receive private consultation. One CUSTOMER created by normal registration; credentials in private owner TXT.
