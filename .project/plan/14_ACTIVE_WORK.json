@@ -410,6 +410,18 @@
         "BE/src/modules/ktv-chat/ktv-chat.module.ts (read-only directory service export only)"
       ],
       "note": "Owner explicitly requested account/logout, SUPER_ADMIN moderated description revisions and Hanoi appointment flow. Preserve E2a booking transactions, provider eligibility locks and all concurrent main changes. Separate presentation revision and appointment inquiry stores; no fake approvals/certificates/reservations, no writes to legacy booking modules."
+    },
+    {
+      "agent": "Codex social booking note 2026-10-10",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/social-booking-note",
+      "ownedPaths": [
+        "FE/src/features/mobile/experience.tsx (floating fanpage shortcut only)",
+        "FE/src/features/mobile/mobile.css (social/note selectors only)",
+        "FE/src/features/mobile/booking-reassurance.tsx; booking.tsx and appointment-request.tsx (shared content only)",
+        "Own scoped release docs and Plan evidence"
+      ],
+      "note": "Owner requested fanpage floating button and tactful healthy-service/respect note on mobile/desktop. Preserve account release, legacy booking transactions and concurrent admin changes."
     }
   ]
 }

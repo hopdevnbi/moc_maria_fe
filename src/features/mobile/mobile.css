@@ -1892,3 +1892,64 @@
     overflow-wrap: anywhere;
   }
 }
+.mm-social-floating {
+  position: fixed;
+  right: max(24px, env(safe-area-inset-right));
+  bottom: 28px;
+  z-index: 24;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 52px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #1877f2;
+  color: white;
+  box-shadow: 0 6px 20px #1877f233;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.mm-social-floating:hover {
+  background: #1465d1;
+}
+.mm-booking-reassurance {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  margin: 0 0 24px;
+  border: 1px solid #dce5d7;
+  border-radius: 16px;
+  background: #f0f5ec;
+  color: #315f46;
+}
+.mm-booking-reassurance > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.mm-booking-reassurance strong {
+  font-size: 14px;
+}
+.mm-booking-reassurance p {
+  margin: 8px 0 0;
+  color: #617467;
+  font-size: 13px;
+  line-height: 1.8;
+}
+@media (max-width: 800px) {
+  .mm-social-floating {
+    right: max(14px, env(safe-area-inset-right));
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    width: 48px;
+    min-height: 48px;
+    padding: 12px;
+  }
+  .mm-social-floating span {
+    display: none;
+  }
+  .mm-booking-reassurance {
+    padding: 16px;
+  }
+}

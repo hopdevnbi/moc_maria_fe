@@ -6,6 +6,7 @@ import { CalendarDays, CheckCircle2, MapPin, Search, ArrowRight, UserRound } fro
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { MobileHeader, MobileNavigation } from "./experience";
+import { BookingReassurance } from "./booking-reassurance";
 import { MOC_MARIA_PRIMARY_ADDRESS } from "./booking-location";
 import { formatPrice } from "@/features/marketplace/format";
 import "./booking-location.css";
@@ -153,6 +154,7 @@ export function AppointmentRequest({
             </Link>
           )}
         </header>
+        <BookingReassurance />
         {submitted ? (
           <section className="mm-booking-success" role="status">
             <CheckCircle2 size={40} />
