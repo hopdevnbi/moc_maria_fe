@@ -326,6 +326,9 @@
 .mm-request-search {
   margin-bottom: 16px;
 }
+.mm-request-change {
+  margin-top: 12px;
+}
 .mm-request-price {
   margin-top: 14px;
   color: #315f46;

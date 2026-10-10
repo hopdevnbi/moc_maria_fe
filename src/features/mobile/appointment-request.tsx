@@ -31,11 +31,11 @@ export function AppointmentRequest({
 }) {
   const { user, status, authFetch } = useAuth();
   const available = providers.filter((p) => p.chatEnabled || !p.isDemo);
-  const [providerId, setProviderId] = useState(
-    () =>
-      available.find((p) => p.id === initial.provider || p.chatProviderId === initial.provider)
-        ?.id || "",
+  const initialProvider = available.find(
+    (p) => p.id === initial.provider || p.chatProviderId === initial.provider,
   );
+  const [providerId, setProviderId] = useState(() => initialProvider?.id || "");
+  const [showProviderPicker, setShowProviderPicker] = useState(!initialProvider);
   const [serviceId, setServiceId] = useState(initial.service || "");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState<"AT_BRANCH" | "AT_HOME">("AT_BRANCH");
@@ -57,13 +57,16 @@ export function AppointmentRequest({
       if (!raw) return;
       const draft = JSON.parse(raw) as Record<string, unknown>;
       if (typeof draft.savedAt !== "number" || Date.now() - draft.savedAt > 30 * 60 * 1000) return;
+      if (initial.provider && (!initialProvider || draft.providerId !== initialProvider.id)) return;
       queueMicrotask(() => {
         if (
+          !initial.provider &&
           typeof draft.providerId === "string" &&
           providers.some((p) => p.id === draft.providerId)
         )
           setProviderId(draft.providerId);
         if (
+          !initial.service &&
           typeof draft.serviceId === "string" &&
           services.some((s) => s.service.id === draft.serviceId)
         )
@@ -77,7 +80,7 @@ export function AppointmentRequest({
     } catch {
       /* A blocked browser storage does not prevent booking. */
     }
-  }, [providers, services]);
+  }, [providers, services, initial.provider, initial.service, initialProvider]);
   const chosen = available.find((p) => p.id === providerId);
   const offers = (p: Provider) =>
     p.isDemo
@@ -217,27 +220,40 @@ export function AppointmentRequest({
                 <div className="mm-booking-step">
                   <span>02</span>
                   <div>
-                    <h2>Chọn kỹ thuật viên</h2>
-                    <p>Tìm theo tên, dịch vụ hoặc khu vực.</p>
+                    <h2>
+                      {!showProviderPicker && chosen ? "KTV bạn đã chọn" : "Chọn kỹ thuật viên"}
+                    </h2>
+                    <p>
+                      {!showProviderPicker && chosen
+                        ? "Tiếp tục chọn dịch vụ và địa chỉ bên dưới."
+                        : "Tìm theo tên, dịch vụ hoặc khu vực."}
+                    </p>
                   </div>
                 </div>
-                <label className="mm-searchbar mm-request-search">
-                  <Search size={18} />
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Tìm tên KTV, dịch vụ..."
-                    aria-label="Tìm kỹ thuật viên"
-                  />
-                </label>
+                {showProviderPicker && (
+                  <label className="mm-searchbar mm-request-search">
+                    <Search size={18} />
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Tìm tên KTV, dịch vụ..."
+                      aria-label="Tìm kỹ thuật viên"
+                    />
+                  </label>
+                )}
                 <div className="mm-request-providers">
-                  {filtered.map((p) => (
+                  {(showProviderPicker ? filtered : chosen ? [chosen] : []).map((p) => (
                     <button
                       type="button"
                       key={p.id}
                       aria-pressed={providerId === p.id}
                       className={"mm-request-provider" + (providerId === p.id ? " selected" : "")}
-                      onClick={() => setProviderId(p.id)}
+                      onClick={() => {
+                        setProviderId(p.id);
+                        if (serviceId && !offers(p).some((s) => s.id === serviceId))
+                          setServiceId("");
+                        if (initialProvider) setShowProviderPicker(false);
+                      }}
                     >
                       {p.avatarUrl?.startsWith("/media/") ? (
                         <Image src={p.avatarUrl} width={56} height={64} alt="" unoptimized />
@@ -255,6 +271,15 @@ export function AppointmentRequest({
                     </button>
                   ))}
                 </div>
+                {!showProviderPicker && chosen && (
+                  <button
+                    type="button"
+                    className="mm-outline-cta mm-request-change"
+                    onClick={() => setShowProviderPicker(true)}
+                  >
+                    Đổi KTV
+                  </button>
+                )}
                 {!filtered.length && (
                   <p role="status">Chưa có KTV phù hợp. Hãy đổi từ khóa hoặc dịch vụ.</p>
                 )}

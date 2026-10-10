@@ -24,6 +24,7 @@ async function BookingContent({
   if (value("flow") !== "verified")
     return (
       <AppointmentRequest
+        key={JSON.stringify([value("provider"), value("service")])}
         providers={data.providers}
         services={[...data.services, ...(demoServices as ServiceItem[])]}
         initial={{ provider: value("provider"), service: value("service") }}
