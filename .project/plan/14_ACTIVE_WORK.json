@@ -75,11 +75,7 @@
       "agent": "Codex current chat",
       "status": "RELEASED",
       "stage": "D2 — practical criteria / derived attendance / assessment history / renewal",
-      "taskIds": [
-        "P03-T28",
-        "P03-T29",
-        "P03-T30"
-      ],
+      "taskIds": ["P03-T28", "P03-T29", "P03-T30"],
       "backendBranch": "codex/production-integration",
       "frontendBranch": "codex/platform-integration",
       "frontendWorktree": "C:/Users/User/.codex/worktrees/moc-maria-platform/moc_maria_fe",
@@ -112,15 +108,7 @@
       "agent": "Codex current chat",
       "status": "RELEASED",
       "stage": "E1 — availability/schema and booking transaction contract",
-      "taskIds": [
-        "P04-T01",
-        "P04-T03",
-        "P04-T04",
-        "P04-T11",
-        "P04-T13",
-        "P04-T14",
-        "P04-T25"
-      ],
+      "taskIds": ["P04-T01", "P04-T03", "P04-T04", "P04-T11", "P04-T13", "P04-T14", "P04-T25"],
       "backendBranch": "codex/production-integration",
       "frontendBranch": "codex/platform-integration",
       "frontendWorktree": "C:/Users/User/.codex/worktrees/moc-maria-platform/moc_maria_fe",
@@ -218,13 +206,7 @@
       "agent": "Codex customer KTV blocking and verified reviews 2026-10-09",
       "status": "RELEASED",
       "stage": "F2 — reciprocal timed blocking and service ratings",
-      "taskIds": [
-        "P06-T19",
-        "P06-T25",
-        "P06-T27",
-        "P06-T26",
-        "P03-T24"
-      ],
+      "taskIds": ["P06-T19", "P06-T25", "P06-T27", "P06-T26", "P03-T24"],
       "frontendBranch": "codex/chat-blocks-reviews",
       "backendBranch": "codex/chat-blocks-reviews",
       "ownedPaths": [
@@ -321,11 +303,7 @@
       "status": "RELEASED",
       "frontendBranch": "codex/chat-instant-send-sound",
       "frontendWorktree": "C:\\Users\\admin\\Desktop\\DỰ ÁN GIÁO LÝ VIÊN\\moc_maria_fe_chat",
-      "taskIds": [
-        "P06-T14",
-        "P06-T15",
-        "P06-T26"
-      ],
+      "taskIds": ["P06-T14", "P06-T15", "P06-T26"],
       "ownedPaths": [
         "FE/src/features/mobile/chat*",
         "FE/public/media/audio/**",
@@ -394,7 +372,7 @@
     },
     {
       "agent": "Codex account booking profile review 2026-10-10",
-      "status": "ACTIVE",
+      "status": "RELEASED",
       "frontendBranch": "codex/account-booking-profile-review",
       "backendBranch": "codex/account-booking-profile-review",
       "ownedPaths": [
@@ -409,7 +387,30 @@
         "BE/src/modules/customer-experience/**; own test/customer-experience.e2e-spec.ts",
         "BE/src/modules/ktv-chat/ktv-chat.module.ts (read-only directory service export only)"
       ],
-      "note": "Owner explicitly requested account/logout, SUPER_ADMIN moderated description revisions and Hanoi appointment flow. Preserve E2a booking transactions, provider eligibility locks and all concurrent main changes. Separate presentation revision and appointment inquiry stores; no fake approvals/certificates/reservations, no writes to legacy booking modules."
+      "note": "Owner explicitly requested account/logout, SUPER_ADMIN moderated description revisions and Hanoi appointment flow. Preserve E2a booking transactions, provider eligibility locks and all concurrent main changes. Separate presentation revision and appointment inquiry stores; no fake approvals/certificates/reservations, no writes to legacy booking modules.",
+      "release": {
+        "backend": "51dc301aed20c8762e345406056dc6dd31e4d6b8",
+        "backendImage": "sha256:cf6486635ae6c5b17ca5bef0c30cc5bf1a2f45747e4e7947ee351c5c0da95998",
+        "frontend": "e77869bc09f9bbd8c650fdcfcdc81ab91caac706",
+        "frontendDeployment": 6976034521,
+        "backendPr": "https://github.com/hopdevnbi/moc_maria_be/pull/10",
+        "frontendPr": "https://github.com/hopdevnbi/moc_maria_fe/pull/19",
+        "validation": "BE quality 27 unit tests + 7 isolated PostgreSQL integrations PASS; FE quality 55 tests PASS, merged main 58 tests CI PASS; local customer/KTV/superadmin inquiry-contacted and pending/approved-public description flows PASS; mobile 320/390/768/1024/1440 no overflow; production 10 KTV and 10 services, fixed Hanoi, private endpoints 401, health 200.",
+        "businessData": "No production inquiries or description approvals created by verification. Inquiry CONTACTED is not a confirmed reservation. Existing eligibility and booking transactions retained.",
+        "releasedAt": "2026-10-10T05:03:40.972Z"
+      }
+    },
+    {
+      "agent": "Codex social booking note 2026-10-10",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/social-booking-note",
+      "ownedPaths": [
+        "FE/src/features/mobile/experience.tsx (floating fanpage shortcut only)",
+        "FE/src/features/mobile/mobile.css (social/note selectors only)",
+        "FE/src/features/mobile/booking-reassurance.tsx; booking.tsx and appointment-request.tsx (shared content only)",
+        "Own scoped release docs and Plan evidence"
+      ],
+      "note": "Owner requested fanpage floating button and tactful healthy-service/respect note on mobile/desktop. Preserve account release, legacy booking transactions and concurrent admin changes."
     }
   ]
 }

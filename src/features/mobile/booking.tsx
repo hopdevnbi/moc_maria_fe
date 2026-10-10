@@ -29,6 +29,7 @@ import {
   type BookingLocationMode,
 } from "./booking-location";
 import { MobileHeader, MobileNavigation } from "./experience";
+import { BookingReassurance } from "./booking-reassurance";
 import "./mobile.css";
 import "./booking-location.css";
 
@@ -331,6 +332,7 @@ export function BookingWizard({
             thuật viên phù hợp.
           </p>
         </div>
+        <BookingReassurance />
         {submitted ? (
           <div className="mm-booking-success" role="status">
             <CheckCircle2 size={42} />
