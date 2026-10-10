@@ -96,6 +96,12 @@ export const adminNavGroups: AdminNavGroup[] = [
   {
     label: "HỆ THỐNG",
     items: [
+      {
+        label: "Email thông báo",
+        icon: Settings2,
+        href: "/quan-tri/thong-bao",
+        permission: "roles.manage",
+      },
       { label: "Hồ sơ cá nhân", icon: UserRoundCheck, href: "/quan-tri/ho-so" },
       {
         label: "Phân quyền & cấu hình",
