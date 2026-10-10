@@ -20,6 +20,7 @@ import demoProfiles from "@/features/mobile/demo-ktvs.json";
 import { bookingHref } from "@/features/mobile/links";
 import "@/features/mobile/mobile.css";
 import { ProviderRating, ProviderReviews } from "@/features/provider-reviews/reviews";
+import { approvedDescriptions } from "@/features/mobile/presentation-data";
 
 export const metadata: Metadata = {
   title: "Hồ sơ kỹ thuật viên",
@@ -33,16 +34,15 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
   if (demo) {
     const chat = await publicRead<ChatProvider[]>("/ktv-chat/providers");
     const receiver = chat.ok ? chat.data.find((c) => c.publicAlias === demo.id) : undefined;
-    return (
-      <DemoKtvDetail
-        provider={{ ...demo, chatProviderId: receiver?.id, chatEnabled: !!receiver }}
-      />
-    );
+    const [presentation] = await approvedDescriptions([
+      { ...demo, chatProviderId: receiver?.id, chatEnabled: !!receiver },
+    ]);
+    return <DemoKtvDetail provider={presentation} />;
   }
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const result = await publicRead<Provider>("/providers/" + encodeURIComponent(id));
   if (!result.ok && result.status === 404) notFound();
-  const provider = result.ok ? result.data : null;
+  const provider = result.ok ? (await approvedDescriptions([result.data]))[0] : null;
   const safeAvatar =
     provider?.avatarUrl?.startsWith("/media/") && !provider.avatarUrl.includes("..")
       ? provider.avatarUrl

@@ -5,7 +5,7 @@ import type { Provider } from "@/features/marketplace/types";
 import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./mobile.css";
-import { chatHref } from "./links";
+import { bookingHref, chatHref } from "./links";
 
 export function DemoKtvDetail({ provider }: { provider: Provider }) {
   return (
@@ -51,6 +51,11 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
               {provider.scheduleOpen ? "Đã mở lịch làm việc" : "Chưa mở lịch"}
             </p>
             {provider.chatEnabled && provider.chatProviderId && (
+              <Link className="mm-primary-cta" href={bookingHref({ provider: provider.id })}>
+                Yêu cầu đặt lịch <MessageCircle size={18} />
+              </Link>
+            )}
+            {provider.chatEnabled && provider.chatProviderId && (
               <Link className="mm-primary-cta" href={chatHref(provider.chatProviderId)}>
                 <MessageCircle size={18} /> Chat riêng với {provider.publicName}
               </Link>
@@ -68,8 +73,8 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
             <p>KTV chưa thiết lập lịch làm việc.</p>
           )}
           <p>
-            Bạn có thể chat để hỏi về thời gian phù hợp. Đặt lịch dịch vụ mở khi hồ sơ đủ điều kiện
-            phục vụ.
+            Gửi yêu cầu hoặc chat để trao đổi thời gian phù hợp. KTV sẽ xác nhận khả năng phục vụ
+            trước khi chốt lịch.
           </p>
         </section>
         <section className="mm-detail-section">
