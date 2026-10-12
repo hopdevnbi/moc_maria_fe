@@ -26,6 +26,8 @@ import { bookingHref, chatHref } from "./links";
 import "./home.css";
 import { useCatalogRealtime } from "./useCatalogRealtime";
 import { ProviderRating } from "@/features/provider-reviews/reviews";
+import { officialDemoKtvOffers } from "./official-ktv-offers";
+import { careMenu } from "./official-menu";
 
 type HomeProps = {
   providers: Provider[];
@@ -50,12 +52,7 @@ export function normalizeSearch(value: string) {
 
 export function providerOffers(provider: Provider, services: ServiceItem[]): ServiceOffer[] {
   if (provider.isDemo) {
-    return (provider.demoServices || []).map((item) => ({
-      id: item.id,
-      name: item.name,
-      duration: item.durationMinutes,
-      price: item.priceVnd,
-    }));
+    return officialDemoKtvOffers(provider);
   }
   const byId = new Map(services.map((entry) => [entry.service.id, entry]));
   const unique = new Map<string, ServiceOffer>();
@@ -151,7 +148,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
 
       <div className="ktv-offers">
         <div className="ktv-offers-heading">
-          <strong>Dịch vụ massage</strong>
+          <strong>{provider.isDemo ? "Kỹ năng chăm sóc (minh họa)" : "Dịch vụ massage"}</strong>
           <Link href={providerProfileHref(provider)}>
             Tất cả <ArrowRight size={13} />
           </Link>
@@ -238,13 +235,18 @@ export function KtvFirstHomepage({
     [providers, services],
   );
   const serviceFilters = useMemo(() => {
-    return [
+    const filters = [
       ...new Map(
         [...knownOffers.values()]
           .flat()
           .map((offer) => [offer.id, { id: offer.id, name: offer.name }]),
       ).values(),
     ];
+    return filters.sort((a, b) => {
+      const indexA = careMenu.findIndex((item) => item.slug === a.id);
+      const indexB = careMenu.findIndex((item) => item.slug === b.id);
+      return (indexA < 0 ? 1000 : indexA) - (indexB < 0 ? 1000 : indexB);
+    });
   }, [knownOffers]);
   const q = normalizeSearch(search.trim());
   const visible = providers.filter((provider) => {

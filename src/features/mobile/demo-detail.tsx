@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   CalendarClock,
-  Clock3,
   MapPin,
   Sparkles,
   UserRound,
@@ -12,10 +11,12 @@ import {
 import type { Provider } from "@/features/marketplace/types";
 import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "./experience";
+import { officialDemoKtvOffers } from "./official-ktv-offers";
 import "./mobile.css";
 import { bookingHref, chatHref } from "./links";
 
 export function DemoKtvDetail({ provider }: { provider: Provider }) {
+  const offers = officialDemoKtvOffers(provider);
   return (
     <div className="mobile-experience">
       <MobileHeader />
@@ -95,24 +96,21 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
         </section>
         <section className="mm-detail-section">
           <div className="mm-results-heading">
-            <h2>Dịch vụ chăm sóc</h2>
-            <span>{provider.demoServices?.length ?? 0} dịch vụ</span>
+            <h2>Kỹ năng chăm sóc (minh họa)</h2>
+            <span>{offers.length} dịch vụ</span>
           </div>
           <div className="mm-detail-services">
-            {(provider.demoServices ?? []).map((service) => (
+            {offers.map((service) => (
               <article key={service.id}>
                 <div>
                   <span className="mm-overline">THƯ GIÃN & CHĂM SÓC</span>
                   <h3>{service.name}</h3>
-                  <p>
-                    <Clock3 size={15} /> {service.durationMinutes} phút
-                  </p>
                 </div>
-                <strong>{formatPrice(service.priceVnd)}</strong>
+                <strong>{formatPrice(service.price)}</strong>
                 {provider.chatEnabled && provider.chatProviderId && (
                   <Link
                     className="mm-text-link"
-                    href={chatHref(provider.chatProviderId, service.id)}
+                    href={chatHref(provider.chatProviderId, service.demoServiceId)}
                   >
                     <MessageCircle size={16} /> Tư vấn dịch vụ này
                   </Link>
