@@ -23,6 +23,11 @@ const photoNames: Record<string, string> = {
   "cham-soc-co-vai-gay-lung-eo": "back-1d0452800a98-960.webp",
   "massage-chan": "foot-732ea1395b88-960.webp",
   "massage-body": "relaxation-c29795f81eb9-960.webp",
+  "massage-bau": "/services/official/massage-bau-960.webp",
+  "cham-soc-giai-cam": "/services/official/cham-soc-giai-cam-960.webp",
+  "combo-giac-hoi-ngai-cuu": "/services/official/combo-giac-hoi-ngai-cuu-960.webp",
+  "cham-soc-giac-ngu": "/services/official/cham-soc-giac-ngu-960.webp",
+  "cham-soc-vung-dau": "/services/official/cham-soc-vung-dau-960.webp",
   "goi-dau-sach": "hair-be9ed1917a19-960.webp",
 };
 
@@ -31,15 +36,19 @@ function CareCard({ item, real }: { item: MenuItem; real?: ServiceItem }) {
     (v) => v.isActive && Number(v.priceVnd) === item.priceVnd,
   ));
   const photo = photoNames[item.slug];
+  const localPhoto = photo?.startsWith("/");
   return (
     <article className="official-care-card">
       <div className="official-care-visual">
         {photo ? (
-          <Image
-            src={"https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/" + photo}
-            alt={"Hình ảnh chăm sóc tại Mộc Maria: " + item.name}
-            width={640} height={390} sizes="(max-width: 680px) 100vw, 33vw" unoptimized
-          />
+          <picture>
+            {localPhoto && <source media="(max-width: 680px)" type="image/webp" srcSet={photo.replace("-960.webp", "-480.webp")} />}
+            <Image
+              src={localPhoto ? photo : "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/" + photo}
+              alt={"Hình ảnh chăm sóc tại Mộc Maria: " + item.name}
+              width={960} height={600} sizes="(max-width: 680px) 100vw, (max-width: 900px) 50vw, 33vw" unoptimized={!localPhoto}
+            />
+          </picture>
         ) : (
           <div className="official-care-placeholder"><Flower2 size={43} strokeWidth={1.15} /></div>
         )}
