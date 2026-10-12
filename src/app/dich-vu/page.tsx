@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { publicMarketplace } from "@/features/mobile/data";
-import { MobileExperience } from "@/features/mobile/experience";
+import { catalogSnapshot } from "@/features/mobile/data";
+import { OfficialMenuPage } from "@/features/mobile/official-menu-page";
 
 export const metadata: Metadata = {
-  title: "Dịch vụ massage và chăm sóc",
+  title: "Bảng giá chăm sóc sức khỏe và đồ uống",
   description:
-    "Chọn dịch vụ massage, thời lượng, bảng giá công khai và kỹ thuật viên đáp ứng điều kiện.",
+    "Bảng giá chính thức Mộc Maria: 10 dịch vụ chăm sóc, trà thảo mộc, nước ép tươi và detox.",
   alternates: { canonical: "/dich-vu" },
 };
 
 async function ServiceList() {
-  const data = await publicMarketplace();
+  const data = await catalogSnapshot();
   return (
-    <MobileExperience {...data} page="services" />
+    <OfficialMenuPage services={data.services} />
   );
 }
 
