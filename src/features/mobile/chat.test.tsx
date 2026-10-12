@@ -73,6 +73,44 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it("merges incremental replies without downloading old history again or showing duplicates", async () => {
+    const baseline = {
+      id: "old",
+      thread_id: "a",
+      sender_user_id: "provider",
+      body: "Tin cũ",
+      created_at: first.updated_at,
+    };
+    let deliver!: (messages: (typeof baseline)[]) => void;
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path === "/ktv-chat/threads/a/messages") return Promise.resolve([baseline]);
+      if (path.includes("/a/updates"))
+        return new Promise((resolve) => {
+          deliver = resolve;
+        });
+      return original(path, init);
+    });
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    await screen.findByText("Tin cũ");
+    await waitFor(() =>
+      expect(
+        state.fetch.mock.calls.some(([path]) => path === "/ktv-chat/threads/a/updates?after=old"),
+      ).toBe(true),
+    );
+    await act(async () =>
+      deliver([
+        baseline,
+        { ...baseline, id: "new", body: "Tin mới", created_at: "2026-10-09T08:01:00Z" },
+      ]),
+    );
+    await screen.findByText("Tin mới");
+    expect(screen.getAllByText("Tin cũ")).toHaveLength(1);
+    expect(
+      state.fetch.mock.calls.filter(([path]) => path === "/ktv-chat/threads/a/messages"),
+    ).toHaveLength(1);
+  });
   it("keeps customer password controls off a provider's chat even with dual-role permissions", async () => {
     state.user = { id: "provider", permissions: ["customer.portal", "provider.portal"] };
     state.fetch.mockImplementation(async (path: string) => {

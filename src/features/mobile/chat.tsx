@@ -3,8 +3,14 @@ import { providerProfileHref } from "./provider-slugs";
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -71,21 +77,71 @@ function normalize(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d");
 }
-function time(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
+const timeFormatter = new Intl.DateTimeFormat("vi-VN", {
+  timeZone: "Asia/Ho_Chi_Minh",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+const dayFormatter = new Intl.DateTimeFormat("vi-VN", {
+  timeZone: "Asia/Ho_Chi_Minh",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+const time = (value: string) => timeFormatter.format(new Date(value));
+const day = (value: string) => dayFormatter.format(new Date(value));
+function pause(milliseconds: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal.aborted) {
+      resolve();
+      return;
+    }
+    const finish = () => {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", finish);
+      resolve();
+    };
+    const timer = setTimeout(finish, milliseconds);
+    signal.addEventListener("abort", finish, { once: true });
+  });
 }
-function day(value: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(value));
-}
+const ChatMessageRow = memo(function ChatMessageRow({
+  item,
+  own,
+  showDate,
+  retryDisabled,
+  retry,
+}: {
+  item: ChatMessage;
+  own: boolean;
+  showDate: boolean;
+  retryDisabled: boolean;
+  retry: (item: ChatMessage) => void;
+}) {
+  return (
+    <div className="ktv-chat-message-row">
+      {showDate && <p className="ktv-chat-date">{day(item.created_at)}</p>}
+      <div className={`ktv-chat-bubble${own ? " own" : ""}`}>
+        <p>{item.body}</p>
+        <time dateTime={item.created_at}>{time(item.created_at)}</time>
+        {item.delivery && (
+          <small className="ktv-chat-delivery">
+            {item.delivery === "sending"
+              ? "Đang gửi…"
+              : item.delivery === "sent"
+                ? "Đã gửi"
+                : "Chưa gửi được"}
+            {item.delivery === "failed" && (
+              <button type="button" disabled={retryDisabled} onClick={() => retry(item)}>
+                Gửi lại
+              </button>
+            )}
+          </small>
+        )}
+      </div>
+    </div>
+  );
+});
 function chatError(error: unknown) {
   const message = error instanceof Error ? error.message : "";
   if (
@@ -118,6 +174,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const shellRef = useRef<HTMLDivElement>(null);
   const openedProvider = useRef("");
   const nearBottom = useRef(true);
+  const olderScroll = useRef<{ id: string; height: number; top: number } | null>(null);
   const pendingSend = useRef<Record<string, { body: string; clientMessageId: string }>>({});
   const enabled = status === "authenticated" && !!user;
   const customer = !!user?.permissions.includes("customer.portal");
@@ -215,12 +272,13 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const history = useInfiniteQuery({
     queryKey: [...key, "messages", selectedId],
     initialPageParam: undefined as string | undefined,
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam, signal }) => {
       try {
         return await authFetch<ChatMessage[]>(
           `/ktv-chat/threads/${selectedId}/messages${pageParam ? "?before=" + pageParam : ""}`,
           {
             cache: "no-store",
+            signal,
             headers: unlockTokens.current[selectedId!]
               ? { "X-Chat-Unlock": unlockTokens.current[selectedId!] }
               : {},
@@ -231,11 +289,69 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
         throw error;
       }
     },
-    getNextPageParam: (page) => (page.length === 50 ? page[0].id : undefined),
+    getNextPageParam: (page) => (page.length >= 50 ? page[0].id : undefined),
     enabled: enabled && !!selectedId && !choosing && !locked,
-    refetchInterval: 5000,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
     retry: 1,
   });
+  const historyReady = history.isSuccess;
+  useEffect(() => {
+    if (!enabled || !selectedId || choosing || locked || !historyReady) return;
+    const cancellation = new AbortController();
+    const historyKey = ["ktv-chat", user?.id, "messages", selectedId];
+    const poll = async () => {
+      while (!cancellation.signal.aborted) {
+        if (document.visibilityState === "hidden") {
+          await pause(1000, cancellation.signal);
+          continue;
+        }
+        const cached = client.getQueryData<InfiniteData<ChatMessage[]>>(historyKey);
+        const after = cached?.pages[0]?.at(-1)?.id;
+        try {
+          const added = await authFetch<ChatMessage[]>(
+            `/ktv-chat/threads/${selectedId}/updates${after ? "?after=" + after : ""}`,
+            {
+              cache: "no-store",
+              signal: cancellation.signal,
+              headers: unlockTokens.current[selectedId]
+                ? { "X-Chat-Unlock": unlockTokens.current[selectedId] }
+                : {},
+            },
+          );
+          if (cancellation.signal.aborted) return;
+          if (added.length) {
+            client.setQueryData<InfiniteData<ChatMessage[]>>(historyKey, (old) => {
+              if (!old) return old;
+              const seen = new Set(old.pages.flat().map((message) => message.id));
+              return {
+                ...old,
+                pages: [
+                  [...old.pages[0], ...added.filter((message) => !seen.has(message.id))],
+                  ...old.pages.slice(1),
+                ],
+              };
+            });
+            void client.invalidateQueries({ queryKey: ["ktv-chat", user?.id, "threads"] });
+          }
+          // Avoid tight loops against an old API or an immediately resolving transport.
+          await pause(added.length === 50 ? 0 : 100, cancellation.signal);
+        } catch (error) {
+          if (cancellation.signal.aborted) return;
+          if (isChatLockedError(error)) {
+            conceal(selectedId);
+            return;
+          }
+          await pause(4000, cancellation.signal);
+        }
+      }
+    };
+    void poll();
+    return () => {
+      cancellation.abort();
+    };
+  }, [enabled, selectedId, choosing, locked, historyReady, user?.id, authFetch, client, conceal]);
   const messages = useMemo(() => {
     if (locked) return [];
     const seen = new Set<string>();
@@ -249,6 +365,14 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       });
     return [...saved, ...outbox.filter((m) => m.thread_id === selectedId && !seen.has(m.id))];
   }, [history.data, outbox, selectedId, locked]);
+  useLayoutEffect(() => {
+    const anchor = olderScroll.current;
+    const element = messagesRef.current;
+    if (anchor && element && anchor.id === selectedId && !history.isFetchingNextPage) {
+      element.scrollTop = anchor.top + element.scrollHeight - anchor.height;
+      olderScroll.current = null;
+    }
+  }, [history.data, history.isFetchingNextPage, selectedId]);
   useEffect(() => {
     return client.getQueryCache().subscribe((event) => {
       const queryKey = event.query.queryKey;
@@ -403,7 +527,6 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
         old.map((m) => (m.id === input?.clientMessageId ? { ...message, delivery: "sent" } : m)),
       );
       if (selectedId === id) setActionError("");
-      void client.invalidateQueries({ queryKey: ["ktv-chat", user?.id, "messages", id] });
       void client.invalidateQueries({ queryKey: ["ktv-chat", user?.id, "threads"] });
     },
     onError: (error, { id, body }, input) => {
@@ -418,6 +541,11 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       );
     },
   });
+  const { mutate: sendMessage } = send;
+  const resend = useCallback(
+    (item: ChatMessage) => sendMessage({ id: item.thread_id, body: item.body }),
+    [sendMessage],
+  );
   const showDirectory = choosing || !threads.data?.length;
   const query = normalize(search);
   const filteredThreads = (threads.data ?? []).filter((thread) =>
@@ -814,7 +942,17 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           <button
                             className="ktv-chat-older"
                             disabled={history.isFetchingNextPage}
-                            onClick={() => void history.fetchNextPage()}
+                            onClick={() => {
+                              nearBottom.current = false;
+                              const element = messagesRef.current;
+                              if (element && selectedId)
+                                olderScroll.current = {
+                                  id: selectedId,
+                                  height: element.scrollHeight,
+                                  top: element.scrollTop,
+                                };
+                              void history.fetchNextPage();
+                            }}
                           >
                             {history.isFetchingNextPage ? "Đang tải..." : "Xem tin nhắn trước"}
                           </button>
@@ -825,38 +963,17 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           </div>
                         ) : messages.length ? (
                           messages.map((item, index) => (
-                            <div className="ktv-chat-message-row" key={item.id}>
-                              {(!index ||
-                                day(messages[index - 1].created_at) !== day(item.created_at)) && (
-                                <p className="ktv-chat-date">{day(item.created_at)}</p>
-                              )}
-                              <div
-                                className={`ktv-chat-bubble${item.sender_user_id === user.id ? " own" : ""}`}
-                              >
-                                <p>{item.body}</p>
-                                <time dateTime={item.created_at}>{time(item.created_at)}</time>
-                                {item.delivery && (
-                                  <small className="ktv-chat-delivery">
-                                    {item.delivery === "sending"
-                                      ? "Đang gửi…"
-                                      : item.delivery === "sent"
-                                        ? "Đã gửi"
-                                        : "Chưa gửi được"}
-                                    {item.delivery === "failed" && (
-                                      <button
-                                        type="button"
-                                        disabled={paused || send.isPending}
-                                        onClick={() =>
-                                          send.mutate({ id: item.thread_id, body: item.body })
-                                        }
-                                      >
-                                        Gửi lại
-                                      </button>
-                                    )}
-                                  </small>
-                                )}
-                              </div>
-                            </div>
+                            <ChatMessageRow
+                              key={item.id}
+                              item={item}
+                              own={item.sender_user_id === user.id}
+                              showDate={
+                                !index ||
+                                day(messages[index - 1].created_at) !== day(item.created_at)
+                              }
+                              retryDisabled={paused || send.isPending}
+                              retry={resend}
+                            />
                           ))
                         ) : (
                           !history.isError && (
