@@ -491,14 +491,22 @@
     },
     {
       "agent": "Codex booking defaults 2026-10-13",
-      "status": "ACTIVE",
+      "status": "RELEASED",
       "frontendBranch": "codex/booking-smart-defaults",
       "ownedPaths": [
         "FE appointment-request.tsx default service/time only",
         "FE appointment-request.test.tsx regression tests",
         "Own docs/Plan evidence"
       ],
-      "note": "Select first compatible service only for linked provider when no explicit service, preserve valid draft/link choices. Default and minimum time now+1h in Hanoi. No backend or legacy booking/eligibility edits."
+      "note": "Select first compatible service only for linked provider when no explicit service, preserve valid draft/link choices. Default and minimum time now+1h in Hanoi. No backend or legacy booking/eligibility edits.",
+      "release": {
+        "frontend": "118089915df2106de55b5ce23bf4782e635b378f",
+        "implementation": "63d69359dc6560c1055529bf21a89bad4510d657",
+        "deployment": 7043341033,
+        "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/26",
+        "test": "Full quality/build and 124 tests PASS; 13 appointment regressions PASS; PR CI PASS. Production rendered form verifies Linh Anh, selected first service, value=min and ~60.6 minutes ahead in Hanoi. Release endpoint matches source.",
+        "businessData": "No booking submitted, backend/schema or production records changed."
+      }
     }
   ]
 }

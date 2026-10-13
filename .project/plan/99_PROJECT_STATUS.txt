@@ -108,3 +108,7 @@ COMMIT: https://github.com/hopdevnbi/moc_maria_fe/pull/24; https://github.com/ho
 DEPLOY: Vercel production 6978653776; ghcr.io/hopdevnbi/moc_maria_be@sha256:fba61122bf79d31da44e10f1447fd86f4575359214832ec7efb006b926116782
 BUSINESS_DATA: No production safety sessions, GPS points, SOS alerts, bookings, approvals or public reviews created. Dedicated production encryption key stored in Kubernetes Secret only. Safety feature requires no new schema migration.
 LIMITATIONS: Web GPS needs visible foreground page; native background tracking is future work. SOS needs network and an on-duty operator, no automatic calls/SMS. Real device GPS was not enabled during QA. OSM tiles unreachable from QA machine network; fallback coordinates/stale status verified, map background availability not verified. Existing internal seed/database IDs preserved.
+
+BOOKING SMART DEFAULTS RELEASE — 2026-10-13
+FE118089915df2106de55b5ce23bf4782e635b378f; implementation63d6935; PR26 merged; Vercel production7043341033 SUCCESS.
+Full quality/build/124 tests; 13 appointment tests and PR CI PASS. Production Linh Anh first service selected; time and min now+1h Hanoi, editable; release endpoint source confirmed. No backend, schema or booking writes.
