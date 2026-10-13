@@ -25,7 +25,15 @@ export function officialDemoKtvOffers(provider: Provider) {
     const index = demoServiceToOfficialIndex[entry.id];
     const item = index === undefined ? undefined : careMenu[index];
     return item
-      ? [{ id: item.slug, demoServiceId: entry.id, name: item.name, price: item.priceVnd, duration: null }]
+      ? [
+          {
+            id: item.slug,
+            demoServiceId: entry.id,
+            name: item.name,
+            price: item.priceVnd,
+            duration: null,
+          },
+        ]
       : [];
   });
 }

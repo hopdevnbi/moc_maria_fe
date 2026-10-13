@@ -12,9 +12,7 @@ export const metadata: Metadata = {
 
 async function ServiceList() {
   const data = await catalogSnapshot();
-  return (
-    <OfficialMenuPage services={data.services} />
-  );
+  return <OfficialMenuPage services={data.services} />;
 }
 
 export default function ServicesPage() {
