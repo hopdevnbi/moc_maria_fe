@@ -488,6 +488,17 @@
         "businessData": "No production safety sessions, GPS points, SOS alerts, bookings, approvals or public reviews created. Dedicated production encryption key stored in Kubernetes Secret only. Safety feature requires no new schema migration.",
         "releasedAt": "2026-10-10T09:07:01.505Z"
       }
+    },
+    {
+      "agent": "Codex booking defaults 2026-10-13",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/booking-smart-defaults",
+      "ownedPaths": [
+        "FE appointment-request.tsx default service/time only",
+        "FE appointment-request.test.tsx regression tests",
+        "Own docs/Plan evidence"
+      ],
+      "note": "Select first compatible service only for linked provider when no explicit service, preserve valid draft/link choices. Default and minimum time now+1h in Hanoi. No backend or legacy booking/eligibility edits."
     }
   ]
 }

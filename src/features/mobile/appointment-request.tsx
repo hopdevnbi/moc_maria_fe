@@ -20,6 +20,19 @@ export function searchText(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d");
 }
+function supportsService(provider: Provider, serviceId: string): boolean {
+  return provider.isDemo
+    ? !!provider.demoServices?.some((s) => s.id === serviceId)
+    : !!provider.eligibleServices?.some((s) => s.serviceId === serviceId);
+}
+function defaultService(provider: Provider | undefined, services: ServiceItem[]): string {
+  return provider
+    ? services.find((s) => supportsService(provider, s.service.id))?.service.id || ""
+    : "";
+}
+function hanoiDateTime(timestamp: number): string {
+  return new Date(timestamp + 7 * 3600000).toISOString().slice(0, 16);
+}
 export function AppointmentRequest({
   providers,
   services,
@@ -38,20 +51,27 @@ export function AppointmentRequest({
   );
   const [providerId, setProviderId] = useState(() => initialProvider?.id || "");
   const [showProviderPicker, setShowProviderPicker] = useState(!initialProvider);
-  const [serviceId, setServiceId] = useState(initial.service || "");
+  const [serviceId, setServiceId] = useState(() =>
+    initial.service && (!initialProvider || supportsService(initialProvider, initial.service))
+      ? initial.service
+      : defaultService(initialProvider, services),
+  );
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState<"AT_BRANCH" | "AT_HOME">("AT_BRANCH");
   const [address, setAddress] = useState("");
-  const [requestedAt, setRequestedAt] = useState("");
+  const [dateLimits] = useState(() => {
+    const now = Date.now();
+    return {
+      min: hanoiDateTime(Math.ceil((now + 3600000) / 60000) * 60000),
+      max: hanoiDateTime(now + 60 * 86400000),
+    };
+  });
+  const [requestedAt, setRequestedAt] = useState(dateLimits.min);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const identity = useRef<{ signature: string; key: string } | null>(null);
-  const [dateLimits] = useState(() => ({
-    min: new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 16),
-    max: new Date(Date.now() + 60 * 86400000 + 7 * 3600000).toISOString().slice(0, 16),
-  }));
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("mocmaria.booking.signin-draft");
@@ -70,19 +90,25 @@ export function AppointmentRequest({
         if (
           !initial.service &&
           typeof draft.serviceId === "string" &&
-          services.some((s) => s.service.id === draft.serviceId)
+          services.some((s) => s.service.id === draft.serviceId) &&
+          (!initialProvider || supportsService(initialProvider, draft.serviceId))
         )
           setServiceId(draft.serviceId);
         if (draft.location === "AT_HOME" || draft.location === "AT_BRANCH")
           setLocation(draft.location);
         if (typeof draft.address === "string") setAddress(draft.address.slice(0, 300));
-        if (typeof draft.requestedAt === "string") setRequestedAt(draft.requestedAt);
+        if (
+          typeof draft.requestedAt === "string" &&
+          draft.requestedAt >= dateLimits.min &&
+          draft.requestedAt <= dateLimits.max
+        )
+          setRequestedAt(draft.requestedAt);
         if (typeof draft.notes === "string") setNotes(draft.notes.slice(0, 500));
       });
     } catch {
       /* A blocked browser storage does not prevent booking. */
     }
-  }, [providers, services, initial.provider, initial.service, initialProvider]);
+  }, [providers, services, initial.provider, initial.service, initialProvider, dateLimits]);
   const chosen = available.find((p) => p.id === providerId);
   const offers = (p: Provider) =>
     p.isDemo
@@ -111,6 +137,8 @@ export function AppointmentRequest({
     !!chosen &&
     !!chosenService &&
     !!requestedAt &&
+    requestedAt >= dateLimits.min &&
+    requestedAt <= dateLimits.max &&
     (location === "AT_BRANCH" || address.trim().length >= 12);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -259,8 +287,8 @@ export function AppointmentRequest({
                       className={"mm-request-provider" + (providerId === p.id ? " selected" : "")}
                       onClick={() => {
                         setProviderId(p.id);
-                        if (serviceId && !offers(p).some((s) => s.id === serviceId))
-                          setServiceId("");
+                        if (!serviceId || !supportsService(p, serviceId))
+                          setServiceId(defaultService(p, services));
                         if (initialProvider) setShowProviderPicker(false);
                       }}
                     >
