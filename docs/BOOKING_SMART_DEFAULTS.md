@@ -7,3 +7,5 @@ The requested time and minimum selectable time start at now plus one hour in Han
 The customer can change both values. No request is submitted automatically; existing address requirements, API payload, idempotency and server validation remain in place. This only affects appointment inquiries, not the separately verified reservation flow. No backend, migration or production booking data changes.
 
 Validation covers KTV preselection, explicit service precedence, incompatible drafts, Hanoi midnight/year rollover, past-time rejection and existing request/retry behavior. Release evidence will record CI and production verification separately.
+
+CODE/TEST/COMMIT/DEPLOY: implementation63d69359dc6560c1055529bf21a89bad4510d657, main118089915df2106de55b5ce23bf4782e635b378f, PR26, Vercel Production7043341033 SUCCESS. Full quality/build and124 tests PASS,13 appointment cases PASS. Production rendered HTML at /dat-lich?provider=linh-anh verified selected provider and first service, requestedAt=min about60.6 minutes ahead; release endpoint matches main source. No production booking submitted.
