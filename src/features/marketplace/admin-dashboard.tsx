@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
   Building2,
+  CalendarClock,
   CheckCircle2,
   ClipboardList,
   Crown,
@@ -30,6 +31,15 @@ type DashboardItem = {
   soon?: boolean;
 };
 const operations: DashboardItem[] = [
+  {
+    title: "Lịch đặt & yêu cầu",
+    description: "Theo dõi yêu cầu của khách, phân loại trạng thái và phối hợp KTV xử lý lịch.",
+    href: "/quan-tri/lich-hen",
+    icon: CalendarClock,
+    tag: "Tiếp nhận khách hàng",
+    permission: "customers.manage",
+    adminOnly: true,
+  },
   {
     title: "Kỹ thuật viên",
     description: "Hồ sơ, xét duyệt ứng tuyển, lịch làm việc và chứng nhận nội bộ.",

@@ -13,6 +13,7 @@ describe("Admin sidebar RBAC navigation", () => {
     const items = groups.flatMap((group) => group.items);
     expect(items.filter((item) => item.href).map((item) => item.href)).toEqual([
       "/quan-tri",
+      "/quan-tri/lich-hen",
       "/quan-tri/ktv",
       "/quan-tri/danh-gia-ktv",
       "/quan-tri/dich-vu",
@@ -34,6 +35,13 @@ describe("Admin sidebar RBAC navigation", () => {
       "Tổng quan",
       "Hồ sơ cá nhân",
     ]);
+  });
+
+  it("keeps appointment administration hidden from users without customers.manage", () => {
+    const groups = adminVisibleGroups(asUser(["ADMIN"], ["admin.portal", "staff.manage"]));
+    expect(
+      groups.flatMap((group) => group.items).some((item) => item.href === "/quan-tri/lich-hen"),
+    ).toBe(false);
   });
 
   it("shows operational modules only with staff.manage", () => {

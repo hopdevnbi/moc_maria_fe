@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Building2,
+  CalendarClock,
   ChevronRight,
   Crown,
   Headset,
@@ -48,6 +49,13 @@ export const adminNavGroups: AdminNavGroup[] = [
   {
     label: "HOẠT ĐỘNG KINH DOANH",
     items: [
+      {
+        label: "Lịch đặt & yêu cầu",
+        icon: CalendarClock,
+        href: "/quan-tri/lich-hen",
+        permission: "customers.manage",
+        adminOnly: true,
+      },
       {
         label: "Kỹ thuật viên",
         icon: UserRoundCheck,
