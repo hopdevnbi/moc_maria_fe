@@ -4,7 +4,7 @@ import { providerProfileHref } from "./provider-slugs";
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -31,7 +31,8 @@ import { formatPrice } from "@/features/marketplace/format";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { bookingHref } from "./links";
 import "./mobile.css";
-import { MOC_MARIA_LOGO_URL } from "./brand";
+import { BrandLogo } from "./brand-logo";
+import { SiteReleaseUpdate } from "@/shared/release/site-release-update";
 import { useCatalogRealtime } from "./useCatalogRealtime";
 
 type Focus = "providers" | "services";
@@ -115,7 +116,7 @@ export function MobileHeader() {
       <div className="mm-container mm-header-inner">
         <Link className="mm-logo" href="/" aria-label="Mộc Maria — trang chủ">
           <span className="mm-brand-mark" aria-hidden="true">
-            <Image src={MOC_MARIA_LOGO_URL} alt="" width={65} height={65} priority unoptimized />
+            <BrandLogo alt="" width={65} height={65} priority />
           </span>
           <span>
             <strong>Mộc Maria</strong>
@@ -139,6 +140,9 @@ export function MobileHeader() {
           <UserRound size={22} />
         </Link>
       </div>
+      <Suspense fallback={null}>
+        <SiteReleaseUpdate />
+      </Suspense>
     </header>
   );
 }

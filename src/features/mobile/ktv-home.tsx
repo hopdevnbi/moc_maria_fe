@@ -30,7 +30,7 @@ import { useCatalogRealtime } from "./useCatalogRealtime";
 import { ProviderRating } from "@/features/provider-reviews/reviews";
 import { officialDemoKtvOffers } from "./official-ktv-offers";
 import { careMenu } from "./official-menu";
-import { MOC_MARIA_LOGO_URL } from "./brand";
+import { BrandLogo } from "./brand-logo";
 
 type HomeProps = {
   providers: Provider[];
@@ -304,8 +304,7 @@ export function KtvFirstHomepage({
           </div>
           <div className="ktv-hero-brand">
             <span className="ktv-hero-orbit" aria-hidden="true" />
-            <Image
-              src={MOC_MARIA_LOGO_URL}
+            <BrandLogo
               alt="Mộc Maria — Wellness Lounge"
               width={1254}
               height={1254}
