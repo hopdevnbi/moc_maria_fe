@@ -25,7 +25,7 @@ export function KtvAvatar({
       {usable && !failed ? (
         <Image
           src={src}
-          alt={(illustrative ? "Ảnh minh họa hoạt động chăm sóc của " : "Ảnh đại diện ") + name}
+          alt={illustrative ? "Hoạt động chăm sóc tại Mộc Maria" : "Ảnh đại diện " + name}
           width={size === "large" ? 90 : 48}
           height={size === "large" ? 90 : 48}
           unoptimized

@@ -36,8 +36,15 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
     if (id !== demo.urlSlug) permanentRedirect("/chuyen-vien/" + demo.urlSlug);
     const chat = await publicRead<ChatProvider[]>("/ktv-chat/providers");
     const receiver = chat.ok ? chat.data.find((c) => c.publicAlias === demo.id) : undefined;
+    if (!receiver) notFound();
     const [presentation] = await approvedDescriptions([
-      { ...demo, chatProviderId: receiver?.id, chatEnabled: !!receiver },
+      {
+        ...demo,
+        publicName: receiver.publicName,
+        serviceArea: receiver.serviceArea,
+        chatProviderId: receiver.id,
+        chatEnabled: true,
+      },
     ]);
     return <DemoKtvDetail provider={presentation} />;
   }

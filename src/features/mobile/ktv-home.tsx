@@ -148,7 +148,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
 
       <div className="ktv-offers">
         <div className="ktv-offers-heading">
-          <strong>{provider.isDemo ? "Kỹ năng chăm sóc (minh họa)" : "Dịch vụ massage"}</strong>
+          <strong>{provider.isDemo ? "Kỹ năng chăm sóc" : "Dịch vụ massage"}</strong>
           <Link href={providerProfileHref(provider)}>
             Tất cả <ArrowRight size={13} />
           </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, type FormEvent } from "react";
 import {
   ArrowLeft,
   CalendarDays,
@@ -11,12 +12,65 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { applicationLabels } from "./format";
-import { usePrivateData } from "./private-api";
+import { usePrivateData, usePrivateMutation, mutationMessage } from "./private-api";
 import { ApplicationReview } from "./training-admin";
 import { KtvAvatar } from "./ktv-avatar";
 import { resolveAdminKtvAvatar } from "./ktv-admin-avatar-source";
 import type { Application, Course } from "./types";
 import "./ktv-admin.css";
+
+function PublicAgeEditor({ id }: { id: string }) {
+  const profile = usePrivateData<{ age: number | null }>(`/admin/provider-public-profile/${id}`);
+  const change = usePrivateMutation();
+  const [notice, setNotice] = useState("");
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const age = Number(new FormData(event.currentTarget).get("age"));
+    try {
+      await change.mutateAsync({
+        path: `/admin/provider-public-profile/${id}`,
+        method: "PATCH",
+        body: { age },
+      });
+      await profile.refetch();
+      setNotice("Đã cập nhật tuổi KTV.");
+    } catch (error) {
+      setNotice(mutationMessage(error));
+    }
+  }
+  return (
+    <section className="market-panel">
+      <h3>Thông tin công khai</h3>
+      {profile.isPending ? (
+        <p>Đang tải thông tin...</p>
+      ) : profile.isError ? (
+        <p role="alert">Không tải được thông tin KTV.</p>
+      ) : (
+        <form
+          key={profile.data?.age}
+          className="market-form"
+          onSubmit={(event) => void save(event)}
+        >
+          <label>
+            Tuổi KTV
+            <input
+              type="number"
+              name="age"
+              min={18}
+              max={100}
+              required
+              defaultValue={profile.data?.age ?? ""}
+            />
+          </label>
+          <button className="market-button" disabled={change.isPending}>
+            Lưu tuổi
+          </button>
+        </form>
+      )}
+      {notice && <p role="status">{notice}</p>}
+    </section>
+  );
+}
 
 export function AdminKtvDetail({ id }: { id: string }) {
   const { user } = useAuth();
@@ -89,6 +143,7 @@ export function AdminKtvDetail({ id }: { id: string }) {
             <ChevronRight size={16} />
             <strong>{item.publicName}</strong>
           </div>
+          {user?.permissions.includes("roles.manage") && <PublicAgeEditor id={item.id} />}
           {courses.isPending ? (
             <p role="status" className="mm-ktv-loading">
               Đang tải đào tạo và chứng nhận...

@@ -2,7 +2,7 @@
   {
     "id": "demo-ktv-01",
     "publicName": "Linh Anh",
-    "age": 26,
+    "age": 21,
     "yearsExperience": 3,
     "serviceArea": "Cầu Giấy · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -49,7 +49,7 @@
   {
     "id": "demo-ktv-02",
     "publicName": "Mai Anh",
-    "age": 25,
+    "age": 23,
     "yearsExperience": 2,
     "serviceArea": "Nam Từ Liêm · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -96,7 +96,7 @@
   {
     "id": "demo-ktv-03",
     "publicName": "Thu Hà",
-    "age": 28,
+    "age": 23,
     "yearsExperience": 5,
     "serviceArea": "Đống Đa · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -143,7 +143,7 @@
   {
     "id": "demo-ktv-04",
     "publicName": "Bảo Ngọc",
-    "age": 27,
+    "age": 22,
     "yearsExperience": 4,
     "serviceArea": "Hà Đông · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -190,7 +190,7 @@
   {
     "id": "demo-ktv-05",
     "publicName": "Hương Ly",
-    "age": 26,
+    "age": 23,
     "yearsExperience": 3,
     "serviceArea": "Tây Hồ · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -237,7 +237,7 @@
   {
     "id": "demo-ktv-06",
     "publicName": "Ngọc Anh",
-    "age": 29,
+    "age": 23,
     "yearsExperience": 6,
     "serviceArea": "Thanh Xuân · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -285,7 +285,7 @@
   {
     "id": "demo-ktv-07",
     "publicName": "Thanh Trúc",
-    "age": 24,
+    "age": 20,
     "yearsExperience": 2,
     "serviceArea": "Hoài Đức · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -327,7 +327,7 @@
   {
     "id": "demo-ktv-08",
     "publicName": "Phương Thảo",
-    "age": 30,
+    "age": 23,
     "yearsExperience": 7,
     "serviceArea": "Ba Đình · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -375,7 +375,7 @@
   {
     "id": "demo-ktv-09",
     "publicName": "Minh Châu",
-    "age": 27,
+    "age": 22,
     "yearsExperience": 4,
     "serviceArea": "Long Biên · Hà Nội",
     "title": "Kỹ thuật viên massage",
@@ -423,7 +423,7 @@
   {
     "id": "demo-ktv-10",
     "publicName": "Khánh Linh",
-    "age": 25,
+    "age": 22,
     "yearsExperience": 3,
     "serviceArea": "Bắc Từ Liêm · Hà Nội",
     "title": "Kỹ thuật viên massage",

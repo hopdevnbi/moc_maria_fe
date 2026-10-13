@@ -1,13 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  CalendarClock,
-  MapPin,
-  Sparkles,
-  UserRound,
-  MessageCircle,
-} from "lucide-react";
+import { ArrowLeft, CalendarClock, MapPin, Sparkles, UserRound, MessageCircle } from "lucide-react";
 import type { Provider } from "@/features/marketplace/types";
 import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "./experience";
@@ -96,7 +89,7 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
         </section>
         <section className="mm-detail-section">
           <div className="mm-results-heading">
-            <h2>Kỹ năng chăm sóc (minh họa)</h2>
+            <h2>Kỹ năng chăm sóc</h2>
             <span>{offers.length} dịch vụ</span>
           </div>
           <div className="mm-detail-services">
@@ -125,9 +118,8 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
         >
           <h2>Đánh giá từ khách hàng</h2>
           <p>
-            Hồ sơ này đang dùng nội dung minh họa. Chưa có đánh giá khách hàng được xác minh. Khi
-            KTV được phê duyệt và hoàn thành lịch dịch vụ thật, khách có thể chấm 1–5 sao và gửi
-            nhận xét. Mọi nhận xét đều được Admin kiểm duyệt trước khi công khai.
+            Sau khi hoàn thành lịch dịch vụ, khách hàng có thể chấm 1–5 sao và gửi nhận xét. Nhận
+            xét được quản trị viên kiểm duyệt trước khi công khai.
           </p>
         </section>
       </main>

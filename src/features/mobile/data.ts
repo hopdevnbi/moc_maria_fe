@@ -3,6 +3,7 @@ import { publicRead } from "@/features/marketplace/public-api";
 import type { Branch, Provider, ServiceItem, ChatProvider } from "@/features/marketplace/types";
 import demoProviders from "@/features/mobile/demo-ktvs.json";
 import { approvedDescriptions } from "./presentation-data";
+import { persistedDirectory } from "./provider-directory";
 
 // Only the public service/branch catalog is cached. Provider approvals and booking slots stay live.
 export async function catalogSnapshot() {
@@ -35,9 +36,11 @@ export async function publicProviderDirectory() {
     publicMarketplace(),
     publicRead<ChatProvider[]>("/ktv-chat/providers"),
   ]);
-  const seed = (demoProviders as Provider[]).map((p) => {
-    const receiver = chat.ok ? chat.data.find((c) => c.publicAlias === p.id) : undefined;
-    return { ...p, chatProviderId: receiver?.id, chatEnabled: !!receiver };
-  });
-  return { ...data, providers: await approvedDescriptions([...data.providers, ...seed]) };
+  return {
+    ...data,
+    providersUnavailable: data.providersUnavailable || !chat.ok,
+    providers: await approvedDescriptions(
+      persistedDirectory(data.providers, demoProviders as Provider[], chat.ok ? chat.data : []),
+    ),
+  };
 }
