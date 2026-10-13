@@ -31,6 +31,7 @@ import { formatPrice } from "@/features/marketplace/format";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { bookingHref } from "./links";
 import "./mobile.css";
+import { MOC_MARIA_LOGO_URL } from "./brand";
 import { useCatalogRealtime } from "./useCatalogRealtime";
 
 type Focus = "providers" | "services";
@@ -113,10 +114,12 @@ export function MobileHeader() {
     <header className="mm-header">
       <div className="mm-container mm-header-inner">
         <Link className="mm-logo" href="/" aria-label="Mộc Maria — trang chủ">
-          <Image src="/brand/moc-maria-mark.webp" alt="" width={45} height={40} priority />
+          <span className="mm-brand-mark" aria-hidden="true">
+            <Image src={MOC_MARIA_LOGO_URL} alt="" width={65} height={65} priority unoptimized />
+          </span>
           <span>
             <strong>Mộc Maria</strong>
-            <small>WELLNESS & CARE</small>
+            <small>WELLNESS LOUNGE</small>
           </span>
         </Link>
         <nav className="mm-desktop-menu" aria-label="Điều hướng chính">

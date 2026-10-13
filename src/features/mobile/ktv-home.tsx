@@ -18,6 +18,8 @@ import {
   SlidersHorizontal,
   Users,
   X,
+  Leaf,
+  ArrowUpRight,
 } from "lucide-react";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { formatPrice } from "@/features/marketplace/format";
@@ -28,6 +30,7 @@ import { useCatalogRealtime } from "./useCatalogRealtime";
 import { ProviderRating } from "@/features/provider-reviews/reviews";
 import { officialDemoKtvOffers } from "./official-ktv-offers";
 import { careMenu } from "./official-menu";
+import { MOC_MARIA_LOGO_URL } from "./brand";
 
 type HomeProps = {
   providers: Provider[];
@@ -269,25 +272,52 @@ export function KtvFirstHomepage({
     <div className="mobile-experience ktv-home">
       <MobileHeader />
       <main className="mm-container ktv-home-main">
-        <div className="ktv-home-top">
+        <section className="ktv-home-top" aria-label="Mộc Maria Wellness Lounge">
           <div className="ktv-home-heading">
             <span className="ktv-kicker">
-              <span /> ĐẶT LỊCH MASSAGE CÙNG MỘC MARIA
+              <Leaf size={14} /> MỘC MARIA · WELLNESS LOUNGE
             </span>
             <h1>
-              Chọn KTV. <em>Đặt lịch ngay.</em>
+              Một chút an yên.
+              <br />
+              <em>Một ngày nhẹ nhàng.</em>
             </h1>
             <p>
-              Xem kỹ thuật viên, dịch vụ và mức giá trước khi đặt. Hoặc trò chuyện để được tư vấn
-              phù hợp.
+              Chọn dịch vụ chăm sóc phù hợp, tìm KTV bạn tin tưởng và trò chuyện trước khi đặt lịch.
             </p>
+            <div className="ktv-hero-actions">
+              <a href="#chon-ktv" className="ktv-hero-primary">
+                Chọn KTV <ArrowRight size={17} />
+              </a>
+              <Link href="/dich-vu" className="ktv-hero-secondary">
+                Khám phá dịch vụ <ArrowUpRight size={17} />
+              </Link>
+            </div>
+            <div className="ktv-hero-note">
+              <span>
+                <Heart size={13} /> Chăm sóc theo nhu cầu
+              </span>
+              <span>
+                <MessageCircle size={13} /> Trò chuyện riêng cùng KTV
+              </span>
+            </div>
           </div>
-          <Link href="/dat-lich" className="ktv-top-book">
-            <CalendarClock size={17} /> Đặt lịch <ArrowRight size={16} />
-          </Link>
-        </div>
+          <div className="ktv-hero-brand">
+            <span className="ktv-hero-orbit" aria-hidden="true" />
+            <Image
+              src={MOC_MARIA_LOGO_URL}
+              alt="Mộc Maria — Wellness Lounge"
+              width={1254}
+              height={1254}
+              sizes="(max-width: 550px) 140px, 260px"
+              priority
+              unoptimized
+            />
+            <span className="ktv-hero-brand-caption">CHẠM ĐẾN SỰ AN YÊN</span>
+          </div>
+        </section>
 
-        <section className="ktv-explore" aria-label="Danh sách kỹ thuật viên massage">
+        <section id="chon-ktv" className="ktv-explore" aria-label="Danh sách kỹ thuật viên massage">
           <div className="ktv-search">
             <Search size={20} />
             <input

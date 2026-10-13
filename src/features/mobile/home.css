@@ -36,18 +36,28 @@
   user-select: none;
 }
 .ktv-home-main {
-  padding-top: 27px;
+  padding-top: 24px;
   padding-bottom: 112px;
 }
 .ktv-home-top {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 23px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr);
+  align-items: center;
+  gap: 28px;
+  padding: 36px 40px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid #e1e6d7;
+  border-radius: 28px;
+  background:
+    radial-gradient(ellipse at 93% 15%, #e0ebd880, transparent 58%),
+    linear-gradient(120deg, #fcf9f0, #f2f5e9);
+  box-shadow: 0 16px 44px #304d2906;
 }
 .ktv-kicker {
-  color: #739074;
+  color: #8f7447;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 1.1px;
@@ -64,21 +74,102 @@
 }
 .ktv-home-heading h1 {
   font:
-    600 clamp(31px, 4.8vw, 52px) / 1.19 var(--font-wellness-serif),
+    500 clamp(34px, 4.2vw, 49px) / 1.2 var(--font-wellness-serif),
     Georgia,
     serif;
-  letter-spacing: -1.7px;
-  margin: 10px 0;
+  letter-spacing: -1.4px;
+  margin: 17px 0 15px;
 }
 .ktv-home-heading h1 em {
-  color: #718a6c;
+  color: #567650;
   font-weight: 500;
 }
 .ktv-home-heading p {
-  color: #77847a;
+  color: #687868;
   line-height: 1.7;
   font-size: 13px;
-  max-width: 710px;
+  max-width: 460px;
+}
+.ktv-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 23px;
+}
+.ktv-hero-primary,
+.ktv-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 46px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+.ktv-hero-primary {
+  color: #fff;
+  background: #2c563c;
+  box-shadow: 0 5px 14px #284e3320;
+}
+.ktv-hero-primary:hover {
+  background: #234630;
+  box-shadow: 0 7px 18px #284e3330;
+}
+.ktv-hero-secondary {
+  color: #47654a;
+  border: 1px solid #d7dfcb;
+  background: #ffffff70;
+}
+.ktv-hero-secondary:hover {
+  background: #fffefb;
+}
+.ktv-hero-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-top: 22px;
+  font-size: 10px;
+  color: #76846d;
+}
+.ktv-hero-note span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ktv-hero-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-width: 0;
+  padding: 13px 0;
+}
+.ktv-hero-brand img {
+  position: relative;
+  width: min(100%, 250px);
+  height: auto;
+}
+.ktv-hero-orbit {
+  position: absolute;
+  inset: -4px -7px;
+  border: 1px solid #b0bd9638;
+  border-radius: 50% 50% 45% 45%;
+  transform: rotate(-12deg);
+  background: radial-gradient(ellipse, #ffffff60, #e1ebd530 70%, transparent);
+  z-index: -1;
+}
+.ktv-hero-brand-caption {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2.3px;
+  color: #8e784e;
 }
 .ktv-top-book {
   display: flex;
@@ -94,6 +185,7 @@
   color: #376448;
 }
 .ktv-explore {
+  scroll-margin-top: 98px;
   background: #fffefa;
   border: 1px solid #e5e9df;
   border-radius: 22px;
@@ -209,6 +301,9 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 .ktv-person {
   display: flex;
@@ -588,5 +683,98 @@
   }
   .ktv-offer-end > span {
     font-size: 10px;
+  }
+}
+@media (hover: hover) {
+  .ktv-card:hover {
+    border-color: #bdcfb7;
+    box-shadow: 0 8px 26px #1e502610;
+  }
+}
+@media (max-width: 1000px) {
+  .ktv-home-top {
+    padding: 30px;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr);
+    gap: 24px;
+  }
+  .ktv-home-heading h1 {
+    font-size: clamp(33px, 4.6vw, 44px);
+  }
+  .ktv-hero-note {
+    gap: 9px 14px;
+  }
+}
+@media (max-width: 700px) {
+  .ktv-home-top {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 22px;
+    border-radius: 23px;
+    text-align: center;
+  }
+  .ktv-hero-brand {
+    grid-row: 1;
+    width: 126px;
+    margin-inline: auto;
+    padding: 0;
+    gap: 0;
+  }
+  .ktv-hero-orbit {
+    inset: -10px -16px;
+  }
+  .ktv-hero-brand-caption {
+    display: none;
+  }
+  .ktv-kicker,
+  .ktv-hero-actions,
+  .ktv-hero-note {
+    justify-content: center;
+  }
+  .ktv-kicker {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .ktv-home-heading h1 {
+    font-size: clamp(30px, 7.5vw, 42px);
+    margin: 13px 0 12px;
+    letter-spacing: -1px;
+  }
+  .ktv-home-heading p {
+    margin-inline: auto;
+    font-size: 12px;
+    line-height: 1.75;
+  }
+  .ktv-hero-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin-top: 18px;
+    gap: 9px;
+  }
+  .ktv-hero-primary,
+  .ktv-hero-secondary {
+    padding-inline: 10px;
+    font-size: 11px;
+    gap: 6px;
+  }
+  .ktv-hero-note {
+    margin-top: 17px;
+    font-size: 9px;
+  }
+  .ktv-explore {
+    scroll-margin-top: 78px;
+  }
+}
+@media (max-width: 380px) {
+  .ktv-home-top {
+    padding: 22px 16px;
+  }
+  .ktv-hero-brand {
+    width: 116px;
+  }
+  .ktv-hero-primary,
+  .ktv-hero-secondary {
+    padding-inline: 8px;
+    font-size: 10px;
+    gap: 5px;
   }
 }
