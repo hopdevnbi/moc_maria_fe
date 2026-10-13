@@ -10,6 +10,7 @@ import { BookingReassurance } from "./booking-reassurance";
 import { bookingHref, chatHref } from "./links";
 import { MOC_MARIA_PRIMARY_ADDRESS } from "./booking-location";
 import { formatPrice } from "@/features/marketplace/format";
+import { officialLegacyCareItem, officialServiceLabel } from "./official-ktv-offers";
 import "./booking-location.css";
 import "./account.css";
 export function searchText(value: string) {
@@ -85,7 +86,7 @@ export function AppointmentRequest({
   const chosen = available.find((p) => p.id === providerId);
   const offers = (p: Provider) =>
     p.isDemo
-      ? p.demoServices || []
+      ? (p.demoServices || []).map(officialServiceLabel)
       : [
           ...new Map(
             (p.eligibleServices || []).map((s) => [
@@ -94,10 +95,11 @@ export function AppointmentRequest({
             ]),
           ).values(),
         ];
-  const serviceList = services.filter(
-    (s) => !chosen || offers(chosen).some((o) => o.id === s.service.id),
-  );
+  const serviceList = services
+    .filter((s) => !chosen || offers(chosen).some((o) => o.id === s.service.id))
+    .map((s) => ({ ...s, service: officialServiceLabel(s.service) }));
   const chosenService = serviceList.find((s) => s.service.id === serviceId);
+  const chosenMenuItem = chosenService && officialLegacyCareItem(chosenService.service.id);
   const filtered = available.filter(
     (p) =>
       (!serviceId || offers(p).some((s) => s.id === serviceId)) &&
@@ -209,10 +211,16 @@ export function AppointmentRequest({
                 </label>
                 {chosenService && (
                   <p className="mm-request-price">
-                    {chosenService.variants.map((v) => v.durationMinutes + " phút").join(" · ")} ·
-                    Từ{" "}
-                    {formatPrice(
-                      Math.min(...chosenService.variants.map((v) => Number(v.priceVnd))),
+                    {chosenMenuItem ? (
+                      formatPrice(chosenMenuItem.priceVnd)
+                    ) : (
+                      <>
+                        {chosenService.variants.map((v) => v.durationMinutes + " phút").join(" · ")}{" "}
+                        · Từ{" "}
+                        {formatPrice(
+                          Math.min(...chosenService.variants.map((v) => Number(v.priceVnd))),
+                        )}
+                      </>
                     )}
                   </p>
                 )}

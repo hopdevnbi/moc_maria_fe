@@ -10,8 +10,11 @@ import { formatPrice } from "@/features/marketplace/format";
 import demoProviders from "./demo-ktvs.json";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./mobile.css";
+import { officialLegacyCareItem } from "./official-ktv-offers";
 
 export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
+  const menuItem = officialLegacyCareItem(item.service.id);
+  const name = menuItem?.name || item.service.name;
   const chat = await publicRead<ChatProvider[]>("/ktv-chat/providers");
   const matching = demoProviders
     .filter((provider) => provider.demoServices.some((offer) => offer.id === item.service.id))
@@ -28,8 +31,7 @@ export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
         </Link>
         <div className="mm-detail-notice" role="note">
           <ShieldAlert size={18} />
-          Dịch vụ này chưa mở đặt lịch. Bạn có thể xem thời lượng và giá bên dưới để chọn liệu trình
-          phù hợp.
+          Chat với KTV để trao đổi nhu cầu và xác nhận thời gian phục vụ trước khi chốt lịch.
         </div>
         <section className="mm-service-detail-hero mm-demo-service-hero">
           {item.imageUrl && (
@@ -44,7 +46,7 @@ export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
                 )}
                 <Image
                   src={item.imageUrl}
-                  alt={item.imageAlt || "Ảnh dịch vụ " + item.service.name}
+                  alt={"Ảnh dịch vụ " + name}
                   width={680}
                   height={400}
                   sizes="(max-width: 700px) 100vw, 480px"
@@ -56,10 +58,13 @@ export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
           )}
           <div>
             <span className="mm-overline">THƯ GIÃN & CHĂM SÓC · MỘC MARIA</span>
-            <h1>{item.service.name}</h1>
-            <p>{item.service.description}</p>
+            <h1>{name}</h1>
+            <p>{menuItem?.description || item.service.description}</p>
             <p className="mm-service-detail-price">
-              Giá từ {formatPrice(Math.min(...item.variants.map((v) => Number(v.priceVnd))))}
+              {menuItem
+                ? "Giá " + formatPrice(menuItem.priceVnd)
+                : "Giá từ " +
+                  formatPrice(Math.min(...item.variants.map((v) => Number(v.priceVnd))))}
             </p>
             <Link href="/dat-lich" className="mm-outline-cta">
               Xem dịch vụ đang mở đặt lịch <ArrowRight size={16} />
@@ -68,22 +73,29 @@ export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
         </section>
         <section className="mm-detail-section">
           <div className="mm-results-heading">
-            <h2>Thời lượng & bảng giá</h2>
-            <span>{item.variants.length} lựa chọn</span>
+            <h2>{menuItem ? "Bảng giá dịch vụ" : "Thời lượng & bảng giá"}</h2>
+            {!menuItem && <span>{item.variants.length} lựa chọn</span>}
           </div>
           <div className="mm-detail-services">
-            {item.variants.map((v) => (
-              <article key={v.id}>
-                <div>
-                  <span className="mm-overline">CHƯA MỞ ĐẶT LỊCH</span>
-                  <h3>{v.name}</h3>
-                  <p>
-                    <Clock3 size={15} /> {v.durationMinutes} phút
-                  </p>
-                </div>
-                <strong>{formatPrice(v.priceVnd)}</strong>
+            {menuItem ? (
+              <article>
+                <h3>{menuItem.name}</h3>
+                <strong>{formatPrice(menuItem.priceVnd)}</strong>
               </article>
-            ))}
+            ) : (
+              item.variants.map((v) => (
+                <article key={v.id}>
+                  <div>
+                    <span className="mm-overline">CHƯA MỞ ĐẶT LỊCH</span>
+                    <h3>{v.name}</h3>
+                    <p>
+                      <Clock3 size={15} /> {v.durationMinutes} phút
+                    </p>
+                  </div>
+                  <strong>{formatPrice(v.priceVnd)}</strong>
+                </article>
+              ))
+            )}
           </div>
         </section>
         <section className="mm-detail-section">
@@ -102,7 +114,7 @@ export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
                 }
                 aria-label={
                   provider.receiver
-                    ? "Chat tư vấn " + item.service.name + " với " + provider.publicName
+                    ? "Chat tư vấn " + name + " với " + provider.publicName
                     : "Xem hồ sơ " + provider.publicName
                 }
                 key={provider.id}

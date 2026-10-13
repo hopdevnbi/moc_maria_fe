@@ -29,6 +29,7 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { ChatProvider } from "@/features/marketplace/types";
 import { chatHref } from "./links";
+import { officialServiceLabel } from "./official-ktv-offers";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
@@ -189,6 +190,11 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const directory = useQuery({
     queryKey: [...key, "providers"],
     queryFn: () => authFetch<ChatProvider[]>("/ktv-chat/providers", { cache: "no-store" }),
+    select: (providers) =>
+      providers.map((provider) => ({
+        ...provider,
+        services: (provider.services || []).map(officialServiceLabel),
+      })),
     enabled: enabled && customer,
     retry: 1,
   });

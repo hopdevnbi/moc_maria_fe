@@ -1,5 +1,6 @@
 import { publicProviderDirectory } from "@/features/mobile/data";
 import demoServices from "@/features/mobile/demo-services.json";
+import { officialDemoKtvOffers, officialServiceLabel } from "@/features/mobile/official-ktv-offers";
 export async function GET() {
   const data = await publicProviderDirectory();
   return Response.json(
@@ -8,12 +9,13 @@ export async function GET() {
         id: p.id,
         publicName: p.publicName,
         serviceArea: p.serviceArea,
-        services:
-          p.demoServices?.map((s) => s.name) || p.eligibleServices?.map((s) => s.serviceName) || [],
+        services: p.isDemo
+          ? officialDemoKtvOffers(p).map((s) => s.name)
+          : p.eligibleServices?.map((s) => s.serviceName) || [],
       })),
       services: [...data.services, ...demoServices].map((s) => ({
         id: s.service.id,
-        name: s.service.name,
+        name: officialServiceLabel(s.service).name,
         slug: s.service.slug,
       })),
     },

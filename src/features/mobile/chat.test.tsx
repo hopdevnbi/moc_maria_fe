@@ -73,6 +73,29 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it("uses current service names for consultation drafts without changing service IDs", async () => {
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation((path: string, init?: RequestInit) =>
+      path === "/ktv-chat/providers"
+        ? Promise.resolve([
+            {
+              id: "p1",
+              publicName: "Ngọc Mai",
+              services: [{ id: "demo-hair", name: "Gội đầu dưỡng sinh" }],
+            },
+          ])
+        : original(path, init),
+    );
+    mount("p1", "demo-hair");
+    const select = await screen.findByRole("combobox", { name: "Chọn dịch vụ để tư vấn" });
+    expect(select).toHaveValue("demo-hair");
+    expect(screen.getByRole("option", { name: "Gội đầu sạch" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Gội đầu dưỡng sinh" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Soạn câu hỏi" }));
+    expect(
+      (screen.getByRole("textbox", { name: "Nội dung tin nhắn" }) as HTMLTextAreaElement).value,
+    ).toContain("Gội đầu sạch");
+  });
   it("merges incremental replies without downloading old history again or showing duplicates", async () => {
     const baseline = {
       id: "old",

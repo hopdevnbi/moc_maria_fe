@@ -155,7 +155,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
         </div>
         {offers.length ? (
           <ul className="ktv-offers-list">
-            {offers.slice(0, 3).map((item) => (
+            {offers.map((item) => (
               <li key={item.id}>
                 <div className="ktv-offer-info">
                   <strong>{item.name}</strong>

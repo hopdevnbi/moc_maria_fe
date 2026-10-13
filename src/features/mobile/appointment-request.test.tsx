@@ -3,6 +3,7 @@ import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { AppointmentRequest } from "./appointment-request";
 import demoProviders from "./demo-ktvs.json";
 import demoServices from "./demo-services.json";
+import { careMenu } from "./official-menu";
 const state = vi.hoisted(() => ({ fetch: vi.fn() }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
@@ -83,10 +84,23 @@ describe("appointment request flow", () => {
   it("finds KTV by unaccented service search without making unset schedules look available", () => {
     mount();
     fireEvent.change(screen.getByLabelText("Tìm kỹ thuật viên"), {
-      target: { value: "co vai gay" },
+      target: { value: "massage body" },
     });
     expect(screen.getByText("Mai Anh")).toBeInTheDocument();
     expect(screen.queryByText("Thu Hà")).not.toBeInTheDocument();
+  });
+  it("uses the official menu in service choices, filtering and price while retaining the API ID", () => {
+    mount();
+    for (const item of careMenu) {
+      expect(screen.getByRole("option", { name: item.name })).toBeInTheDocument();
+    }
+    fireEvent.change(screen.getByLabelText("Dịch vụ chăm sóc"), { target: { value: "demo-hair" } });
+    expect(screen.getByText("49.000 ₫")).toBeInTheDocument();
+    for (const name of ["Mai Anh", "Thanh Trúc", "Minh Châu"]) {
+      expect(screen.getByRole("button", { name: new RegExp(name) })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("button", { name: /Linh Anh/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Dịch vụ chăm sóc")).toHaveValue("demo-hair");
   });
   it("submits Hanoi home address and real receiver ID, retaining identity on failed retry", async () => {
     state.fetch.mockRejectedValueOnce(new Error("Mạng gián đoạn"));
