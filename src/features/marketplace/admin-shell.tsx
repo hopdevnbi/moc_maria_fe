@@ -37,6 +37,7 @@ type AdminNavItem = {
   href?: string;
   permission?: string;
   adminOnly?: boolean;
+  superOnly?: boolean;
   description?: string;
 };
 type AdminNavGroup = { label: string; items: AdminNavItem[] };
@@ -114,8 +115,10 @@ export const adminNavGroups: AdminNavGroup[] = [
       {
         label: "Phân quyền & cấu hình",
         icon: Settings2,
+        href: "/quan-tri/phan-quyen",
+        permission: "roles.manage",
         adminOnly: true,
-        description: "Giai đoạn tiếp theo",
+        superOnly: true,
       },
     ],
   },
@@ -138,7 +141,8 @@ export function adminVisibleGroups(user: AdminUser | null): AdminNavGroup[] {
       items: group.items.filter(
         (item) =>
           (!item.permission || user.permissions.includes(item.permission)) &&
-          (!item.adminOnly || canControl),
+          (!item.adminOnly || canControl) &&
+          (!item.superOnly || user.roles.includes("SUPER_ADMIN")),
       ),
     }))
     .filter((group) => group.items.length > 0);

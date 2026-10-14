@@ -8,7 +8,7 @@ function asUser(roles: string[], permissions: string[]) {
 describe("Admin sidebar RBAC navigation", () => {
   it("shows only active management routes to SUPER_ADMIN", () => {
     const groups = adminVisibleGroups(
-      asUser(["SUPER_ADMIN"], ["admin.portal", "staff.manage", "customers.manage"]),
+      asUser(["SUPER_ADMIN"], ["admin.portal", "staff.manage", "customers.manage", "roles.manage"]),
     );
     const items = groups.flatMap((group) => group.items);
     expect(items.filter((item) => item.href).map((item) => item.href)).toEqual([
@@ -20,11 +20,11 @@ describe("Admin sidebar RBAC navigation", () => {
       "/quan-tri/co-so",
       "/quan-tri/khach-hang",
       "/quan-tri/hoi-vien-vip",
+      "/quan-tri/thong-bao",
       "/quan-tri/ho-so",
+      "/quan-tri/phan-quyen",
     ]);
-    expect(items.filter((item) => !item.href).map((item) => item.label)).toEqual([
-      "Phân quyền & cấu hình",
-    ]);
+    expect(items.filter((item) => !item.href).map((item) => item.label)).toEqual([]);
   });
 
   it("does not show VIP approval access to a receptionist with customers.manage", () => {
@@ -41,6 +41,13 @@ describe("Admin sidebar RBAC navigation", () => {
     const groups = adminVisibleGroups(asUser(["ADMIN"], ["admin.portal", "staff.manage"]));
     expect(
       groups.flatMap((group) => group.items).some((item) => item.href === "/quan-tri/lich-hen"),
+    ).toBe(false);
+  });
+
+  it("never shows role management to an ordinary ADMIN even if roles.manage is assigned", () => {
+    const groups = adminVisibleGroups(asUser(["ADMIN"], ["admin.portal", "roles.manage"]));
+    expect(
+      groups.flatMap((group) => group.items).some((item) => item.href === "/quan-tri/phan-quyen"),
     ).toBe(false);
   });
 
