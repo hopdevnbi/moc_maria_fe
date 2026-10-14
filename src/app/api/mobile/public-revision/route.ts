@@ -2,21 +2,24 @@
 import { NextResponse } from "next/server";
 import { publicRead } from "@/features/marketplace/public-api";
 import type { Branch, Provider, ServiceItem } from "@/features/marketplace/types";
+import type { PublicDisplay } from "@/features/provider-display/display-policy";
 
 function stable<T extends { id: string }>(rows: T[]) {
   return [...rows].sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export async function GET() {
-  const [services, providers, branches] = await Promise.all([
+  const [services, providers, branches, display] = await Promise.all([
     publicRead<ServiceItem[]>("/services"),
     publicRead<Provider[]>("/providers"),
     publicRead<Branch[]>("/branches"),
+    publicRead<PublicDisplay>("/provider-display"),
   ]);
   const headers = { "Cache-Control": "no-store, max-age=0" };
-  if (!services.ok || !providers.ok || !branches.ok)
+  if (!services.ok || !providers.ok || !branches.ok || !display.ok)
     return NextResponse.json({ error: "Public catalog unavailable" }, { status: 503, headers });
   const normalized = {
+    display: display.data,
     services: stable(
       services.data.map((entry) => ({
         ...entry,

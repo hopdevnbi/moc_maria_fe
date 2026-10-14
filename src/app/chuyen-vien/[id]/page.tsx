@@ -46,12 +46,14 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
         chatEnabled: true,
       },
     ]);
+    if (!presentation) notFound();
     return <DemoKtvDetail provider={presentation} />;
   }
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const result = await publicRead<Provider>("/providers/" + encodeURIComponent(id));
   if (!result.ok && result.status === 404) notFound();
   const provider = result.ok ? (await approvedDescriptions([result.data]))[0] : null;
+  if (result.ok && !provider) notFound();
   const safeAvatar =
     provider?.avatarUrl?.startsWith("/media/") && !provider.avatarUrl.includes("..")
       ? provider.avatarUrl
