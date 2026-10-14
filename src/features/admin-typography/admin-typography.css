@@ -1,0 +1,34 @@
+/* Keep Vietnamese letters and their diacritics in the same self-hosted family.
+   The font-family overrides are intentional: feature-level font shorthands
+   otherwise restore system Georgia, regardless of CSS chunk loading order.
+   Sizes, weights, spacing and all public-page typography remain unchanged. */
+.mm-admin-typography,
+.mm-admin-typography :is(button, input, select, textarea) {
+  font-family: var(--font-wellness-sans), Arial, sans-serif;
+}
+
+.mm-admin-typography
+  :is(
+    h1,
+    h2,
+    h3,
+    .mm-request-detail h4,
+    .mm-admin-brand-text strong,
+    .mm-admin-avatar,
+    .mm-admin-welcome-mark,
+    .mm-admin-module > strong,
+    .mm-admin-profile-image > span:first-child,
+    .mm-access-stats strong,
+    .mm-access-small-avatar,
+    .mm-access-avatar,
+    .mm-cm-metrics strong,
+    .mm-cm-detail-stats strong,
+    .mm-cm-mini-avatar,
+    .mm-cm-avatar,
+    .mm-ktv-overview strong,
+    .mm-ktv-avatar,
+    .mm-ktv-empty-filter strong,
+    .mm-reviews-admin-empty strong
+  ) {
+  font-family: var(--font-wellness-serif), "Times New Roman", serif !important;
+}
