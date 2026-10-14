@@ -507,6 +507,18 @@
         "test": "Full quality/build and 124 tests PASS; 13 appointment regressions PASS; PR CI PASS. Production rendered form verifies Linh Anh, selected first service, value=min and ~60.6 minutes ahead in Hanoi. Release endpoint matches source.",
         "businessData": "No booking submitted, backend/schema or production records changed."
       }
+    },
+    {
+      "agent": "Codex KTV workspace 2026-10-14",
+      "status": "ACTIVE",
+      "frontendBranch": "codex/ktv-workspace-redesign",
+      "ownedPaths": [
+        "FE technician workspace new components/CSS/tests",
+        "FE tai-khoan/page.tsx technician branch only",
+        "FE inquiries.tsx completion display/actions only",
+        "Own docs/Plan"
+      ],
+      "note": "Reuse current inquiry fulfillment API. Preserve customer profile/VIP and customer account UI. No certifications/reviews/reservations created by reported completion."
     }
   ]
 }
