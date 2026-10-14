@@ -14,12 +14,20 @@ export interface Inquiry {
   requestedAt: string;
   notes: string;
   status: string;
+  serviceId?: string;
+  providerCompletedAt?: string;
+  appointmentId?: string;
+  fulfillmentStatus?: string;
+  archivedAt?: string;
 }
 const labels: Record<string, string> = {
   PENDING: "Chờ KTV phản hồi",
   CONTACTED: "KTV đang trao đổi với bạn",
   DECLINED: "KTV chưa thể nhận yêu cầu",
   CANCELLED: "Đã hủy yêu cầu",
+  CONFIRMED: "Đã xác nhận lịch",
+  IN_SERVICE: "Đang phục vụ",
+  COMPLETED: "Đã hoàn thành",
 };
 export function AppointmentInquiries() {
   const { user, authFetch } = useAuth();
@@ -84,7 +92,11 @@ export function AppointmentInquiries() {
               {item.serviceName} ·{" "}
               {user?.id === item.customerId ? item.providerName : item.customerName}
             </strong>
-            <p className="mm-account-role">{labels[item.status] || item.status}</p>
+            <p className="mm-account-role">
+              {labels[
+                item.fulfillmentStatus || (item.providerCompletedAt ? "COMPLETED" : item.status)
+              ] || item.status}
+            </p>
             <p>
               {new Intl.DateTimeFormat("vi-VN", {
                 dateStyle: "medium",
@@ -118,7 +130,9 @@ export function AppointmentInquiries() {
                 Mở chat
               </Link>
               {user?.id === item.customerId
-                ? (item.status === "PENDING" || item.status === "CONTACTED") && (
+                ? !item.providerCompletedAt &&
+                  !item.appointmentId &&
+                  (item.status === "PENDING" || item.status === "CONTACTED") && (
                     <button
                       disabled={!!busy}
                       className="mm-outline-cta"

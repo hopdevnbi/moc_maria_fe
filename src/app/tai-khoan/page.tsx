@@ -15,6 +15,7 @@ import { CustomerAccountProfile } from "@/features/mobile/customer-account-profi
 import { AppointmentInquiries } from "@/features/mobile/inquiries";
 import { AccountSearch } from "@/features/mobile/account-search";
 import { AccountShortcuts } from "@/features/mobile/account-shortcuts";
+import { TechnicianWorkspace } from "@/features/mobile/ktv-workspace";
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -42,6 +43,7 @@ function AccountContent() {
   const customer = user.permissions.includes("customer.portal");
   const technician = user.roles.includes("THERAPIST") || user.roles.includes("DOCTOR_CONSULTANT");
   const admin = user.permissions.includes("admin.portal");
+  if (technician) return <TechnicianWorkspace />;
   const actions = technician
     ? [
         {
