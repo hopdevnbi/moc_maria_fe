@@ -64,27 +64,26 @@ const operations: DashboardItem[] = [
     tag: "Cơ sở & vận hành",
     permission: "staff.manage",
   },
-];
-const upcoming: DashboardItem[] = [
   {
     title: "Quản lý khách hàng",
-    description: "Tìm kiếm hồ sơ, quản lý tình trạng và lịch sử chăm sóc khách hàng.",
+    description: "Tìm kiếm hồ sơ, xem lịch sử yêu cầu và lưu ghi chú chăm sóc nội bộ.",
+    href: "/quan-tri/khach-hang",
     icon: UsersRound,
-    tag: "Đang xây dựng",
+    tag: "Hồ sơ & chăm sóc khách",
     adminOnly: true,
     permission: "customers.manage",
-    soon: true,
   },
   {
     title: "Hội viên VIP",
-    description: "Tiếp nhận yêu cầu nâng hạng, Admin xét duyệt và thiết lập quyền lợi.",
+    description: "Theo dõi hội viên, cấp hoặc thu hồi VIP với lý do và thời hạn rõ ràng.",
+    href: "/quan-tri/hoi-vien-vip",
     icon: Crown,
-    tag: "Chờ phát hành",
+    tag: "Chăm sóc hội viên",
     adminOnly: true,
     permission: "customers.manage",
-    soon: true,
   },
 ];
+const upcoming: DashboardItem[] = [];
 
 export function AdminDashboard() {
   const { user } = useAuth();
@@ -196,8 +195,9 @@ export function AdminDashboard() {
         <div>
           <strong>Quản trị rõ ràng, bảo vệ dữ liệu</strong>
           <p>
-            Mỗi nhân viên chỉ thấy phân hệ được cấp quyền. Các thay đổi về khách hàng và VIP chỉ
-            được kích hoạt sau khi Backend và quy trình xét duyệt được triển khai chính thức.
+            Mỗi nhân viên chỉ thấy phân hệ được cấp quyền. Ghi chú chăm sóc và thay đổi trạng thái
+            VIP được lưu riêng tư, có lịch sử thao tác; quyền lợi tài chính sẽ được cấu hình khi có
+            chính sách hội viên chính thức.
           </p>
         </div>
         <ClipboardList size={21} className="mm-admin-note-tail" aria-hidden="true" />

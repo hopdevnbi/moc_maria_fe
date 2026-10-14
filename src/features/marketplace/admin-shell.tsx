@@ -88,16 +88,16 @@ export const adminNavGroups: AdminNavGroup[] = [
       {
         label: "Khách hàng",
         icon: UsersRound,
+        href: "/quan-tri/khach-hang",
         permission: "customers.manage",
         adminOnly: true,
-        description: "Đang hoàn thiện",
       },
       {
         label: "Hội viên VIP",
         icon: Crown,
+        href: "/quan-tri/hoi-vien-vip",
         permission: "customers.manage",
         adminOnly: true,
-        description: "Chờ phát hành",
       },
     ],
   },

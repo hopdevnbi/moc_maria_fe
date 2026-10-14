@@ -18,11 +18,11 @@ describe("Admin sidebar RBAC navigation", () => {
       "/quan-tri/danh-gia-ktv",
       "/quan-tri/dich-vu",
       "/quan-tri/co-so",
+      "/quan-tri/khach-hang",
+      "/quan-tri/hoi-vien-vip",
       "/quan-tri/ho-so",
     ]);
     expect(items.filter((item) => !item.href).map((item) => item.label)).toEqual([
-      "Khách hàng",
-      "Hội viên VIP",
       "Phân quyền & cấu hình",
     ]);
   });
