@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { AccountNav } from "@/features/auth/components/AccountNav";
 import { isActiveVip, useCustomerSelfProfile } from "./customer-account-profile";
+import { vipLabel } from "@/features/membership/vip-level";
 import { formatPrice } from "@/features/marketplace/format";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { bookingHref } from "./links";
@@ -119,7 +120,9 @@ function MobileAccountLink() {
     <Link
       href="/tai-khoan"
       className="mm-account-mobile"
-      aria-label={vip ? "Tài khoản hội viên VIP" : "Tài khoản"}
+      aria-label={
+        vip ? `Tài khoản hội viên ${vipLabel(profile.data?.membership.level)}` : "Tài khoản"
+      }
     >
       {vip ? <Crown size={23} fill="currentColor" color="#b58a42" /> : <UserRound size={22} />}
     </Link>

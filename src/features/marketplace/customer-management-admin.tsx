@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { vipLabel, vipLevel } from "@/features/membership/vip-level";
 import { mutationMessage, usePrivateData, usePrivateMutation } from "./private-api";
 import "./customer-management-admin.css";
 
@@ -38,6 +39,7 @@ interface Customer {
   birthday: string | null;
   avatarUrl: string | null;
   vipStatus: "VIP" | "STANDARD";
+  vipLevel?: number | null;
   vipExpiresAt: string | null;
   inquiryCount: number;
   appointmentCount: number;
@@ -58,6 +60,7 @@ interface CustomerDetail extends Customer {
   note: string;
   vip: {
     isVip: boolean;
+    level?: number | null;
     expiresAt: string | null;
     startedAt: string | null;
     reason: string | null;
@@ -110,7 +113,7 @@ function CustomerBadge({ customer }: { customer: Customer }) {
   return (
     <span className={customer.vipStatus === "VIP" ? "mm-cm-badge is-vip" : "mm-cm-badge"}>
       {customer.vipStatus === "VIP" && <Crown size={13} aria-hidden="true" />}
-      {customer.vipStatus === "VIP" ? "VIP" : "Thường"}
+      {customer.vipStatus === "VIP" ? vipLabel(customer.vipLevel) : "Thường"}
     </span>
   );
 }
@@ -126,7 +129,8 @@ function CustomerDetails({ customer, onClose }: { customer: CustomerDetail; onCl
   const [expiry, setExpiry] = useState(
     customer.vipStatus === "VIP" && customer.vipExpiresAt ? customer.vipExpiresAt.slice(0, 10) : "",
   );
-  const [grantVip, setGrantVip] = useState(customer.vipStatus !== "VIP");
+  const [grantVip, setGrantVip] = useState(true);
+  const [level, setLevel] = useState(vipLevel(customer.vip.level ?? customer.vipLevel));
   const [feedback, setFeedback] = useState("");
   const [confirmAccountChange, setConfirmAccountChange] = useState(false);
 
@@ -154,7 +158,7 @@ function CustomerDetails({ customer, onClose }: { customer: CustomerDetail; onCl
       await vipMutation.mutateAsync({
         path: `/admin/customers/${customer.id}/vip`,
         method: "PATCH",
-        body: { isVip: grantVip, expiresAt, reason: reason.trim() },
+        body: { isVip: grantVip, ...(grantVip ? { level } : {}), expiresAt, reason: reason.trim() },
       });
       setFeedback(grantVip ? "Đã cập nhật trạng thái VIP." : "Đã thu hồi trạng thái VIP.");
     } catch {
@@ -316,7 +320,9 @@ function CustomerDetails({ customer, onClose }: { customer: CustomerDetail; onCl
         </div>
         <div className="mm-cm-membership-note">
           <strong>
-            {customer.vipStatus === "VIP" ? "Hội viên VIP đang hiệu lực" : "Khách hàng thường"}
+            {customer.vipStatus === "VIP"
+              ? `Hội viên ${vipLabel(customer.vipLevel)} đang hiệu lực`
+              : "Khách hàng thường"}
           </strong>
           <span>
             {customer.vipStatus === "VIP"
@@ -347,6 +353,23 @@ function CustomerDetails({ customer, onClose }: { customer: CustomerDetail; onCl
           </div>
           {grantVip && (
             <label>
+              Cấp hội viên VIP
+              <input
+                type="number"
+                min={1}
+                max={99}
+                step={1}
+                required
+                value={level}
+                onChange={(event) => setLevel(Number(event.target.value))}
+              />
+              <small>
+                VIP 1, VIP 2, VIP 3… Tất cả các cấp còn hiệu lực đều được đổi ảnh đại diện.
+              </small>
+            </label>
+          )}
+          {grantVip && (
+            <label>
               Ngày hết hạn (tùy chọn)
               <input
                 type="date"
@@ -374,7 +397,11 @@ function CustomerDetails({ customer, onClose }: { customer: CustomerDetail; onCl
           <button
             className="mm-cm-primary"
             type="submit"
-            disabled={vipMutation.isPending || reason.trim().length < 10}
+            disabled={
+              vipMutation.isPending ||
+              reason.trim().length < 10 ||
+              (grantVip && (!Number.isInteger(level) || level < 1 || level > 99))
+            }
           >
             {vipMutation.isPending
               ? "Đang lưu..."

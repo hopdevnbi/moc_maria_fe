@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { vipLabel } from "@/features/membership/vip-level";
 import "./customer-account-profile.css";
 
 export type CustomerSelfProfile = {
@@ -31,7 +32,12 @@ export type CustomerSelfProfile = {
   phone: string | null;
   roles: string[];
   customer: { id: string; birthday: string | null; avatarUrl: string | null };
-  membership: { tier: "VIP" | "STANDARD"; expiresAt: string | null; startedAt: string | null };
+  membership: {
+    tier: "VIP" | "STANDARD";
+    level?: number | null;
+    expiresAt: string | null;
+    startedAt: string | null;
+  };
   avatarUploadEnabled: boolean;
 };
 
@@ -68,7 +74,7 @@ function displayDate(value: string | null): string {
 
 const isValidAvatarUrl = (value: string | null) => !!value && /^https:\/\/[^\s]+$/i.test(value);
 
-function CustomerPhoto({
+export function CustomerPhoto({
   profile,
   onUpdate,
 }: {
@@ -153,7 +159,7 @@ function CustomerPhoto({
           </span>
         )}
       </div>
-      {profile.avatarUploadEnabled ? (
+      {profile.avatarUploadEnabled && isActiveVip(profile) ? (
         <>
           <label className="mm-customer-photo-upload" htmlFor="customer-avatar-input">
             <Camera size={16} />
@@ -186,10 +192,14 @@ function CustomerPhoto({
               </button>
             </div>
           )}
-          <small>Ảnh sẽ được cắt vuông, tối ưu WebP 384px và lưu trên CDN.</small>
+          <small>JPG, PNG hoặc WebP · tối đa 5 MB. Xem trước ảnh rồi nhấn lưu.</small>
         </>
       ) : (
-        <small>Tính năng tải ảnh đang tạm bảo trì. Bạn vẫn có thể chỉnh thông tin cá nhân.</small>
+        <small>
+          {isActiveVip(profile)
+            ? "Tính năng tải ảnh đang tạm bảo trì. Bạn vẫn có thể chỉnh thông tin cá nhân."
+            : "Đổi ảnh đại diện là quyền lợi của hội viên VIP còn hiệu lực."}
+        </small>
       )}
       {done && (
         <p className="mm-customer-photo-ok" role="status">
@@ -270,7 +280,8 @@ function CustomerProfileContent({
         <h2>{profile.displayName}</h2>
         {vip ? (
           <div className="mm-customer-vip-mark">
-            <Crown size={18} fill="currentColor" /> HỘI VIÊN VIP <BadgeCheck size={16} />
+            <Crown size={18} fill="currentColor" /> HỘI VIÊN {vipLabel(profile.membership.level)}{" "}
+            <BadgeCheck size={16} />
           </div>
         ) : (
           <div className="mm-customer-normal-mark">
@@ -285,7 +296,11 @@ function CustomerProfileContent({
         <div className={vip ? "mm-customer-membership is-vip" : "mm-customer-membership"}>
           <span>{vip ? <Crown size={20} fill="currentColor" /> : <ShieldCheck size={19} />}</span>
           <div>
-            <strong>{vip ? "Hội viên VIP đang hiệu lực" : "Thành viên tiêu chuẩn"}</strong>
+            <strong>
+              {vip
+                ? `Hội viên ${vipLabel(profile.membership.level)} đang hiệu lực`
+                : "Thành viên tiêu chuẩn"}
+            </strong>
             <small>
               {vip
                 ? `Thời hạn: ${displayDate(profile.membership.expiresAt)}`

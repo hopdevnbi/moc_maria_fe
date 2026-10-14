@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Crown, LogOut, UserRound } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { isActiveVip, useCustomerSelfProfile } from "@/features/mobile/customer-account-profile";
+import { vipLabel } from "@/features/membership/vip-level";
 
 export function AccountNav() {
   const { status, user, logout } = useAuth();
@@ -60,10 +61,10 @@ export function AccountNav() {
         {vip && (
           <span
             className="inline-flex items-center gap-1 rounded-full bg-[#fff0c9] px-2 py-0.5 text-[10px] font-extrabold text-[#9b712b]"
-            title="Hội viên VIP đang hiệu lực"
+            title={`Hội viên ${vipLabel(customer.data?.membership.level)} đang hiệu lực`}
           >
             <Crown size={12} fill="currentColor" />
-            VIP
+            {vipLabel(customer.data?.membership.level)}
           </span>
         )}
       </Link>
