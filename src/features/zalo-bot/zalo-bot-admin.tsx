@@ -72,7 +72,7 @@ export function ZaloBotAdmin() {
           {status.data.recipientCount}
         </p>
       )}
-      <ol>
+      <ol style={{ listStyle: "decimal", paddingInlineStart: 24, lineHeight: 1.9 }}>
         <li>
           Bấm <strong>Tạo mã kết nối</strong>.
         </li>
@@ -89,8 +89,9 @@ export function ZaloBotAdmin() {
         Nếu dùng nhóm quản trị, thêm Bot vào nhóm rồi gửi mã trong nhóm đó. Mỗi mã dùng một lần, có
         hiệu lực 30 phút; tạo mã mới thay thế mã chưa dùng.
       </p>
-      <div className="market-actions">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBlock: 20 }}>
         <button
+          className="market-button"
           type="button"
           disabled={
             mutation.isPending || !status.data?.botConfigured || !status.data.webhookConfigured
@@ -99,10 +100,16 @@ export function ZaloBotAdmin() {
         >
           Tạo mã kết nối
         </button>
-        <button type="button" disabled={status.isFetching} onClick={() => void status.refetch()}>
+        <button
+          className="market-button market-button-secondary"
+          type="button"
+          disabled={status.isFetching}
+          onClick={() => void status.refetch()}
+        >
           Kiểm tra trạng thái
         </button>
         <button
+          className="market-button market-button-secondary"
           type="button"
           disabled={mutation.isPending || !status.data?.recipientCount}
           onClick={test}
@@ -110,6 +117,7 @@ export function ZaloBotAdmin() {
           Gửi thông báo kiểm tra
         </button>
         <button
+          className="market-button market-button-secondary"
           type="button"
           disabled={mutation.isPending || !status.data?.recipientCount}
           onClick={report}
@@ -121,6 +129,7 @@ export function ZaloBotAdmin() {
         <div className="market-panel">
           <label htmlFor="zalo-pairing">Dòng cần gửi vào Bot</label>
           <textarea
+            className="market-input"
             id="zalo-pairing"
             readOnly
             rows={2}
