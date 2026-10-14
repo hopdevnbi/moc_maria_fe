@@ -1,4 +1,4 @@
-﻿import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderReviewsAdmin } from "./reviews-admin";
 
@@ -7,9 +7,17 @@ const mock = vi.hoisted(() => ({
   mutateAsync: vi.fn().mockResolvedValue({ id: "review-1" }),
   refetch: vi.fn().mockResolvedValue({}),
   reset: vi.fn(),
+  vipOnly: false,
 }));
 vi.mock("./private-api", () => ({
   usePrivateData: (path: string) => {
+    if (path.endsWith("/policy"))
+      return {
+        data: { vipOnly: mock.vipOnly, version: 0 },
+        isPending: false,
+        isError: false,
+        refetch: mock.refetch,
+      };
     mock.path = path;
     return {
       data: {
@@ -52,9 +60,31 @@ vi.mock("next/link", () => ({
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  mock.vipOnly = false;
 });
 
 describe("Admin KTV review moderation", () => {
+  it("requires a reason and current version to turn on VIP-only submissions", async () => {
+    render(<ProviderReviewsAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: /Chỉ hội viên VIP/ }));
+    const confirm = screen.getByRole("button", { name: "Xác nhận lưu chế độ" });
+    expect(confirm).toBeDisabled();
+    fireEvent.change(screen.getByRole("textbox", { name: /Lý do thay đổi/ }), {
+      target: { value: "Chỉ nhận đánh giá từ hội viên VIP đã trải nghiệm dịch vụ." },
+    });
+    fireEvent.click(confirm);
+    await waitFor(() =>
+      expect(mock.mutateAsync).toHaveBeenCalledWith({
+        path: "/admin/provider-reviews/policy",
+        method: "PATCH",
+        body: {
+          vipOnly: true,
+          expectedVersion: 0,
+          reason: "Chỉ nhận đánh giá từ hội viên VIP đã trải nghiệm dịch vụ.",
+        },
+      }),
+    );
+  });
   it("shows the pending queue, stars, review and provider without customer PII", () => {
     render(<ProviderReviewsAdmin />);
     expect(mock.path).toBe("/admin/provider-reviews?status=PENDING&page=1");

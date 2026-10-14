@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Crown,
   MessageSquareText,
   ShieldCheck,
   Star,
@@ -36,6 +37,148 @@ type ReviewList = {
   pending: number;
   hasMore: boolean;
 };
+type ReviewPolicy = { vipOnly: boolean; version: number };
+
+function ReviewPolicySettings() {
+  const policy = usePrivateData<ReviewPolicy>("/admin/provider-reviews/policy");
+  const update = usePrivateMutation<ReviewPolicy>();
+  const [wanted, setWanted] = useState<boolean | null>(null);
+  const [reason, setReason] = useState("");
+  const [success, setSuccess] = useState("");
+  const value = policy.data?.vipOnly;
+
+  async function save() {
+    if (!policy.data || wanted === null || wanted === value || reason.trim().length < 10) return;
+    try {
+      await update.mutateAsync({
+        path: "/admin/provider-reviews/policy",
+        method: "PATCH",
+        body: { vipOnly: wanted, expectedVersion: policy.data.version, reason: reason.trim() },
+      });
+      setWanted(null);
+      setReason("");
+      setSuccess(
+        wanted
+          ? "Đã bật: chỉ hội viên VIP đủ điều kiện được gửi đánh giá."
+          : "Đã mở quyền đánh giá cho mọi khách có lịch hẹn hoàn thành.",
+      );
+      await policy.refetch();
+    } catch {
+      // Keep the draft and error visible so admins can reload on a version conflict.
+    }
+  }
+
+  return (
+    <section className="mm-reviews-policy" aria-label="Cài đặt quyền đánh giá KTV">
+      <div className="mm-reviews-policy-heading">
+        <span className="mm-reviews-policy-icon">
+          <Crown size={21} />
+        </span>
+        <div>
+          <h3>Ai được đánh giá KTV?</h3>
+          <p>Khách phải có lịch hẹn đã hoàn thành. Mọi nhận xét vẫn phải được Admin duyệt.</p>
+        </div>
+      </div>
+      {policy.isPending ? (
+        <p role="status">Đang tải cấu hình...</p>
+      ) : policy.isError || !policy.data ? (
+        <p role="alert">
+          Chưa tải được cấu hình.{" "}
+          <button type="button" onClick={() => void policy.refetch()}>
+            Thử lại
+          </button>
+        </p>
+      ) : (
+        <>
+          <div
+            className="mm-reviews-policy-options"
+            role="group"
+            aria-label="Chế độ cho phép đánh giá"
+          >
+            <button
+              type="button"
+              className={(wanted ?? value) === false ? "active" : ""}
+              aria-pressed={(wanted ?? value) === false}
+              disabled={update.isPending}
+              onClick={() => {
+                setWanted(false);
+                setSuccess("");
+              }}
+            >
+              Mọi khách đã dùng dịch vụ
+            </button>
+            <button
+              type="button"
+              className={(wanted ?? value) === true ? "active vip" : ""}
+              aria-pressed={(wanted ?? value) === true}
+              disabled={update.isPending}
+              onClick={() => {
+                setWanted(true);
+                setSuccess("");
+              }}
+            >
+              <Crown size={16} /> Chỉ hội viên VIP
+            </button>
+          </div>
+          {(wanted ?? value) && (
+            <p className="mm-reviews-policy-hint">
+              VIP phải còn hiệu lực tại thời điểm gửi hoặc sửa đánh giá; khách thường không thể vượt
+              qua bằng cách gọi API trực tiếp.
+            </p>
+          )}
+          {wanted !== null && wanted !== value && (
+            <div className="mm-reviews-policy-confirm">
+              <label htmlFor="mm-review-policy-reason">Lý do thay đổi (tối thiểu 10 ký tự)</label>
+              <textarea
+                id="mm-review-policy-reason"
+                rows={2}
+                maxLength={500}
+                value={reason}
+                disabled={update.isPending}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Giải thích vì sao bạn muốn thay đổi quyền đánh giá..."
+              />
+              <div>
+                <button
+                  type="button"
+                  disabled={update.isPending}
+                  onClick={() => {
+                    setWanted(null);
+                    setReason("");
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="mm-review-approve"
+                  disabled={update.isPending || reason.trim().length < 10}
+                  onClick={() => void save()}
+                >
+                  {update.isPending ? "Đang lưu..." : "Xác nhận lưu chế độ"}
+                </button>
+              </div>
+            </div>
+          )}
+          {update.isError && (
+            <p role="alert" className="mm-reviews-error">
+              {mutationMessage(update.error)}{" "}
+              <button type="button" onClick={() => void policy.refetch()}>
+                Tải lại
+              </button>
+            </p>
+          )}
+          {success && (
+            <p role="status" className="mm-reviews-success">
+              <Check size={16} />
+              {success}
+            </p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
 type Filter = "ALL" | ModerationStatus;
 const filters: { value: Filter; label: string }[] = [
   { value: "ALL", label: "Tất cả" },
@@ -102,6 +245,7 @@ export function ProviderReviewsAdmin() {
           </p>
         </div>
       </div>
+      <ReviewPolicySettings />
       <div className="mm-reviews-admin-stat">
         <span>
           <Clock3 size={18} /> Cần xét duyệt

@@ -35,7 +35,15 @@ function mount(component: React.ReactNode) {
 }
 beforeEach(() => {
   state.status = "authenticated";
-  state.fetch.mockReset().mockResolvedValue([eligible]);
+  state.fetch
+    .mockReset()
+    .mockImplementation((path: string) =>
+      Promise.resolve(
+        path.includes("/me/access")
+          ? { vipOnly: false, isVip: false, canReview: true }
+          : [eligible],
+      ),
+    );
   vi.stubGlobal(
     "fetch",
     vi.fn().mockImplementation(async (url: string) => ({
@@ -105,5 +113,30 @@ describe("verified service feedback", () => {
     );
     expect(state.fetch).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Viết đánh giá" })).not.toBeInTheDocument();
+  });
+  it("blocks customer review form for non-VIP when policy is VIP-only", async () => {
+    state.fetch.mockImplementation((path: string) =>
+      Promise.resolve(
+        path.includes("/me/access")
+          ? { vipOnly: true, isVip: false, canReview: false }
+          : [eligible],
+      ),
+    );
+    mount(<ProviderReviews providerId="p1" />);
+    expect(await screen.findByText("Chỉ hội viên VIP được gửi đánh giá")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Viết đánh giá" })).not.toBeInTheDocument();
+    expect(state.fetch).not.toHaveBeenCalledWith(
+      expect.stringContaining("me/eligible"),
+      expect.anything(),
+    );
+  });
+  it("allows VIP to see verified completed review form even when VIP-only", async () => {
+    state.fetch.mockImplementation((path: string) =>
+      Promise.resolve(
+        path.includes("/me/access") ? { vipOnly: true, isVip: true, canReview: true } : [eligible],
+      ),
+    );
+    mount(<ProviderReviews providerId="p1" />);
+    expect(await screen.findByRole("button", { name: "Viết đánh giá" })).toBeInTheDocument();
   });
 });

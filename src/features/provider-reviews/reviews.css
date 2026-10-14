@@ -174,3 +174,30 @@
     flex-direction: column;
   }
 }
+.mm-review-vip-notice {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e6d4a3;
+  background: #fff9ed;
+  border-radius: 14px;
+  color: #785d29;
+  line-height: 1.6;
+}
+.mm-review-vip-notice > svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.mm-review-vip-notice strong {
+  font-size: 14px;
+}
+.mm-review-vip-notice p {
+  margin: 5px 0 8px;
+  font-size: 12px;
+  color: #806d4e;
+}
+.mm-review-vip-notice a {
+  font-weight: 700;
+  text-decoration: underline;
+  color: #6e5427;
+}

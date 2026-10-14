@@ -7,6 +7,7 @@ import { MobileHeader, MobileNavigation } from "./experience";
 import { officialDemoKtvOffers } from "./official-ktv-offers";
 import "./mobile.css";
 import { bookingHref, chatHref } from "./links";
+import { ProviderRating, ProviderReviews } from "@/features/provider-reviews/reviews";
 
 export function DemoKtvDetail({ provider }: { provider: Provider }) {
   const offers = officialDemoKtvOffers(provider);
@@ -34,6 +35,7 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
           <div className="mm-profile-description">
             <span className="mm-overline">KỸ THUẬT VIÊN MỘC MARIA</span>
             <h1>{provider.publicName}</h1>
+            {provider.chatProviderId && <ProviderRating providerId={provider.chatProviderId} />}
             <p className="mm-profile-title">{provider.title}</p>
             <div className="mm-profile-facts">
               {provider.age && <span>{provider.age} tuổi</span>}
@@ -112,16 +114,20 @@ export function DemoKtvDetail({ provider }: { provider: Provider }) {
             ))}
           </div>
         </section>
-        <section
-          className="mm-detail-section mm-demo-review-info"
-          aria-label="Đánh giá kỹ thuật viên"
-        >
-          <h2>Đánh giá từ khách hàng</h2>
-          <p>
-            Sau khi hoàn thành lịch dịch vụ, khách hàng có thể chấm 1–5 sao và gửi nhận xét. Nhận
-            xét được quản trị viên kiểm duyệt trước khi công khai.
-          </p>
-        </section>
+        {provider.chatProviderId ? (
+          <ProviderReviews providerId={provider.chatProviderId} />
+        ) : (
+          <section
+            className="mm-detail-section mm-demo-review-info"
+            aria-label="Đánh giá kỹ thuật viên"
+          >
+            <h2>Đánh giá từ khách hàng</h2>
+            <p>
+              Chưa thể nhận đánh giá cho hồ sơ này. Lịch dịch vụ cần được xác thực trước khi gửi
+              nhận xét.
+            </p>
+          </section>
+        )}
       </main>
       <MobileNavigation active="providers" />
     </div>

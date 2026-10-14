@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Star, BadgeCheck, X } from "lucide-react";
+import { Star, BadgeCheck, Crown, X } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { resolveApiBaseUrl } from "@/shared/config/environment";
 import "./reviews.css";
@@ -31,6 +31,7 @@ type Eligible = {
   version: number | null;
   editable_until: string | null;
 };
+type ReviewAccess = { vipOnly: boolean; isVip: boolean; canReview: boolean };
 async function read<T>(path: string): Promise<T> {
   const response = await fetch(resolveApiBaseUrl() + path, {
     cache: "no-store",
@@ -98,7 +99,7 @@ function ReviewForm({ item, onDone }: { item: Eligible; onDone: () => void }) {
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        if (stars && comment.trim()) save.mutate();
+        if (stars && comment.trim().length >= 15) save.mutate();
       }}
     >
       <p>
@@ -129,6 +130,7 @@ function ReviewForm({ item, onDone }: { item: Eligible; onDone: () => void }) {
         Nhận xét của bạn
         <textarea
           required
+          minLength={15}
           maxLength={2000}
           rows={5}
           value={comment}
@@ -151,7 +153,10 @@ function ReviewForm({ item, onDone }: { item: Eligible; onDone: () => void }) {
             : "Chưa gửi được đánh giá. Vui lòng thử lại."}
         </p>
       )}
-      <button className="mm-review-button" disabled={!stars || !comment.trim() || save.isPending}>
+      <button
+        className="mm-review-button"
+        disabled={!stars || comment.trim().length < 15 || save.isPending}
+      >
         {save.isPending ? "Đang gửi..." : item.review_id ? "Lưu thay đổi" : "Gửi đánh giá"}
       </button>
     </form>
@@ -162,6 +167,13 @@ export function MyReviewRequests({ providerId }: { providerId: string }) {
   const [selected, setSelected] = useState<Eligible | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const customer = !!user?.permissions.includes("customer.portal");
+  const access = useQuery({
+    queryKey: ["my-provider-review-access", user?.id],
+    queryFn: () => authFetch<ReviewAccess>("/provider-reviews/me/access", { cache: "no-store" }),
+    enabled: status === "authenticated" && customer,
+    staleTime: 0,
+    retry: false,
+  });
   const eligible = useQuery({
     queryKey: ["my-provider-reviews", user?.id, providerId],
     queryFn: () =>
@@ -169,7 +181,7 @@ export function MyReviewRequests({ providerId }: { providerId: string }) {
         `/provider-reviews/me/eligible?providerApplicationId=${encodeURIComponent(providerId)}`,
         { cache: "no-store" },
       ),
-    enabled: status === "authenticated" && customer,
+    enabled: status === "authenticated" && customer && access.data?.canReview === true,
   });
   if (status === "loading") return <p>Đang kiểm tra lịch dịch vụ...</p>;
   if (status !== "authenticated")
@@ -184,7 +196,28 @@ export function MyReviewRequests({ providerId }: { providerId: string }) {
   if (!customer) return null;
   return (
     <div className="mm-my-reviews">
-      {eligible.isError ? (
+      {access.isPending ? (
+        <p>Đang kiểm tra quyền đánh giá...</p>
+      ) : access.isError || !access.data ? (
+        <p role="alert">
+          Chưa xác minh được quyền đánh giá.{" "}
+          <button type="button" onClick={() => void access.refetch()}>
+            Thử lại
+          </button>
+        </p>
+      ) : !access.data.canReview ? (
+        <div className="mm-review-vip-notice" role="status">
+          <Crown size={19} aria-hidden="true" />
+          <div>
+            <strong>Chỉ hội viên VIP được gửi đánh giá</strong>
+            <p>
+              Hiện Mộc Maria chỉ nhận đánh giá từ hội viên VIP còn hiệu lực và đã hoàn thành dịch
+              vụ. Đánh giá vẫn cần Admin duyệt trước khi xuất hiện.
+            </p>
+            <Link href="/hoi-vien">Tìm hiểu hội viên VIP</Link>
+          </div>
+        </div>
+      ) : eligible.isError ? (
         <p role="alert">
           Chưa tải được dịch vụ của bạn.{" "}
           <button onClick={() => void eligible.refetch()}>Thử lại</button>
