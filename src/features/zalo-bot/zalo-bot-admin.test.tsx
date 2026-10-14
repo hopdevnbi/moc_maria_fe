@@ -17,7 +17,10 @@ vi.mock("@/features/marketplace/private-api", () => ({
   usePrivateMutation: () => ({ mutateAsync: state.save }),
   mutationMessage: () => "Kết nối chưa hoàn tất",
 }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 beforeEach(() => {
   state.save.mockReset();
   state.refetch.mockClear();
@@ -56,5 +59,20 @@ describe("Zalo operator setup", () => {
     await waitFor(() =>
       expect(state.save).toHaveBeenCalledWith({ path: "/admin/chat-digest/run" }),
     );
+  });
+  it("copies the exact generated command without sending a notification", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    state.save.mockResolvedValue({
+      command: "Kết nối Mộc Maria 0123456789ABCDEF",
+      expiresAt: "2026-10-14T06:00:00Z",
+    });
+    render(<ZaloBotAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: "Tạo mã kết nối" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Sao chép dòng kết nối" }));
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith("Kết nối Mộc Maria 0123456789ABCDEF"),
+    );
+    expect(state.save).toHaveBeenCalledTimes(1);
   });
 });

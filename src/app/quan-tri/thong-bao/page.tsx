@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { AdminShell } from "@/features/marketplace/admin-shell";
-import { NotificationEmailsAdmin } from "@/features/marketplace/notification-emails-admin";
+import { NotificationCenter } from "@/features/notifications/notification-center";
 
 export const metadata: Metadata = {
-  title: "Email nhận thông báo | Mộc Maria",
+  title: "Trung tâm thông báo",
   robots: { index: false, follow: false },
 };
 export default function NotificationSettingsPage() {
   return (
-    <AdminShell title="Cấu hình email nhận thông báo" permission="roles.manage">
-      <NotificationEmailsAdmin />
+    <AdminShell title="Trung tâm thông báo" permission="roles.manage">
+      <NotificationCenter />
     </AdminShell>
   );
 }
