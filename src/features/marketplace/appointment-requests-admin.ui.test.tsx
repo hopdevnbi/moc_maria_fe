@@ -72,7 +72,11 @@ describe("Appointment admin board", () => {
     expect(mutateAsync).toHaveBeenCalledWith({
       path: "/admin/appointment-inquiries/abc123",
       method: "PATCH",
-      body: { status: "CONTACTED", reason: "Đã liên hệ qua điện thoại." },
+      body: {
+        status: "CONTACTED",
+        reason: "Đã liên hệ qua điện thoại.",
+        expectedStatus: "PENDING",
+      },
     });
   });
 });
