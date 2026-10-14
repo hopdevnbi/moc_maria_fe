@@ -36,7 +36,8 @@ export interface AdminAppointmentRequest {
   address: string;
   notes: string;
   status: RequestStatus;
-  allowedActions?: Array<"CONTACTED" | "DECLINED">;
+  allowedActions?: RequestStatus[];
+  archivedAt?: string;
 }
 
 interface RequestDetail extends AdminAppointmentRequest {
@@ -85,6 +86,7 @@ export function formatRequestDate(value: string): string {
 }
 
 const actionLabels: Partial<Record<RequestStatus, string>> = {
+  PENDING: "Chuyển về chờ phản hồi",
   CONTACTED: "Đánh dấu đã liên hệ",
   DECLINED: "Không thể tiếp nhận",
   CANCELLED: "Hủy yêu cầu",
@@ -92,11 +94,13 @@ const actionLabels: Partial<Record<RequestStatus, string>> = {
 
 export function AppointmentRequestsAdmin() {
   const [filter, setFilter] = useState<RequestStatus | "ALL">("PENDING");
+  const [archived, setArchived] = useState(false);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [action, setAction] = useState<RequestStatus | null>(null);
+  const [archiveAction, setArchiveAction] = useState<"ARCHIVE" | "RESTORE" | null>(null);
   const [reason, setReason] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -108,7 +112,7 @@ export function AppointmentRequestsAdmin() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const endpoint = `/admin/appointment-inquiries?page=${page}${filter !== "ALL" ? `&status=${filter}` : ""}&q=${encodeURIComponent(query)}`;
+  const endpoint = `/admin/appointment-inquiries?page=${page}${filter !== "ALL" ? `&status=${filter}` : ""}&q=${encodeURIComponent(query)}${archived ? "&archived=true" : ""}`;
   const requests = usePrivateData<RequestList>(endpoint);
   const change = usePrivateMutation();
   const entries = requests.data?.items ?? [];
@@ -121,14 +125,19 @@ export function AppointmentRequestsAdmin() {
 
   async function submitAction(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selected || !action || reason.trim().length < 10 || change.isPending) return;
+    if (!selected || (!action && !archiveAction) || reason.trim().length < 10 || change.isPending)
+      return;
     try {
       await change.mutateAsync({
-        path: `/admin/appointment-inquiries/${encodeURIComponent(selected.id)}`,
-        method: "PATCH",
-        body: { status: action, reason: reason.trim() },
+        path: `/admin/appointment-inquiries/${encodeURIComponent(selected.id)}${archiveAction === "RESTORE" ? "/restore" : ""}`,
+        method:
+          archiveAction === "ARCHIVE" ? "DELETE" : archiveAction === "RESTORE" ? "POST" : "PATCH",
+        body: archiveAction
+          ? { reason: reason.trim() }
+          : { status: action, reason: reason.trim(), expectedStatus: selected.status },
       });
       setAction(null);
+      setArchiveAction(null);
       setReason("");
       setSuccess("Đã lưu kết quả xử lý yêu cầu. Danh sách đã được cập nhật.");
       await requests.refetch();
@@ -231,6 +240,20 @@ export function AppointmentRequestsAdmin() {
               {entry.title}
             </button>
           ))}
+          <button
+            type="button"
+            aria-pressed={archived}
+            className={archived ? "is-active" : ""}
+            onClick={() => {
+              setArchived((value) => !value);
+              setFilter("ALL");
+              setPage(1);
+              setSelectedId("");
+              setSuccess("");
+            }}
+          >
+            {archived ? "Đang xem lưu trữ" : "Đã lưu trữ"}
+          </button>
         </div>
 
         {success && (
@@ -362,9 +385,15 @@ export function AppointmentRequestsAdmin() {
                           <strong>
                             {event.event === "appointment.inquiry.created"
                               ? "Khách gửi yêu cầu"
-                              : event.event === "appointment.inquiry.admin_updated"
-                                ? "Quản trị cập nhật"
-                                : "Yêu cầu được cập nhật"}
+                              : event.event === "appointment.inquiry.admin_created"
+                                ? "Super Admin tạo yêu cầu"
+                                : event.event === "appointment.inquiry.admin_archived"
+                                  ? "Lưu trữ yêu cầu"
+                                  : event.event === "appointment.inquiry.admin_restored"
+                                    ? "Khôi phục yêu cầu"
+                                    : event.event === "appointment.inquiry.admin_updated"
+                                      ? "Quản trị cập nhật"
+                                      : "Yêu cầu được cập nhật"}
                             {event.status
                               ? ` · ${requestStatusLabels[event.status] || event.status}`
                               : ""}
@@ -410,6 +439,49 @@ export function AppointmentRequestsAdmin() {
                       <X size={16} /> Không thể tiếp nhận
                     </button>
                   )}
+                  {selected.allowedActions?.includes("PENDING") && (
+                    <button
+                      type="button"
+                      className="mm-request-action subtle"
+                      onClick={() => {
+                        setAction("PENDING");
+                        setArchiveAction(null);
+                        setReason("");
+                        change.reset();
+                      }}
+                    >
+                      Chuyển về chờ phản hồi
+                    </button>
+                  )}
+                  {selected.allowedActions?.includes("CANCELLED") && (
+                    <button
+                      type="button"
+                      className="mm-request-action subtle"
+                      onClick={() => {
+                        setAction("CANCELLED");
+                        setArchiveAction(null);
+                        setReason("");
+                        change.reset();
+                      }}
+                    >
+                      Hủy yêu cầu
+                    </button>
+                  )}
+                  {(selected.allowedActions?.includes("CANCELLED") ||
+                    selected.allowedActions?.includes("PENDING")) && (
+                    <button
+                      type="button"
+                      className="mm-request-action subtle"
+                      onClick={() => {
+                        setArchiveAction(archived ? "RESTORE" : "ARCHIVE");
+                        setAction(null);
+                        setReason("");
+                        change.reset();
+                      }}
+                    >
+                      {archived ? "Khôi phục yêu cầu" : "Lưu trữ (không xóa lịch sử)"}
+                    </button>
+                  )}
                 </div>
               </article>
             )}
@@ -446,7 +518,7 @@ export function AppointmentRequestsAdmin() {
         phân quyền.
       </p>
 
-      {selected && action && (
+      {selected && (action || archiveAction) && (
         <div className="mm-request-modal-layer" role="presentation">
           <form
             className="mm-request-modal"
@@ -455,7 +527,15 @@ export function AppointmentRequestsAdmin() {
             aria-labelledby="mm-request-modal-title"
             onSubmit={(event) => void submitAction(event)}
           >
-            <h3 id="mm-request-modal-title">{actionLabels[action] || "Cập nhật yêu cầu"}</h3>
+            <h3 id="mm-request-modal-title">
+              {archiveAction === "ARCHIVE"
+                ? "Lưu trữ yêu cầu"
+                : archiveAction === "RESTORE"
+                  ? "Khôi phục yêu cầu"
+                  : action
+                    ? actionLabels[action] || "Cập nhật yêu cầu"
+                    : "Cập nhật yêu cầu"}
+            </h3>
             <p>
               Khách hàng <strong>{selected.customerName}</strong> · {selected.serviceName}. Hành
               động này được ghi nhận trong lịch sử quản trị.
@@ -478,7 +558,14 @@ export function AppointmentRequestsAdmin() {
               </p>
             )}
             <div className="mm-request-modal-actions">
-              <button type="button" onClick={() => setAction(null)} disabled={change.isPending}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAction(null);
+                  setArchiveAction(null);
+                }}
+                disabled={change.isPending}
+              >
                 Quay lại
               </button>
               <button
