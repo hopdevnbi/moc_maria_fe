@@ -711,6 +711,12 @@
 .nt-sender strong {
   font-weight: 500;
 }
+.nt-sender a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--nt-green);
+}
 .nt-notice {
   margin-top: 16px !important;
   padding: 12px 14px;

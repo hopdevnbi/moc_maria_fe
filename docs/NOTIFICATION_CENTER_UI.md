@@ -20,3 +20,7 @@ Các checkbox cũ chịu kiểu dáng của ô nhập liệu, bị giãn cao/r�
 Format/lint/typecheck,139 tests và production build PASS trước tích hợp main cập nhật. Kiểm tra browser với chính component, CSS build và font của production trên preview local cô lập.320/390/768/1440px không tràn ngang; chuyển chế độ, chọn1 giờ, lưu và giữ bản nháp khi làm mới PASS. Preview không gọi API production hoặc thay dữ liệu thật.
 
 Giữ nguyên AdminShell và quyền `roles.manage`, các URL/API và sender `no-reply@mocmaria.com`. Hai trang có noindex. Không đổi backend, lịch đang lưu, danh sách email, người nhận Zalo hay Giang Xá. Tích hợp fast-forward các commit main mới trước phát hành; chỉ commit các file thuộc feature này.
+
+## Production
+
+Release UI `810413556361de2ae182181cb18d881e71159c32` đã qua GitHub Quality38513656877 và Vercel Production7057171613; `/api/release` xác nhận đúng SHA. Browser quản trị thật xác nhận hai email đang bật, một người nhận Zalo, lịch ngày09:00, pending0/failed0. Hai trang hiển thị giao diện mới; không thao tác lưu/xóa/bật tắt cấu hình hoặc gửi thông báo thật trong kiểm tra UI.
