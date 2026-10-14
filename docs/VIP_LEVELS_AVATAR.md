@@ -18,3 +18,7 @@ and Giang Xá configuration remain unchanged.
 QA covers legacy/default levels, admin-assigned levels, API expiry/revocation checks,
 upload-preview/save UI and existing profile/storage behavior. Customer mutation
 fixtures are restricted to isolated PostgreSQL.
+
+Local quality156 tests/40 files, TypeScript/lint/format/build PASS. Avatar preview
+requires explicit save; standard/expired profiles never render an upload input.
+Real CDN transport passed with a generated QA image that was removed afterward.
