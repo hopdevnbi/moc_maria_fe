@@ -139,4 +139,21 @@ describe("verified service feedback", () => {
     mount(<ProviderReviews providerId="p1" />);
     expect(await screen.findByRole("button", { name: "Viết đánh giá" })).toBeInTheDocument();
   });
+  it("explains why VIP does not get a write button without a completed appointment", async () => {
+    state.fetch.mockImplementation((path: string) =>
+      Promise.resolve(
+        path.includes("/me/access") ? { vipOnly: true, isVip: true, canReview: true } : [],
+      ),
+    );
+    mount(<ProviderReviews providerId="p1" />);
+    expect(
+      await screen.findByText("Bạn chưa có lịch hẹn hoàn thành với KTV này"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Hội viên VIP vẫn cần sử dụng dịch vụ/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Tìm hiểu và đặt lịch chăm sóc" })).toHaveAttribute(
+      "href",
+      "/dat-lich",
+    );
+    expect(screen.queryByRole("button", { name: "Viết đánh giá" })).not.toBeInTheDocument();
+  });
 });

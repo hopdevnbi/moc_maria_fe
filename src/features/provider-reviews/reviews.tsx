@@ -266,7 +266,18 @@ export function MyReviewRequests({ providerId }: { providerId: string }) {
           );
         })
       ) : (
-        <p>Bạn có thể viết đánh giá sau khi hoàn thành dịch vụ với KTV này.</p>
+        <div className="mm-review-requirement" role="status">
+          <BadgeCheck size={19} aria-hidden="true" />
+          <div>
+            <strong>Bạn chưa có lịch hẹn hoàn thành với KTV này</strong>
+            <p>
+              Hội viên VIP vẫn cần sử dụng dịch vụ và được xác nhận hoàn thành lịch hẹn trước khi
+              chấm sao hoặc viết nhận xét. Đây là cách Mộc Maria bảo đảm đánh giá đến từ trải nghiệm
+              thật, không phải đánh giá tự do.
+            </p>
+            <Link href="/dat-lich">Tìm hiểu và đặt lịch chăm sóc</Link>
+          </div>
+        </div>
       )}
       <dialog
         ref={dialog}
