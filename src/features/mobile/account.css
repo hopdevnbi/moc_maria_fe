@@ -64,6 +64,9 @@
   gap: 20px;
   align-items: start;
 }
+.mm-account-settings.is-customer {
+  grid-template-columns: minmax(0, 1fr);
+}
 .mm-account-profile {
   border: 1px solid #dde6db;
   background: #fffefa;

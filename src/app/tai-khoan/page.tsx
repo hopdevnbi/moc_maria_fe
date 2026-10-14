@@ -10,7 +10,8 @@ import {
   UserRound,
   ShieldCheck,
 } from "lucide-react";
-import { CustomerProfileEditor, ProviderDescriptionEditor } from "@/features/mobile/profile-editor";
+import { ProviderDescriptionEditor } from "@/features/mobile/profile-editor";
+import { CustomerAccountProfile } from "@/features/mobile/customer-account-profile";
 import { AppointmentInquiries } from "@/features/mobile/inquiries";
 import { AccountSearch } from "@/features/mobile/account-search";
 import { AccountShortcuts } from "@/features/mobile/account-shortcuts";
@@ -119,6 +120,7 @@ function AccountContent() {
           </p>
         </div>
       </section>
+      {customer && <CustomerAccountProfile />}
       <AccountShortcuts
         technician={technician}
         signingOut={busy}
@@ -179,51 +181,52 @@ function AccountContent() {
       )}
       <AppointmentInquiries />
       {technician && <ProviderDescriptionEditor />}
-      <section className="mm-account-settings">
-        <article className="mm-account-profile" id="thong-tin-tai-khoan">
-          <h2>Thông tin tài khoản</h2>
-          <p className="mm-account-role">
-            {technician ? "Kỹ thuật viên" : customer ? "Khách hàng" : "Thành viên Mộc Maria"}
-          </p>
-          <dl>
-            <div>
-              <dt>Họ và tên</dt>
-              <dd>{user.displayName}</dd>
-            </div>
-            <div>
-              <dt>Email</dt>
-              <dd>{user.email || "Chưa cập nhật"}</dd>
-            </div>
-            <div>
-              <dt>Số điện thoại</dt>
-              <dd>{user.phone || "Chưa cập nhật"}</dd>
-            </div>
-          </dl>
-          {customer && <CustomerProfileEditor />}
-          {user.mustChangePassword && (
-            <p className="mm-account-notice">
-              Bạn đang dùng mật khẩu ban đầu. Hãy đổi mật khẩu của riêng mình.
+      <section className={customer ? "mm-account-settings is-customer" : "mm-account-settings"}>
+        {!customer && (
+          <article className="mm-account-profile" id="thong-tin-tai-khoan">
+            <h2>Thông tin tài khoản</h2>
+            <p className="mm-account-role">
+              {technician ? "Kỹ thuật viên" : customer ? "Khách hàng" : "Thành viên Mộc Maria"}
             </p>
-          )}
-          <button
-            type="button"
-            disabled={busy}
-            className="mm-account-logout"
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await logoutAll();
-              } catch {
-                setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            {busy ? "Đang đăng xuất..." : "Đăng xuất mọi thiết bị"}
-          </button>
-          {notice && <p role="alert">{notice}</p>}
-        </article>
+            <dl>
+              <div>
+                <dt>Họ và tên</dt>
+                <dd>{user.displayName}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{user.email || "Chưa cập nhật"}</dd>
+              </div>
+              <div>
+                <dt>Số điện thoại</dt>
+                <dd>{user.phone || "Chưa cập nhật"}</dd>
+              </div>
+            </dl>
+            {user.mustChangePassword && (
+              <p className="mm-account-notice">
+                Bạn đang dùng mật khẩu ban đầu. Hãy đổi mật khẩu của riêng mình.
+              </p>
+            )}
+            <button
+              type="button"
+              disabled={busy}
+              className="mm-account-logout"
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await logoutAll();
+                } catch {
+                  setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {busy ? "Đang đăng xuất..." : "Đăng xuất mọi thiết bị"}
+            </button>
+            {notice && <p role="alert">{notice}</p>}
+          </article>
+        )}
         <div id="doi-mat-khau">
           <ChangePasswordForm />
         </div>

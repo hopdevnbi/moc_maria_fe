@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import {
   ArrowRight,
@@ -35,6 +36,7 @@ interface Customer {
   createdAt: string;
   lastLoginAt: string | null;
   birthday: string | null;
+  avatarUrl: string | null;
   vipStatus: "VIP" | "STANDARD";
   vipExpiresAt: string | null;
   inquiryCount: number;
@@ -181,8 +183,31 @@ function CustomerDetails({ customer, onClose }: { customer: CustomerDetail; onCl
   return (
     <aside className="mm-cm-detail" aria-label={`Chi tiết khách hàng ${customer.displayName}`}>
       <div className="mm-cm-detail-heading">
-        <span className="mm-cm-avatar" aria-hidden="true">
-          {customer.displayName.trim().charAt(0).toLocaleUpperCase("vi-VN") || "K"}
+        <span
+          className={
+            customer.vipStatus === "VIP" ? "mm-cm-avatar mm-cm-avatar-vip" : "mm-cm-avatar"
+          }
+        >
+          {customer.avatarUrl?.startsWith("https://") ? (
+            <Image
+              src={customer.avatarUrl}
+              unoptimized
+              width={68}
+              height={68}
+              alt={`Ảnh đại diện ${customer.displayName}`}
+              className="mm-cm-avatar-image"
+            />
+          ) : (
+            customer.displayName.trim().charAt(0).toLocaleUpperCase("vi-VN") || "K"
+          )}
+          {customer.vipStatus === "VIP" && (
+            <Crown
+              size={15}
+              className="mm-cm-avatar-crown"
+              fill="currentColor"
+              aria-label="Hội viên VIP"
+            />
+          )}
         </span>
         <div>
           <p className="mm-cm-overline">HỒ SƠ KHÁCH HÀNG</p>
@@ -616,8 +641,33 @@ export function CustomerManagementAdmin({ mode }: { mode: "customers" | "vip" })
                   onClick={() => setSelectedId(customer.id)}
                   aria-pressed={selectedId === customer.id}
                 >
-                  <span className="mm-cm-mini-avatar">
-                    {customer.displayName.trim().charAt(0).toLocaleUpperCase("vi-VN") || "K"}
+                  <span
+                    className={
+                      customer.vipStatus === "VIP"
+                        ? "mm-cm-mini-avatar is-vip"
+                        : "mm-cm-mini-avatar"
+                    }
+                  >
+                    {customer.avatarUrl?.startsWith("https://") ? (
+                      <Image
+                        src={customer.avatarUrl}
+                        unoptimized
+                        width={42}
+                        height={42}
+                        alt=""
+                        className="mm-cm-avatar-image"
+                      />
+                    ) : (
+                      customer.displayName.trim().charAt(0).toLocaleUpperCase("vi-VN") || "K"
+                    )}
+                    {customer.vipStatus === "VIP" && (
+                      <Crown
+                        className="mm-cm-mini-crown"
+                        size={12}
+                        fill="currentColor"
+                        aria-label="VIP"
+                      />
+                    )}
                   </span>
                   <span className="mm-cm-customer-main">
                     <strong>{customer.displayName}</strong>

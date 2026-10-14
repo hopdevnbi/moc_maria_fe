@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
+  Crown,
   ChevronRight,
   Clock3,
   Flower2,
@@ -27,6 +28,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { AccountNav } from "@/features/auth/components/AccountNav";
+import { isActiveVip, useCustomerSelfProfile } from "./customer-account-profile";
 import { formatPrice } from "@/features/marketplace/format";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { bookingHref } from "./links";
@@ -110,6 +112,20 @@ export function MobileNavigation({
   );
 }
 
+function MobileAccountLink() {
+  const profile = useCustomerSelfProfile();
+  const vip = isActiveVip(profile.data);
+  return (
+    <Link
+      href="/tai-khoan"
+      className="mm-account-mobile"
+      aria-label={vip ? "Tài khoản hội viên VIP" : "Tài khoản"}
+    >
+      {vip ? <Crown size={23} fill="currentColor" color="#b58a42" /> : <UserRound size={22} />}
+    </Link>
+  );
+}
+
 export function MobileHeader() {
   return (
     <header className="mm-header">
@@ -136,9 +152,7 @@ export function MobileHeader() {
         <div className="mm-account">
           <AccountNav />
         </div>
-        <Link href="/tai-khoan" className="mm-account-mobile" aria-label="Tài khoản">
-          <UserRound size={22} />
-        </Link>
+        <MobileAccountLink />
       </div>
       <Suspense fallback={null}>
         <SiteReleaseUpdate />
