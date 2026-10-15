@@ -19,6 +19,7 @@ import {
   usePrivateMutation,
 } from "@/features/marketplace/private-api";
 import "./event-admin.css";
+import { GiftPrizesAdmin } from "./gift-prizes-admin";
 
 export type GiftStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "PAUSED" | "ENDED" | "ARCHIVED";
 export type GiftEvent = {
@@ -468,16 +469,6 @@ export function GiftEventAdmin() {
                 </p>
               </div>
             )}
-            {step === 4 && (
-              <div className="mm-ge-placeholder">
-                <Gift size={30} />
-                <h4>Kho quà & tỉ lệ</h4>
-                <p>
-                  Ở chặng P06, trang này sẽ có CRUD voucher/đồ uống/vật phẩm, tồn và trọng số. Chưa
-                  thể công bố nếu chưa có quà hợp lệ.
-                </p>
-              </div>
-            )}
             {step === 5 && (
               <div className="mm-ge-review">
                 <h4>Xem lại trước khi công bố</h4>
@@ -501,7 +492,7 @@ export function GiftEventAdmin() {
                 </p>
               </div>
             )}
-            {current && editable && isDirty && (
+            {step !== 4 && current && editable && isDirty && (
               <label className="mm-ge-reason">
                 Lý do thay đổi bản nháp (10–500 ký tự)
                 <input
@@ -519,7 +510,7 @@ export function GiftEventAdmin() {
                 {mutationMessage(mutation.error)}
               </p>
             )}
-            {editable && (
+            {editable && step !== 4 && (
               <button
                 type="submit"
                 className="mm-ge-save"
@@ -539,6 +530,7 @@ export function GiftEventAdmin() {
               </button>
             )}
           </form>
+          {step === 4 && <GiftPrizesAdmin event={current} />}
           {current && (
             <div className="mm-ge-actions">
               <strong>
