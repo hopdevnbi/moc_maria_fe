@@ -1,0 +1,457 @@
+.mm-ge-admin {
+  max-width: 1200px;
+  margin: 0 auto 35px;
+  display: grid;
+  gap: 22px;
+  color: #254c39;
+}
+.mm-ge-feature-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 23px;
+  border-radius: 19px;
+  background: linear-gradient(120deg, #f5f8f0, #fffbf2);
+  border: 1px solid #dfe8dc;
+}
+.mm-ge-head-icon {
+  width: 53px;
+  height: 53px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #916e39;
+  background: #f8edd3;
+}
+.mm-ge-feature-head h2 {
+  font:
+    normal 27px/1.15 Georgia,
+    serif;
+  margin: 4px 0;
+}
+.mm-ge-feature-head p {
+  font-size: 12px;
+  color: #728978;
+  line-height: 1.7;
+  margin: 0;
+}
+.mm-ge-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+  color: #977b4a;
+}
+.mm-ge-shield {
+  white-space: nowrap;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: #e9f4e8;
+  padding: 8px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.mm-ge-layout {
+  display: grid;
+  grid-template-columns: 275px minmax(0, 1fr);
+  gap: 17px;
+  align-items: start;
+}
+.mm-ge-sidebar,
+.mm-ge-editor {
+  background: #fff;
+  border: 1px solid #dce6d9;
+  border-radius: 20px;
+  padding: 21px;
+  min-width: 0;
+}
+.mm-ge-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mm-ge-sidebar-head h3 {
+  font:
+    normal 21px Georgia,
+    serif;
+  margin: 0;
+}
+.mm-ge-sidebar-head button,
+.mm-ge-tier-choose button,
+.mm-ge-actions button {
+  border: 1px solid #cbdec9;
+  border-radius: 10px;
+  background: #edf6ec;
+  color: #315d42;
+  padding: 9px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mm-ge-event-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  text-align: left;
+  width: 100%;
+  background: #fcfdf9;
+  border: 1px solid #e1e9dd;
+  border-radius: 13px;
+  padding: 16px;
+  margin-top: 14px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #79907b;
+}
+.mm-ge-event-card.selected {
+  background: #edf6eb;
+  border-color: #8caf92;
+}
+.mm-ge-event-title {
+  font-weight: 800;
+  color: #2a503a;
+  font-size: 13px;
+}
+.mm-ge-event-card small {
+  font-size: 10px;
+  line-height: 1.6;
+}
+.mm-ge-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.mm-ge-editor-header span {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  font-weight: 800;
+  color: #8f9f8c;
+}
+.mm-ge-editor-header h3 {
+  font:
+    normal 26px Georgia,
+    serif;
+  margin: 4px 0;
+}
+.mm-ge-label {
+  background: #f1f5ed;
+  border-radius: 100px;
+  padding: 8px 11px;
+  white-space: nowrap;
+}
+.mm-ge-steps {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+  border-bottom: 1px solid #e0e8db;
+  padding-bottom: 15px;
+}
+.mm-ge-steps button {
+  padding: 9px 11px;
+  background: #f4f7f0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #68816e;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mm-ge-steps button.active {
+  background: #2d5b40;
+  color: #fff;
+}
+.mm-ge-form {
+  display: grid;
+  gap: 17px;
+}
+.mm-ge-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+.mm-ge-fields label,
+.mm-ge-reason {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #43664c;
+}
+.mm-ge-fields .wide,
+.mm-ge-fields > p.wide {
+  grid-column: 1/-1;
+}
+.mm-ge-fields > p {
+  color: #819682;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.mm-ge-fields input,
+.mm-ge-fields textarea,
+.mm-ge-reason input,
+.mm-ge-tier-choose select,
+.mm-ge-actions input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d3e1cf;
+  border-radius: 10px;
+  padding: 11px;
+  background: #fbfdf9;
+  color: #2f533a;
+  font: inherit;
+  font-size: 13px;
+}
+.mm-ge-fields input:disabled {
+  color: #829285;
+  background: #f5f7f3;
+}
+.mm-ge-fields textarea {
+  resize: vertical;
+}
+.mm-ge-tiers {
+  display: grid;
+  gap: 15px;
+}
+.mm-ge-tier-row {
+  border: 1px solid #cde0cb;
+  background: #f2f9f0;
+  border-radius: 13px;
+  padding: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+.mm-ge-tier-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: #39704b;
+}
+.mm-ge-tier-row small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #788e7e;
+}
+.mm-ge-tier-choose {
+  display: flex;
+  gap: 9px;
+}
+.mm-ge-tier-choose select {
+  flex: 1;
+}
+.mm-ge-tier-chips {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.mm-ge-tier-chips button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #d0dec9;
+  background: #fff8e9;
+  color: #876a3d;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.mm-ge-tiers > p {
+  color: #80927f;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.mm-ge-placeholder {
+  text-align: center;
+  background: #f7f9f2;
+  padding: 40px 20px;
+  border: 1px dashed #cddfcb;
+  border-radius: 16px;
+}
+.mm-ge-placeholder svg {
+  color: #c09d5c;
+}
+.mm-ge-placeholder h4 {
+  font:
+    normal 25px Georgia,
+    serif;
+  margin: 10px 0;
+}
+.mm-ge-placeholder p {
+  color: #788d79;
+  font-size: 12px;
+}
+.mm-ge-review dl {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 12px;
+  border: 1px solid #e0e9de;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.mm-ge-review dt {
+  color: #7e9382;
+}
+.mm-ge-review dd {
+  margin: 0;
+  font-weight: 700;
+}
+.mm-ge-review > p {
+  font-size: 12px;
+  color: #758878;
+  line-height: 1.7;
+}
+.mm-ge-save {
+  justify-self: start;
+  background: #315d43;
+  border: 0;
+  border-radius: 11px;
+  padding: 12px 18px;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+.mm-ge-save:disabled,
+.mm-ge-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mm-ge-actions {
+  margin-top: 23px;
+  border-top: 1px solid #e1e9df;
+  padding-top: 20px;
+  display: grid;
+  gap: 11px;
+}
+.mm-ge-actions strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+.mm-ge-actions p {
+  font-size: 12px;
+  margin: 0;
+  color: #7b8c7d;
+}
+.mm-ge-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.mm-ge-notice,
+.mm-ge-alert {
+  background: #eef8e9;
+  border: 1px solid #b8d8b6;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 12px;
+  color: #386044;
+  line-height: 1.7;
+}
+.mm-ge-alert {
+  background: #fff7e9;
+  border-color: #eddbad;
+  color: #8b734c;
+}
+.mm-ge-alert button {
+  border: 0;
+  background: #315c41;
+  color: white;
+  border-radius: 8px;
+  padding: 8px;
+  margin-left: 10px;
+}
+.mm-ge-error {
+  color: #a13c37;
+  font-size: 12px;
+}
+.mm-ge-foot {
+  font-size: 11px;
+  color: #789181;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .mm-ge-layout {
+    grid-template-columns: 1fr;
+  }
+  .mm-ge-sidebar {
+    padding: 16px;
+  }
+  .mm-ge-sidebar-head {
+    margin-bottom: 5px;
+  }
+  .mm-ge-sidebar {
+    display: grid;
+    gap: 8px;
+  }
+  .mm-ge-event-card {
+    margin: 0;
+  }
+  .mm-ge-feature-head {
+    flex-wrap: wrap;
+  }
+  .mm-ge-shield {
+    margin-left: 65px;
+  }
+}
+@media (max-width: 620px) {
+  .mm-ge-feature-head,
+  .mm-ge-editor {
+    padding: 15px;
+  }
+  .mm-ge-head-icon {
+    width: 42px;
+    height: 42px;
+  }
+  .mm-ge-feature-head h2 {
+    font-size: 23px;
+  }
+  .mm-ge-shield {
+    margin-left: 0;
+  }
+  .mm-ge-fields {
+    grid-template-columns: 1fr;
+  }
+  .mm-ge-steps {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mm-ge-tier-choose {
+    flex-wrap: wrap;
+  }
+  .mm-ge-tier-choose button {
+    flex: 1;
+  }
+  .mm-ge-review dl {
+    grid-template-columns: 1fr;
+  }
+  .mm-ge-save {
+    width: 100%;
+    justify-content: center;
+  }
+  .mm-ge-actions > div button {
+    flex: 1;
+  }
+  .mm-ge-fields input[type="datetime-local"] {
+    font-size: 16px;
+  }
+}

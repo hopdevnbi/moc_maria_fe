@@ -11,6 +11,7 @@ import {
   CalendarClock,
   ChevronRight,
   Crown,
+  Gift,
   Headset,
   LayoutDashboard,
   LockKeyhole,
@@ -74,6 +75,13 @@ export const adminNavGroups: AdminNavGroup[] = [
         icon: Sparkles,
         href: "/quan-tri/dich-vu",
         permission: "staff.manage",
+      },
+      {
+        label: "Sự kiện & mở hộp quà",
+        icon: Gift,
+        href: "/quan-tri/su-kien",
+        permission: "admin.portal",
+        superOnly: true,
       },
       {
         label: "Cơ sở & vận hành",
