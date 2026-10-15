@@ -1,4 +1,5 @@
 "use client";
+import { PendingLabel } from "@/shared/loading/loading-state";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
@@ -145,7 +146,7 @@ export function RegisterForm({ returnTo }: { returnTo?: string }) {
         disabled={isSubmitting}
         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--moc-green)] px-5 font-semibold text-white disabled:opacity-60"
       >
-        {isSubmitting ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+        {isSubmitting ? <PendingLabel>Đang tạo tài khoản…</PendingLabel> : "Tạo tài khoản"}
         {!isSubmitting && <ArrowRight size={18} />}
       </button>
     </form>

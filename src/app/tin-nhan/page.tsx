@@ -7,6 +7,7 @@ import {
   internalServiceParam,
 } from "@/features/mobile/public-route-ids";
 import { KtvChatPage } from "@/features/mobile/chat";
+import { PublicPageLoading } from "@/shared/loading/public-page-loading";
 
 export const metadata: Metadata = {
   title: "Chat với KTV Mộc Maria",
@@ -33,7 +34,15 @@ export default function MessagesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   return (
-    <Suspense fallback={<p role="status">Đang tải tin nhắn...</p>}>
+    <Suspense
+      fallback={
+        <PublicPageLoading
+          page="chat"
+          title="Đang mở không gian trò chuyện"
+          description="Chuẩn bị hội thoại riêng giữa bạn và kỹ thuật viên."
+        />
+      }
+    >
       <MessagesContent searchParams={searchParams} />
     </Suspense>
   );

@@ -2,6 +2,7 @@
 import { Suspense } from "react";
 import { publicProviderDirectory } from "@/features/mobile/data";
 import { KtvFirstHomepage } from "@/features/mobile/ktv-home";
+import { PublicPageLoading } from "@/shared/loading/public-page-loading";
 
 export const metadata: Metadata = {
   title: "Danh sách Kỹ thuật viên",
@@ -19,9 +20,11 @@ export default function ProvidersPage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto max-w-4xl p-8" role="status">
-          Đang tải danh sách kỹ thuật viên...
-        </main>
+        <PublicPageLoading
+          page="providers"
+          title="Tìm người đồng hành cùng bạn"
+          description="Đang tải danh sách kỹ thuật viên và thông tin dịch vụ mới nhất."
+        />
       }
     >
       <ProviderList />

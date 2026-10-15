@@ -1,4 +1,5 @@
 "use client";
+import { PendingLabel } from "@/shared/loading/loading-state";
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -71,7 +72,7 @@ export function ResetPasswordForm() {
         disabled={state === "saving"}
         className="min-h-12 w-full rounded-2xl bg-[var(--moc-green)] px-5 font-semibold text-white disabled:opacity-60"
       >
-        {state === "saving" ? "Đang lưu..." : "Đặt lại mật khẩu"}
+        {state === "saving" ? <PendingLabel>Đang lưu…</PendingLabel> : "Đặt lại mật khẩu"}
       </button>
     </form>
   );

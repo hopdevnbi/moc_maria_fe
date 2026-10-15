@@ -1,4 +1,5 @@
 "use client";
+import { PendingLabel } from "@/shared/loading/loading-state";
 
 import { useState } from "react";
 import { ApiError } from "../auth-api";
@@ -77,7 +78,7 @@ export function ChangePasswordForm() {
         disabled={state === "saving"}
         className="rounded-xl bg-[var(--moc-green)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
       >
-        {state === "saving" ? "Đang lưu..." : "Đổi mật khẩu"}
+        {state === "saving" ? <PendingLabel>Đang lưu…</PendingLabel> : "Đổi mật khẩu"}
       </button>
     </form>
   );

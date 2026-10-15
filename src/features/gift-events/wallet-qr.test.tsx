@@ -33,13 +33,11 @@ describe("P11 private QR wallet", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
   it("requires explicit interaction, never places token in location", async () => {
-    const fetch = vi
-      .fn()
-      .mockResolvedValue({
-        token: "secret-one-time-opaque-token",
-        rewardId: gift.id,
-        expiresAt: new Date(Date.now() + 240000).toISOString(),
-      });
+    const fetch = vi.fn().mockResolvedValue({
+      token: "secret-one-time-opaque-token",
+      rewardId: gift.id,
+      expiresAt: new Date(Date.now() + 240000).toISOString(),
+    });
     render(<WalletQr gift={gift} authFetch={fetch} />);
     expect(fetch).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: /Tạo mã QR/ }));

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { MarketShell, CardSkeleton } from "@/features/marketplace/components";
+import { MarketShell } from "@/features/marketplace/components";
+import { LoadingState } from "@/shared/loading/loading-state";
 import { PriceResults } from "@/features/marketplace/catalog";
 export const metadata: Metadata = {
   title: "Bảng giá dịch vụ",
@@ -14,7 +15,7 @@ export default function PricePage() {
       eyebrow="BẢNG GIÁ MỘC MARIA"
       description="Các mức giá được công bố trực tiếp từ danh mục dịch vụ. Mọi phụ phí cần được bạn chấp thuận trước khi xác nhận lịch."
     >
-      <Suspense fallback={<CardSkeleton />}>
+      <Suspense fallback={<LoadingState title="Đang chuẩn bị bảng giá" shape="list" />}>
         <PriceResults />
       </Suspense>
     </MarketShell>

@@ -27,6 +27,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { LoadingState, PendingLabel } from "@/shared/loading/loading-state";
 import type { ChatProvider } from "@/features/marketplace/types";
 import { chatHref } from "./links";
 import { officialServiceLabel } from "./official-ktv-offers";
@@ -621,9 +622,11 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
           </span>
         </div>
         {status === "loading" ? (
-          <div className="ktv-chat-empty" role="status">
-            <LoaderCircle className="ktv-chat-spinner" /> Đang tải tài khoản...
-          </div>
+          <LoadingState
+            title="Đang mở không gian trò chuyện"
+            description="Mộc đang kiểm tra tài khoản và chuẩn bị hội thoại của bạn."
+            shape="messages"
+          />
         ) : !user ? (
           <div className="ktv-chat-empty">
             <div className="ktv-chat-hero-icon">
@@ -699,9 +702,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
               )}
               <div className="ktv-chat-contacts">
                 {threads.isPending ? (
-                  <p className="ktv-chat-list-note" role="status">
-                    Đang tải hội thoại...
-                  </p>
+                  <LoadingState compact title="Đang tải hội thoại…" description="" shape="list" />
                 ) : showDirectory && customer ? (
                   <>
                     <p className="ktv-chat-list-note">
@@ -710,7 +711,12 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                         : "Bạn chưa có tin nhắn. Chọn một KTV để bắt đầu."}
                     </p>
                     {directory.isPending ? (
-                      <p className="ktv-chat-list-note">Đang tải KTV...</p>
+                      <LoadingState
+                        compact
+                        title="Đang tìm KTV của bạn…"
+                        description=""
+                        shape="list"
+                      />
                     ) : directory.isError ? (
                       <div className="ktv-chat-list-note">
                         Chưa tải được danh sách KTV.{" "}
@@ -960,13 +966,20 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                               void history.fetchNextPage();
                             }}
                           >
-                            {history.isFetchingNextPage ? "Đang tải..." : "Xem tin nhắn trước"}
+                            {history.isFetchingNextPage ? (
+                              <PendingLabel>Đang tải tin nhắn trước…</PendingLabel>
+                            ) : (
+                              "Xem tin nhắn trước"
+                            )}
                           </button>
                         )}
                         {history.isPending ? (
-                          <div className="ktv-chat-intro" role="status">
-                            <LoaderCircle className="ktv-chat-spinner" /> Đang tải tin nhắn...
-                          </div>
+                          <LoadingState
+                            compact
+                            title="Đang tải tin nhắn…"
+                            description="Chuẩn bị lịch sử trò chuyện của bạn."
+                            shape="messages"
+                          />
                         ) : messages.length ? (
                           messages.map((item, index) => (
                             <ChatMessageRow

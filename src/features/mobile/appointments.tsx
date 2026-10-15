@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { LoadingState, RefreshNotice } from "@/shared/loading/loading-state";
 import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
 import "@/features/mobile/mobile.css";
@@ -126,7 +127,11 @@ export default function AppointmentsPage() {
           <p>Theo dõi yêu cầu, phản hồi KTV và xác nhận báo giá trước khi lịch được chốt.</p>
         </div>
         {status === "loading" ? (
-          <p role="status">Đang kiểm tra tài khoản...</p>
+          <LoadingState
+            title="Đang mở lịch hẹn của bạn"
+            description="Mộc đang kiểm tra tài khoản của bạn."
+            shape="list"
+          />
         ) : !user ? (
           <div className="mm-empty">
             <strong>Đăng nhập để xem lịch hẹn</strong>
@@ -154,8 +159,13 @@ export default function AppointmentsPage() {
                 {error}
               </p>
             )}
-            {loading ? (
-              <p role="status">Đang tải lịch hẹn...</p>
+            {loading && items.length > 0 && <RefreshNotice label="Đang cập nhật lịch hẹn…" />}
+            {loading && items.length === 0 ? (
+              <LoadingState
+                title="Đang tải lịch hẹn…"
+                description="Chuẩn bị thông tin yêu cầu và lịch chăm sóc của bạn."
+                shape="list"
+              />
             ) : items.length === 0 ? (
               <div className="mm-empty">
                 <CalendarDays size={32} />
@@ -191,7 +201,7 @@ export default function AppointmentsPage() {
                           type="button"
                           className="mm-primary-cta"
                           onClick={() => void confirm(item)}
-                          disabled={!!confirmingId}
+                          disabled={!!confirmingId || loading}
                         >
                           {confirmingId === item.id ? "Đang xác nhận..." : "Đồng ý báo giá"}{" "}
                           <CheckCircle2 size={17} />

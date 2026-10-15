@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { catalogSnapshot } from "@/features/mobile/data";
 import { OfficialMenuPage } from "@/features/mobile/official-menu-page";
+import { PublicPageLoading } from "@/shared/loading/public-page-loading";
 
 export const metadata: Metadata = {
   title: "Bảng giá chăm sóc sức khỏe và đồ uống",
@@ -19,9 +20,11 @@ export default function ServicesPage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto max-w-4xl p-8" role="status">
-          Đang tải dịch vụ...
-        </main>
+        <PublicPageLoading
+          page="services"
+          title="Chọn một khoảng nghỉ cho mình"
+          description="Đang cập nhật dịch vụ, thời lượng và bảng giá của Mộc Maria."
+        />
       }
     >
       <ServiceList />

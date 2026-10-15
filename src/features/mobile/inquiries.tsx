@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { LoadingState, RefreshNotice } from "@/shared/loading/loading-state";
 export interface Inquiry {
   id: string;
   customerId: string;
@@ -81,8 +82,9 @@ export function AppointmentInquiries() {
         </button>
       </div>
       {notice && <p role="alert">{notice}</p>}
-      {loading ? (
-        <p role="status">Đang tải yêu cầu...</p>
+      {loading && items.length > 0 && <RefreshNotice label="Đang cập nhật yêu cầu đặt lịch…" />}
+      {loading && items.length === 0 ? (
+        <LoadingState compact title="Đang tải yêu cầu đặt lịch…" description="" shape="list" />
       ) : !items.length ? (
         <p>Bạn chưa có yêu cầu đặt lịch nào.</p>
       ) : (
@@ -134,7 +136,7 @@ export function AppointmentInquiries() {
                   !item.appointmentId &&
                   (item.status === "PENDING" || item.status === "CONTACTED") && (
                     <button
-                      disabled={!!busy}
+                      disabled={!!busy || loading}
                       className="mm-outline-cta"
                       onClick={() => void reply(item.id, "CANCELLED")}
                     >
@@ -144,14 +146,14 @@ export function AppointmentInquiries() {
                 : item.status === "PENDING" && (
                     <>
                       <button
-                        disabled={!!busy}
+                        disabled={!!busy || loading}
                         className="mm-primary-cta"
                         onClick={() => void reply(item.id, "CONTACTED")}
                       >
                         Nhận trao đổi
                       </button>
                       <button
-                        disabled={!!busy}
+                        disabled={!!busy || loading}
                         className="mm-outline-cta"
                         onClick={() => void reply(item.id, "DECLINED")}
                       >

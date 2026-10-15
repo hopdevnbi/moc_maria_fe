@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
+import { LoadingState } from "@/shared/loading/loading-state";
 
 export function RequireAuth({
   children,
@@ -32,7 +33,11 @@ export function RequireAuth({
   if (status === "loading") {
     return (
       <div className="mx-auto max-w-3xl px-6 py-20">
-        <div className="h-40 animate-pulse rounded-[2rem] bg-white/70" />
+        <LoadingState
+          title="Đang mở không gian của bạn"
+          description="Mộc đang kiểm tra phiên đăng nhập của bạn."
+          shape="form"
+        />
       </div>
     );
   }

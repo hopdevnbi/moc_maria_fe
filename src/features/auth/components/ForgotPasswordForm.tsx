@@ -1,4 +1,5 @@
 "use client";
+import { PendingLabel } from "@/shared/loading/loading-state";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -70,7 +71,7 @@ export function ForgotPasswordForm() {
         disabled={submitting}
         className="min-h-12 w-full rounded-2xl bg-[var(--moc-green)] px-5 font-semibold text-white disabled:opacity-60"
       >
-        {submitting ? "Đang xử lý..." : "Tiếp tục"}
+        {submitting ? <PendingLabel>Đang xử lý…</PendingLabel> : "Tiếp tục"}
       </button>
     </form>
   );

@@ -1,4 +1,5 @@
 "use client";
+import { PendingLabel } from "@/shared/loading/loading-state";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
@@ -101,7 +102,7 @@ export function LoginForm() {
         disabled={isSubmitting}
         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--moc-green)] px-5 font-semibold text-white disabled:opacity-60"
       >
-        {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+        {isSubmitting ? <PendingLabel>Đang đăng nhập…</PendingLabel> : "Đăng nhập"}
         {!isSubmitting && <ArrowRight size={18} />}
       </button>
     </form>

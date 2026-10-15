@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { PublicPageLoading } from "@/shared/loading/public-page-loading";
 import { permanentRedirect } from "next/navigation";
 import {
   cleanPublicQuery,
@@ -68,9 +69,11 @@ export default function BookingPage({
   return (
     <Suspense
       fallback={
-        <main className="mx-auto max-w-3xl p-8" role="status">
-          Đang mở lịch đặt hẹn...
-        </main>
+        <PublicPageLoading
+          page="booking"
+          title="Chuẩn bị lịch chăm sóc của bạn"
+          description="Đang tải dịch vụ và kỹ thuật viên để bạn lựa chọn."
+        />
       }
     >
       <BookingContent searchParams={searchParams} />

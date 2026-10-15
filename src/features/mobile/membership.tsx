@@ -12,6 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { RefreshNotice } from "@/shared/loading/loading-state";
 import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
 import "@/features/mobile/mobile.css";
 
@@ -32,7 +33,7 @@ export default function MembershipPage() {
           </p>
           <div className="mm-members-hero-actions">
             {status === "loading" ? (
-              <p role="status">Đang kiểm tra tài khoản...</p>
+              <RefreshNotice label="Đang kiểm tra tài khoản…" />
             ) : user ? (
               <Link className="mm-primary-cta" href="/tai-khoan">
                 Quản lý tài khoản <ArrowRight size={17} />

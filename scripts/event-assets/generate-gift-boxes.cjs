@@ -3,6 +3,7 @@
  * Requires 'sharp' (already used in Mộc Maria's image toolchain).
  * Deterministic illustration assets, never draws/allocates prizes.
  */
+/* eslint-disable @typescript-eslint/no-require-imports -- Standalone Node.js CommonJS asset generator. */
 const fs = require("node:fs");
 const path = require("node:path");
 const sharp = require("sharp");
