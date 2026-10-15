@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Mộc Maria · Khu vườn quà An Nhiên · Mô phỏng P02</title>
+  <style>
+    :root { color-scheme:light; --forest:#153f32; --sage:#dfe9df; --gold:#d6ae68; --ivory:#f8f7f0; --peach:#f6e3d5; }
+    *{box-sizing:border-box} body{margin:0;font:15px/1.65 system-ui,Arial,sans-serif;color:var(--forest);background:var(--ivory)}
+    button{cursor:pointer;font:inherit} button:focus-visible{outline:3px solid #c77b61;outline-offset:3px}
+    header{background:#fffdf9;border-bottom:1px solid #e3e8dc;padding:13px max(24px,calc((100vw - 1150px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px;position:sticky;top:0;z-index:10}
+    .logo{font:bold 23px Georgia,serif}.logo small{font:700 9px system-ui;letter-spacing:2px;display:block;margin-left:3px;color:#9d814d}
+    nav{display:flex;gap:18px;align-items:center;font-size:13px}.pill,.navbutton{border-radius:100px;background:var(--forest);color:white;padding:10px 20px;border:0}.navbutton{display:inline-block}
+    .debug{padding:11px 20px;background:#efe5d4;text-align:center;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+    .debug strong{color:#985936}.debug button{border:1px solid #e0c9a2;border-radius:7px;padding:3px 9px;background:white;color:var(--forest)}
+    .debug button[aria-pressed=true]{background:var(--forest);color:white}
+    main{max-width:1160px;padding:40px 22px;margin:auto}.eyebrow{letter-spacing:3px;font-size:10px;font-weight:800;color:#967240}
+    .hero{display:grid;grid-template-columns:minmax(280px,42%) 1fr;gap:26px;align-items:center}
+    .intro{padding:25px 14px 25px 0}.intro h1{font:normal clamp(40px,5vw,70px)/1.08 Georgia,serif;letter-spacing:-1px;margin:14px 0}.intro p{color:#65806c;max-width:360px}
+    .status{display:inline-flex;gap:8px;align-items:center;border:1px solid #d3e0cf;background:#edf6e8;border-radius:100px;color:#43704c;font-weight:700;padding:8px 14px;font-size:12px}
+    .status:before{content:'';height:7px;width:7px;border-radius:50%;background:#5a9a63}
+    .intro button{border:0;background:var(--forest);color:#fff;border-radius:13px;padding:15px 24px;font-weight:750;margin-top:13px}
+    .tip{font-size:12px!important;color:#937c5d!important;margin-top:18px}
+    .garden{position:relative;overflow:hidden;border-radius:30px;background:radial-gradient(ellipse at top,#416f5b,#153f32 75%);padding:32px 28px 40px;box-shadow:0 25px 60px #12332828;min-height:480px}
+    .garden:before,.garden:after{content:'✺';position:absolute;font-size:100px;color:#f1dca11c;top:-40px;left:15px}.garden:after{top:auto;left:auto;right:-5px;bottom:-58px}
+    .garden h2{font:normal 30px Georgia,serif;text-align:center;color:#f9eacf;margin:0 0 8px}.garden .subtitle{text-align:center;color:#d8e6d8;font-size:11px;margin:0 0 24px}
+    .boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 18px}
+    .box{height:154px;border:1px solid #ffffff21;border-radius:18px;background:#ffffff12;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#f6e8cb;gap:11px;transition:transform .22s;background-clip:padding-box}
+    .box:hover{transform:translateY(-5px);background:#ffffff1c}.gift{display:block;width:83px;height:76px;position:relative;background:linear-gradient(140deg,var(--gift-a,#2d7751),var(--gift-b,#1a4939));border-radius:6px 6px 12px 12px;box-shadow:0 15px 24px #061b1f44,inset -10px 0 12px #002b2045}
+    .gift:before{content:'';position:absolute;z-index:1;top:0;bottom:0;left:35px;width:13px;background:linear-gradient(90deg,#bd9043,#f8dda2,#bf924a)}
+    .gift:after{content:'◠';position:absolute;top:-28px;left:8px;right:8px;font-size:70px;line-height:34px;color:#eccd81;text-align:center;text-shadow:0 3px 3px #1c221a69}
+    .lid{position:absolute;top:-3px;left:-4px;right:-4px;height:17px;border-radius:5px;background:linear-gradient(140deg,var(--gift-b,#1a4939),var(--gift-a,#2d7751));z-index:2}.lid:after{content:'';position:absolute;top:0;bottom:0;width:13px;left:38px;background:linear-gradient(90deg,#b88d42,#f4d396,#bd8c44)}
+    .box:nth-child(2){--gift-a:#d9aa65;--gift-b:#9f7444}.box:nth-child(3){--gift-a:#e9ded0;--gift-b:#b9ae9f}.box:nth-child(4){--gift-a:#7b9d89;--gift-b:#456f62}.box:nth-child(5){--gift-a:#dcae99;--gift-b:#b77f6a}.box:nth-child(6){--gift-a:#acc4a3;--gift-b:#638977}
+    .box small{font-size:10px;letter-spacing:1px;text-transform:uppercase}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:34px}
+    .card{border-radius:18px;border:1px solid #e0e7dc;background:#fffdf9;padding:23px}.card b{font:normal 23px Georgia,serif}.card p{font-size:12px;color:#829181}
+    .overlay{position:fixed;inset:0;background:#102c25c9;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px}.modal{background:#fffdf9;border-radius:26px;padding:38px 30px;width:min(100%,440px);text-align:center;box-shadow:0 30px 60px #061b164d}
+    .modal h2{font:normal 39px Georgia,serif;margin:9px 0}.modal p{color:#6e8374}.modal button{margin-top:12px;border:0;border-radius:11px;background:var(--forest);color:white;padding:12px 23px}
+    .voucher{margin:22px auto;border:1px solid #d9bb85;background:linear-gradient(145deg,#fff9e9,#ead5a4);border-radius:16px;padding:22px;box-shadow:0 12px 18px #e1c48555}.voucher big{font:normal 39px Georgia,serif}
+    .wallet{max-width:660px;margin:20px auto;border-radius:22px;background:#fff;padding:25px}.wallet h2{font:normal 33px Georgia,serif;margin:0 0 20px}.wallet article{padding:18px;border:1px solid #e4e9de;border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;gap:12px}
+    .hidden{display:none}.footer{margin-top:42px;text-align:center;color:#7d907e;font-size:11px}.warning{font-weight:700;color:#a16c46}
+    @media(max-width:750px){header{padding:13px 20px}header nav span{display:none}main{padding:18px 14px}.hero{grid-template-columns:1fr;gap:16px}.intro{padding:14px 5px}.intro h1{font-size:47px;margin:8px 0}.garden{min-height:0;padding:25px 13px 25px;border-radius:21px}.garden h2{font-size:24px}.boxes{grid-template-columns:repeat(2,1fr);gap:10px}.box{height:143px}.gift{transform:scale(.85)}.cards{grid-template-columns:1fr;margin-top:20px}.card{padding:18px}.modal{padding:28px 20px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <header><div class="logo">✥ Mộc Maria <small>WELLNESS LOUNGE</small></div><nav><span>Thể lệ</span><span>Ví quà</span><button class="pill">Tài khoản</button></nav></header>
+  <div class="debug"><strong>PREVIEW P02 · MÔ PHỎNG, KHÔNG PHÁT QUÀ</strong> Chọn trạng thái:
+    <button data-state="SCHEDULED">Chờ</button><button data-state="LIVE" aria-pressed="true">Đủ điều kiện</button><button data-state="OPENING">Đang mở</button><button data-state="REVEAL">Có quà</button><button data-state="ALREADY_PLAYED">Hết lượt</button><button data-state="INELIGIBLE">Sai hạng</button><button data-state="WALLET">Ví quà</button>
+  </div>
+  <main><div class="hero"><section class="intro"><span class="eyebrow">THÁNG TRI ÂN · KHU VƯỜN AN NHIÊN</span><h1>Mở hộp quà.<br/>Nhận yêu thương.</h1><p>Một món quà nhỏ gửi lời cảm ơn đến những người đã đồng hành cùng Mộc Maria.</p><span id="status" class="status" role="status">Bạn có một lượt mở quà</span><div><button id="action">Khám phá món quà của tôi ↗</button></div><p class="tip">Mỗi tài khoản có tối đa một lượt mỗi sự kiện · Kết quả thật do hệ thống quyết định.</p></section><section class="garden"><h2>Vườn quà dành cho bạn</h2><p class="subtitle">Sáu hộp quà, một lời tri ân. Hãy chọn hộp bạn yêu thích.</p><div class="boxes" id="boxes">
+    <button class="box" aria-label="Chọn hộp quà số 1"><span class="gift"><i class="lid"></i></span><small>Hộp 01</small></button><button class="box" aria-label="Chọn hộp quà số 2"><span class="gift"><i class="lid"></i></span><small>Hộp 02</small></button><button class="box" aria-label="Chọn hộp quà số 3"><span class="gift"><i class="lid"></i></span><small>Hộp 03</small></button><button class="box" aria-label="Chọn hộp quà số 4"><span class="gift"><i class="lid"></i></span><small>Hộp 04</small></button><button class="box" aria-label="Chọn hộp quà số 5"><span class="gift"><i class="lid"></i></span><small>Hộp 05</small></button><button class="box" aria-label="Chọn hộp quà số 6"><span class="gift"><i class="lid"></i></span><small>Hộp 06</small></button>
+  </div></section></div><section class="cards"><div class="card"><b>01 · Đủ điều kiện</b><p>Mặc định chỉ khách THƯỜNG. Hạng VIP do Admin chọn cụ thể từng hạng.</p></div><div class="card"><b>02 · Một lượt thật</b><p>Mỗi khách một lượt/event. Trang này chỉ là mô phỏng thiết kế.</p></div><div class="card"><b>03 · Quà tại quầy</b><p>Quà sẽ nằm trong ví cá nhân. Nhân viên xác thực trước khi giao.</p></div></section><div class="footer">Mộc Maria · Sự kiện được bảo vệ bằng kiểm tra trên máy chủ · BẢN MÔ PHỎNG P02</div></main>
+  <div class="overlay hidden" id="overlay" role="dialog" aria-modal="true" aria-label="Mô phỏng kết quả"><div class="modal"><span class="eyebrow">MÔ PHỎNG THIẾT KẾ</span><h2 id="modalTitle">Món quà dành cho bạn</h2><div class="voucher" id="voucher"><span>VOUCHER MỘC MARIA</span><br/><big>50.000₫</big><br/><small>HÌNH MINH HỌA · KHÔNG CÓ GIÁ TRỊ SỬ DỤNG</small></div><p id="modalBody">Đây là trạng thái kết quả giả lập để duyệt UI. Không phát sinh giải thưởng hay quyền lợi.</p><button id="close">Quay lại xem giao diện</button></div></div>
+  <div class="wallet hidden" id="wallet"><h2>Ví quà của tôi · MÔ PHỎNG</h2><article><span>Voucher 50.000₫ (minh họa)</span><strong>CHƯA ĐỔI</strong></article><article><span>Trà thảo mộc (minh họa)</span><strong>ĐÃ ĐỔI</strong></article><small>Không có QR hợp lệ, không liên kết tài khoản thật.</small></div>
+  <script>
+    const states={SCHEDULED:['Sự kiện sắp bắt đầu','Xem thể lệ'],LIVE:['Bạn có một lượt mở quà','Khám phá món quà của tôi ↗'],OPENING:['Đang chuẩn bị món quà…','Đợi máy chủ xác nhận'],REVEAL:['Món quà đang chờ bạn','Xem kết quả mô phỏng'],ALREADY_PLAYED:['Bạn đã dùng hết lượt','Xem ví quà mô phỏng'],INELIGIBLE:['Hạng tài khoản chưa đủ điều kiện','Xem hạng tham gia'],WALLET:['Ví quà đã nhận','Xem ví quà mô phỏng']};
+    let current='LIVE';
+    function choose(s){current=s;document.querySelectorAll('[data-state]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.state===s)));document.querySelector('#status').textContent=states[s][0];document.querySelector('#action').textContent=states[s][1];document.querySelector('#wallet').classList.toggle('hidden',s!=='WALLET');document.querySelector('#overlay').classList.toggle('hidden',s!=='OPENING'&&s!=='REVEAL');document.querySelector('#modalTitle').textContent=s==='OPENING'?'Hộp quà đang mở…':'Món quà dành cho bạn';document.querySelector('#voucher').classList.toggle('hidden',s==='OPENING');document.querySelector('#modalBody').textContent=s==='OPENING'?'Bản mô phỏng motion: kết quả phải có từ backend trước khi hiển thị animation.':'Đây là trạng thái kết quả giả lập để duyệt UI. Không phát sinh giải thưởng hay quyền lợi.';document.querySelectorAll('.box').forEach(b=>b.disabled=s!=='LIVE');}
+    document.querySelectorAll('[data-state]').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.state)));
+    document.querySelector('#action').addEventListener('click',()=>choose(current==='LIVE'?'OPENING':current==='OPENING'?'REVEAL':'WALLET'));
+    document.querySelector('#close').addEventListener('click',()=>choose('LIVE'));
+    document.querySelectorAll('.box').forEach(b=>b.addEventListener('click',()=>choose('OPENING')));
+    choose('LIVE');
+  </script>
+</body></html>
