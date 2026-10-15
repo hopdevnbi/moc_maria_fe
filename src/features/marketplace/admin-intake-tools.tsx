@@ -1,4 +1,5 @@
 "use client";
+import { DEFAULT_BOOKING_NOTE } from "@/shared/booking/inquiry-status";
 
 import { useMemo, useState, type FormEvent } from "react";
 import { CalendarPlus, Crown, KeyRound, UserPlus, X } from "lucide-react";
@@ -32,8 +33,10 @@ export function AdminIntakeTools({ onCreated }: { onCreated?: () => void }) {
   const [location, setLocation] = useState<"AT_HOME" | "AT_BRANCH">("AT_BRANCH");
   const [address, setAddress] = useState("");
   const [requestedAt, setRequestedAt] = useState("");
-  const [notes, setNotes] = useState("");
-  const [reason, setReason] = useState("");
+  const [notes, setNotes] = useState(DEFAULT_BOOKING_NOTE);
+  const [reason, setReason] = useState(
+    "Tiếp nhận yêu cầu đặt lịch theo thông tin khách hàng cung cấp.",
+  );
   const [notice, setNotice] = useState("");
   const options = usePrivateData<Options>(
     `/admin/intake/options?q=${encodeURIComponent(search)}`,
@@ -105,8 +108,8 @@ export function AdminIntakeTools({ onCreated }: { onCreated?: () => void }) {
         },
       });
       setNotice("Đã tạo yêu cầu và ghi lịch sử quản trị. Đây chưa phải lịch hẹn được xác nhận.");
-      setNotes("");
-      setReason("");
+      setNotes(DEFAULT_BOOKING_NOTE);
+      setReason("Tiếp nhận yêu cầu đặt lịch theo thông tin khách hàng cung cấp.");
       onCreated?.();
     } catch {
       /* keep form for retry */

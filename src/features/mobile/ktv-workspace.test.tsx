@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { TechnicianWorkspace } from "./ktv-workspace";
 import type { Inquiry } from "./inquiries";
+import { DEFAULT_COMPLETION_NOTE } from "@/shared/booking/inquiry-status";
 const auth = vi.hoisted(() => ({
   user: {
     id: "ktv",
@@ -122,6 +123,7 @@ describe("KTV working dashboard", () => {
     const card = screen.getByText("Khách An").closest("article")!;
     fireEvent.click(within(card).getByRole("button", { name: "Đánh dấu đã hoàn thành" }));
     const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("textbox")).toHaveValue(DEFAULT_COMPLETION_NOTE);
     expect(within(dialog).getByRole("button", { name: "Xác nhận đã hoàn thành" })).toBeDisabled();
     expect(dialog).toHaveFocus();
     fireEvent.click(within(dialog).getByRole("checkbox"));
@@ -132,7 +134,10 @@ describe("KTV working dashboard", () => {
         path.includes("/provider/appointment-inquiries/") && init?.method === "POST",
     );
     expect(call).toBeDefined();
-    expect(JSON.parse(call![1].body)).toMatchObject({ servicePerformedConfirmed: true });
+    expect(JSON.parse(call![1].body)).toMatchObject({
+      servicePerformedConfirmed: true,
+      reason: DEFAULT_COMPLETION_NOTE,
+    });
     expect(auth.fetch.mock.calls.some(([path]) => path.includes("/admin/"))).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Đã xong" }));
     expect(screen.getByText("Khách An")).toBeInTheDocument();

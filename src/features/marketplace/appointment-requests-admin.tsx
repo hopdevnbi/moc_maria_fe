@@ -2,9 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import {
-  AlertCircle,
   CalendarClock,
   Check,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -17,9 +17,15 @@ import {
   X,
 } from "lucide-react";
 import { mutationMessage, usePrivateData, usePrivateMutation } from "./private-api";
+import {
+  defaultStatusNote,
+  inquiryStatusLabels,
+  inquiryDisplayStatus,
+  type InquiryStatus,
+} from "@/shared/booking/inquiry-status";
 import "./appointment-requests-admin.css";
 
-export type RequestStatus = "PENDING" | "CONTACTED" | "DECLINED" | "CANCELLED";
+export type RequestStatus = InquiryStatus;
 export interface AdminAppointmentRequest {
   id: string;
   customerId: string;
@@ -38,6 +44,11 @@ export interface AdminAppointmentRequest {
   status: RequestStatus;
   allowedActions?: RequestStatus[];
   archivedAt?: string;
+  appointmentId?: string;
+  appointmentVersion?: number | null;
+  providerCompletedAt?: string;
+  fulfillmentStatus?: string;
+  canManageStatus?: boolean;
 }
 
 interface RequestDetail extends AdminAppointmentRequest {
@@ -54,20 +65,18 @@ interface RequestList {
   total: number;
   page: number;
   hasMore: boolean;
-  counts: Record<RequestStatus | "ALL", number>;
+  counts: Partial<Record<RequestStatus | "ALL", number>>;
 }
 
-export const requestStatusLabels: Record<RequestStatus, string> = {
-  PENDING: "Chờ KTV phản hồi",
-  CONTACTED: "Đang trao đổi",
-  DECLINED: "Không thể phục vụ",
-  CANCELLED: "Đã hủy",
-};
+export const requestStatusLabels = inquiryStatusLabels;
 
 const filters: { value: RequestStatus | "ALL"; title: string }[] = [
   { value: "ALL", title: "Tất cả" },
   { value: "PENDING", title: "Chờ phản hồi" },
   { value: "CONTACTED", title: "Đang trao đổi" },
+  { value: "CONFIRMED", title: "Đã xác nhận" },
+  { value: "IN_SERVICE", title: "Đang phục vụ" },
+  { value: "COMPLETED", title: "Đã hoàn thành" },
   { value: "DECLINED", title: "Từ chối" },
   { value: "CANCELLED", title: "Đã hủy" },
 ];
@@ -90,6 +99,9 @@ const actionLabels: Partial<Record<RequestStatus, string>> = {
   CONTACTED: "Đánh dấu đã liên hệ",
   DECLINED: "Không thể tiếp nhận",
   CANCELLED: "Hủy yêu cầu",
+  CONFIRMED: "Xác nhận lịch",
+  IN_SERVICE: "Bắt đầu phục vụ",
+  COMPLETED: "Đánh dấu đã hoàn thành",
 };
 
 export function AppointmentRequestsAdmin() {
@@ -102,6 +114,8 @@ export function AppointmentRequestsAdmin() {
   const [action, setAction] = useState<RequestStatus | null>(null);
   const [archiveAction, setArchiveAction] = useState<"ARCHIVE" | "RESTORE" | null>(null);
   const [reason, setReason] = useState("");
+  const [actionRecord, setActionRecord] = useState<AdminAppointmentRequest | null>(null);
+  const [performed, setPerformed] = useState(false);
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
@@ -115,7 +129,10 @@ export function AppointmentRequestsAdmin() {
   const endpoint = `/admin/appointment-inquiries?page=${page}${filter !== "ALL" ? `&status=${filter}` : ""}&q=${encodeURIComponent(query)}${archived ? "&archived=true" : ""}`;
   const requests = usePrivateData<RequestList>(endpoint);
   const change = usePrivateMutation();
-  const entries = requests.data?.items ?? [];
+  const entries = (requests.data?.items ?? []).map((item) => ({
+    ...item,
+    status: item.appointmentVersion != null ? item.status : inquiryDisplayStatus(item),
+  }));
   const selected = entries.find((item) => item.id === selectedId) ?? entries[0] ?? null;
   const detail = usePrivateData<RequestDetail>(
     selected ? `/admin/appointment-inquiries/${encodeURIComponent(selected.id)}` : "",
@@ -123,22 +140,50 @@ export function AppointmentRequestsAdmin() {
   );
   const total = requests.data?.total ?? 0;
 
+  function beginAction(next: RequestStatus | "ARCHIVE" | "RESTORE") {
+    if (!selected) return;
+    setActionRecord({ ...selected });
+    setAction(next === "ARCHIVE" || next === "RESTORE" ? null : next);
+    setArchiveAction(next === "ARCHIVE" || next === "RESTORE" ? next : null);
+    setReason(defaultStatusNote(next));
+    setPerformed(false);
+    change.reset();
+  }
+
   async function submitAction(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selected || (!action && !archiveAction) || reason.trim().length < 10 || change.isPending)
+    if (
+      !actionRecord ||
+      (!action && !archiveAction) ||
+      reason.trim().length < 10 ||
+      change.isPending ||
+      (action === "COMPLETED" && !performed)
+    )
       return;
     try {
       await change.mutateAsync({
-        path: `/admin/appointment-inquiries/${encodeURIComponent(selected.id)}${archiveAction === "RESTORE" ? "/restore" : ""}`,
+        path: `/admin/appointment-inquiries/${encodeURIComponent(actionRecord.id)}${archiveAction === "RESTORE" ? "/restore" : ""}`,
         method:
           archiveAction === "ARCHIVE" ? "DELETE" : archiveAction === "RESTORE" ? "POST" : "PATCH",
         body: archiveAction
           ? { reason: reason.trim() }
-          : { status: action, reason: reason.trim(), expectedStatus: selected.status },
+          : {
+              status: action,
+              reason: reason.trim(),
+              expectedStatus: actionRecord.status,
+              expectedUpdatedAt: actionRecord.updatedAt,
+              expectedAppointmentVersion: actionRecord.appointmentVersion ?? undefined,
+              ...(action === "COMPLETED" ? { servicePerformedConfirmed: performed } : {}),
+            },
       });
       setAction(null);
       setArchiveAction(null);
       setReason("");
+      setActionRecord(null);
+      if (action && !archived) {
+        setFilter(action);
+        setPage(1);
+      }
       setSuccess("Đã lưu kết quả xử lý yêu cầu. Danh sách đã được cập nhật.");
       await requests.refetch();
     } catch {
@@ -156,8 +201,8 @@ export function AppointmentRequestsAdmin() {
           <span className="mm-request-overline">TRUNG TÂM TIẾP NHẬN</span>
           <h2>Chăm sóc từng yêu cầu từ khách hàng</h2>
           <p>
-            Tra cứu yêu cầu, kiểm tra lịch mong muốn và phối hợp kỹ thuật viên. Yêu cầu tư vấn chỉ
-            là bước liên hệ, <strong>chưa phải lịch hẹn đã được xác nhận hoặc thanh toán.</strong>
+            Theo dõi lịch chăm sóc từ khi tiếp nhận đến hoàn thành. Mỗi thay đổi đều được lưu lịch
+            sử; trạng thái lịch không tự ghi nhận thanh toán.
           </p>
         </div>
       </section>
@@ -167,7 +212,7 @@ export function AppointmentRequestsAdmin() {
           { value: "ALL" as const, title: "Tổng yêu cầu", icon: CalendarClock },
           { value: "PENDING" as const, title: "Chờ phản hồi", icon: Clock3 },
           { value: "CONTACTED" as const, title: "Đang trao đổi", icon: UserRound },
-          { value: "DECLINED" as const, title: "Không thể tiếp nhận", icon: AlertCircle },
+          { value: "COMPLETED" as const, title: "Đã hoàn thành", icon: CheckCircle2 },
         ].map(({ value, title, icon: Icon }) => (
           <button
             className={filter === value ? "mm-request-stat is-active" : "mm-request-stat"}
@@ -393,7 +438,11 @@ export function AppointmentRequestsAdmin() {
                                     ? "Khôi phục yêu cầu"
                                     : event.event === "appointment.inquiry.admin_updated"
                                       ? "Quản trị cập nhật"
-                                      : "Yêu cầu được cập nhật"}
+                                      : event.event === "appointment.inquiry.provider_completed"
+                                        ? "KTV báo hoàn thành"
+                                        : event.event === "appointment.inquiry.provider_started"
+                                          ? "KTV bắt đầu phục vụ"
+                                          : "Yêu cầu được cập nhật"}
                             {event.status
                               ? ` · ${requestStatusLabels[event.status] || event.status}`
                               : ""}
@@ -410,18 +459,33 @@ export function AppointmentRequestsAdmin() {
                 </div>
                 <div className="mm-request-detail-foot">
                   <p>
-                    Chỉ đánh dấu đã liên hệ sau khi thực sự trao đổi với khách hoặc KTV. Thao tác
-                    không tự tạo lịch xác nhận.
+                    Kiểm tra thông tin trước khi xác nhận. Ghi chú đã được điền sẵn và có thể chỉnh
+                    sửa.
                   </p>
+                  {selected.allowedActions?.includes("COMPLETED") && (
+                    <button
+                      type="button"
+                      aria-label="Đánh dấu đã hoàn thành lịch hẹn"
+                      className="mm-request-action primary"
+                      onClick={() => beginAction("COMPLETED")}
+                    >
+                      <CheckCircle2 size={16} /> Đã hoàn thành
+                    </button>
+                  )}
+                  {selected.canManageStatus && (
+                    <button
+                      type="button"
+                      className="mm-request-action subtle"
+                      onClick={() => beginAction(selected.allowedActions?.[0] ?? "PENDING")}
+                    >
+                      Đổi trạng thái lịch hẹn
+                    </button>
+                  )}
                   {selected.allowedActions?.includes("CONTACTED") && (
                     <button
                       className="mm-request-action primary"
                       type="button"
-                      onClick={() => {
-                        setAction("CONTACTED");
-                        setReason("");
-                        change.reset();
-                      }}
+                      onClick={() => beginAction("CONTACTED")}
                     >
                       <Check size={16} /> Đã liên hệ
                     </button>
@@ -430,11 +494,7 @@ export function AppointmentRequestsAdmin() {
                     <button
                       className="mm-request-action subtle"
                       type="button"
-                      onClick={() => {
-                        setAction("DECLINED");
-                        setReason("");
-                        change.reset();
-                      }}
+                      onClick={() => beginAction("DECLINED")}
                     >
                       <X size={16} /> Không thể tiếp nhận
                     </button>
@@ -443,12 +503,7 @@ export function AppointmentRequestsAdmin() {
                     <button
                       type="button"
                       className="mm-request-action subtle"
-                      onClick={() => {
-                        setAction("PENDING");
-                        setArchiveAction(null);
-                        setReason("");
-                        change.reset();
-                      }}
+                      onClick={() => beginAction("PENDING")}
                     >
                       Chuyển về chờ phản hồi
                     </button>
@@ -457,31 +512,22 @@ export function AppointmentRequestsAdmin() {
                     <button
                       type="button"
                       className="mm-request-action subtle"
-                      onClick={() => {
-                        setAction("CANCELLED");
-                        setArchiveAction(null);
-                        setReason("");
-                        change.reset();
-                      }}
+                      onClick={() => beginAction("CANCELLED")}
                     >
                       Hủy yêu cầu
                     </button>
                   )}
-                  {(selected.allowedActions?.includes("CANCELLED") ||
-                    selected.allowedActions?.includes("PENDING")) && (
-                    <button
-                      type="button"
-                      className="mm-request-action subtle"
-                      onClick={() => {
-                        setArchiveAction(archived ? "RESTORE" : "ARCHIVE");
-                        setAction(null);
-                        setReason("");
-                        change.reset();
-                      }}
-                    >
-                      {archived ? "Khôi phục yêu cầu" : "Lưu trữ (không xóa lịch sử)"}
-                    </button>
-                  )}
+                  {!selected.appointmentId &&
+                    (selected.allowedActions?.includes("CANCELLED") ||
+                      selected.allowedActions?.includes("PENDING")) && (
+                      <button
+                        type="button"
+                        className="mm-request-action subtle"
+                        onClick={() => beginAction(archived ? "RESTORE" : "ARCHIVE")}
+                      >
+                        {archived ? "Khôi phục yêu cầu" : "Lưu trữ (không xóa lịch sử)"}
+                      </button>
+                    )}
                 </div>
               </article>
             )}
@@ -518,7 +564,7 @@ export function AppointmentRequestsAdmin() {
         phân quyền.
       </p>
 
-      {selected && (action || archiveAction) && (
+      {actionRecord && (action || archiveAction) && (
         <div className="mm-request-modal-layer" role="presentation">
           <form
             className="mm-request-modal"
@@ -537,9 +583,42 @@ export function AppointmentRequestsAdmin() {
                     : "Cập nhật yêu cầu"}
             </h3>
             <p>
-              Khách hàng <strong>{selected.customerName}</strong> · {selected.serviceName}. Hành
-              động này được ghi nhận trong lịch sử quản trị.
+              Khách hàng <strong>{actionRecord.customerName}</strong> · {actionRecord.serviceName}.
+              Hành động này được ghi nhận trong lịch sử quản trị.
             </p>
+            {action && actionRecord.canManageStatus && (
+              <label className="mm-request-state-picker">
+                Trạng thái cần chuyển
+                <select
+                  aria-label="Trạng thái cần chuyển"
+                  value={action}
+                  disabled={change.isPending}
+                  onChange={(event) => {
+                    const next = event.target.value as RequestStatus;
+                    setAction(next);
+                    setReason(defaultStatusNote(next));
+                    setPerformed(false);
+                  }}
+                >
+                  {(actionRecord.allowedActions ?? []).map((value) => (
+                    <option key={value} value={value}>
+                      {requestStatusLabels[value]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {action === "COMPLETED" && (
+              <label className="mm-request-completion-check">
+                <input
+                  type="checkbox"
+                  checked={performed}
+                  disabled={change.isPending}
+                  onChange={(event) => setPerformed(event.target.checked)}
+                />{" "}
+                Tôi xác nhận buổi chăm sóc đã thực sự hoàn thành.
+              </label>
+            )}
             <label htmlFor="mm-request-reason">Ghi chú xử lý (ít nhất 10 ký tự)</label>
             <textarea
               id="mm-request-reason"
@@ -571,7 +650,11 @@ export function AppointmentRequestsAdmin() {
               <button
                 type="submit"
                 className="primary"
-                disabled={change.isPending || reason.trim().length < 10}
+                disabled={
+                  change.isPending ||
+                  reason.trim().length < 10 ||
+                  (action === "COMPLETED" && !performed)
+                }
               >
                 {change.isPending ? "Đang lưu..." : "Xác nhận xử lý"}
               </button>

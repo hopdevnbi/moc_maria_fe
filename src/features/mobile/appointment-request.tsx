@@ -1,4 +1,5 @@
 "use client";
+import { DEFAULT_BOOKING_NOTE } from "@/shared/booking/inquiry-status";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -67,7 +68,7 @@ export function AppointmentRequest({
     };
   });
   const [requestedAt, setRequestedAt] = useState(dateLimits.min);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(DEFAULT_BOOKING_NOTE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);

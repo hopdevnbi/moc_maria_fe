@@ -23,6 +23,7 @@ import { OwnProviderPlanning } from "@/features/marketplace/provider-planning";
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { ProviderDescriptionEditor } from "./profile-editor";
 import type { Inquiry } from "./inquiries";
+import { DEFAULT_COMPLETION_NOTE, defaultStatusNote } from "@/shared/booking/inquiry-status";
 import { officialServiceLabel } from "./official-ktv-offers";
 import {
   type ProviderFulfillment,
@@ -69,7 +70,7 @@ export function TechnicianWorkspace() {
     [panel, setPanel] = useState("schedule");
   const [completion, setCompletion] = useState<Inquiry | null>(null),
     [attested, setAttested] = useState(false),
-    [note, setNote] = useState(""),
+    [note, setNote] = useState(DEFAULT_COMPLETION_NOTE),
     [notice, setNotice] = useState(""),
     [signingOut, setSigningOut] = useState(false);
   const items = (inquiries.data || []).filter((i) => i.customerId !== user?.id && !i.archivedAt);
@@ -110,11 +111,16 @@ export function TechnicianWorkspace() {
     mutationFn: async ({ item, status }: { item: Inquiry; status: string }) => {
       const fulfillment = progress.get(item.id);
       if (status === "COMPLETED" || status === "IN_SERVICE") {
+        if (status === "IN_SERVICE" && !item.appointmentId)
+          return authFetch("/provider/appointment-inquiries/" + item.id + "/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason: defaultStatusNote("IN_SERVICE") }),
+          });
         const reason =
-          note.trim() ||
-          (status === "COMPLETED"
-            ? "KTV xác nhận buổi chăm sóc đã thực sự hoàn thành."
-            : "KTV xác nhận bắt đầu phục vụ khách hàng.");
+          status === "IN_SERVICE"
+            ? defaultStatusNote("IN_SERVICE")
+            : note.trim() || DEFAULT_COMPLETION_NOTE;
         if (item.appointmentId) {
           if (!fulfillment?.version)
             throw Error("Chưa tải được tiến độ lịch. Hãy tải lại trước khi cập nhật.");
@@ -171,7 +177,7 @@ export function TechnicianWorkspace() {
       void client.invalidateQueries({ queryKey: key });
       setCompletion(null);
       setAttested(false);
-      setNote("");
+      setNote(DEFAULT_COMPLETION_NOTE);
       setNotice(
         action.status === "COMPLETED"
           ? "Đã cập nhật hoàn thành buổi chăm sóc."
@@ -385,10 +391,12 @@ export function TechnicianWorkspace() {
               const status = stage(item),
                 f = progress.get(item.id),
                 official = !!item.appointmentId;
-              const startAllowed = f?.startsAt && Date.parse(f.startsAt) - 30 * 60000 <= now;
+              const startAllowed =
+                Date.parse(official ? f?.startsAt || "" : item.requestedAt) - 30 * 60000 <= now;
               const finishAllowed = official
                 ? status === "IN_SERVICE" && !!f?.endsAt && Date.parse(f.endsAt) <= now
-                : status === "CONTACTED" && Date.parse(item.requestedAt) <= now;
+                : ["CONTACTED", "IN_SERVICE"].includes(status) &&
+                  Date.parse(item.requestedAt) <= now;
               return (
                 <article className="ktvw-card" key={item.id}>
                   <div className="ktvw-card-top">
@@ -467,7 +475,7 @@ export function TechnicianWorkspace() {
                         </button>
                       </>
                     )}
-                    {status === "CONFIRMED" && official && (
+                    {status === "CONFIRMED" && (
                       <button
                         type="button"
                         className="ktvw-primary"
@@ -477,21 +485,22 @@ export function TechnicianWorkspace() {
                         Bắt đầu phục vụ
                       </button>
                     )}
-                    {["CONTACTED", "IN_SERVICE"].includes(status) && (
-                      <button
-                        type="button"
-                        className="ktvw-complete"
-                        disabled={mutation.isPending || !finishAllowed}
-                        onClick={() => {
-                          setCompletion(item);
-                          setAttested(false);
-                          setNote("");
-                          setNotice("");
-                        }}
-                      >
-                        <CheckCircle2 size={16} /> Đánh dấu đã hoàn thành
-                      </button>
-                    )}
+                    {["CONTACTED", "IN_SERVICE"].includes(status) &&
+                      (!official || status === "IN_SERVICE") && (
+                        <button
+                          type="button"
+                          className="ktvw-complete"
+                          disabled={mutation.isPending || !finishAllowed}
+                          onClick={() => {
+                            setCompletion(item);
+                            setAttested(false);
+                            setNote(DEFAULT_COMPLETION_NOTE);
+                            setNotice("");
+                          }}
+                        >
+                          <CheckCircle2 size={16} /> Đánh dấu đã hoàn thành
+                        </button>
+                      )}
                   </div>
                   {!finishAllowed && status === "IN_SERVICE" && f?.endsAt && (
                     <p className="ktvw-hint">Có thể hoàn thành từ {workTime(f.endsAt)}.</p>

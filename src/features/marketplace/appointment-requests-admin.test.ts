@@ -2,14 +2,16 @@ import { describe, expect, it } from "vitest";
 import { formatRequestDate, requestStatusLabels } from "./appointment-requests-admin";
 
 describe("Admin appointment request presentation", () => {
-  it("displays the actual inquiry lifecycle without inventing a confirmed booking", () => {
+  it("labels the complete operational inquiry lifecycle", () => {
     expect(requestStatusLabels).toEqual({
       PENDING: "Chờ KTV phản hồi",
       CONTACTED: "Đang trao đổi",
+      CONFIRMED: "Đã xác nhận",
+      IN_SERVICE: "Đang phục vụ",
+      COMPLETED: "Đã hoàn thành",
       DECLINED: "Không thể phục vụ",
       CANCELLED: "Đã hủy",
     });
-    expect(Object.keys(requestStatusLabels)).not.toContain("CONFIRMED");
   });
 
   it("formats requested appointment time in Vietnam, including at the day boundary", () => {

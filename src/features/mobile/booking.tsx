@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+import { DEFAULT_BOOKING_NOTE } from "@/shared/booking/inquiry-status";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -98,7 +99,7 @@ export function BookingWizard({
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [availabilityError, setAvailabilityError] = useState("");
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(DEFAULT_BOOKING_NOTE);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
   const [submitted, setSubmitted] = useState(false);

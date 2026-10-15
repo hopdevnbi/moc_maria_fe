@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { LoadingState, RefreshNotice } from "@/shared/loading/loading-state";
+import { inquiryDisplayStatus } from "@/shared/booking/inquiry-status";
 export interface Inquiry {
   id: string;
   customerId: string;
@@ -94,11 +95,7 @@ export function AppointmentInquiries() {
               {item.serviceName} ·{" "}
               {user?.id === item.customerId ? item.providerName : item.customerName}
             </strong>
-            <p className="mm-account-role">
-              {labels[
-                item.fulfillmentStatus || (item.providerCompletedAt ? "COMPLETED" : item.status)
-              ] || item.status}
-            </p>
+            <p className="mm-account-role">{labels[inquiryDisplayStatus(item)] || item.status}</p>
             <p>
               {new Intl.DateTimeFormat("vi-VN", {
                 dateStyle: "medium",
