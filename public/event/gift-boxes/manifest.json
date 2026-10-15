@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "label": "rung-xanh",
+    "svg": "/event/gift-boxes/gift-1.svg",
+    "small": "/event/gift-boxes/gift-1-320.webp",
+    "large": "/event/gift-boxes/gift-1-640.webp"
+  },
+  {
+    "id": 2,
+    "label": "vang-champagne",
+    "svg": "/event/gift-boxes/gift-2.svg",
+    "small": "/event/gift-boxes/gift-2-320.webp",
+    "large": "/event/gift-boxes/gift-2-640.webp"
+  },
+  {
+    "id": 3,
+    "label": "ngoc-trai",
+    "svg": "/event/gift-boxes/gift-3.svg",
+    "small": "/event/gift-boxes/gift-3-320.webp",
+    "large": "/event/gift-boxes/gift-3-640.webp"
+  },
+  {
+    "id": 4,
+    "label": "sage-am",
+    "svg": "/event/gift-boxes/gift-4.svg",
+    "small": "/event/gift-boxes/gift-4-320.webp",
+    "large": "/event/gift-boxes/gift-4-640.webp"
+  },
+  {
+    "id": 5,
+    "label": "dao-nhat",
+    "svg": "/event/gift-boxes/gift-5.svg",
+    "small": "/event/gift-boxes/gift-5-320.webp",
+    "large": "/event/gift-boxes/gift-5-640.webp"
+  },
+  {
+    "id": 6,
+    "label": "tram-la",
+    "svg": "/event/gift-boxes/gift-6.svg",
+    "small": "/event/gift-boxes/gift-6-320.webp",
+    "large": "/event/gift-boxes/gift-6-640.webp"
+  }
+]
