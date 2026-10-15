@@ -127,8 +127,8 @@ export function AdminIntakeTools({ onCreated }: { onCreated?: () => void }) {
           <small>CHỈ SUPER ADMIN</small>
           <h3>Tiếp nhận & cấp tài khoản nhanh</h3>
           <p>
-            Tạo khách, cấp thông tin đăng nhập, lập yêu cầu giúp khách. Lịch chính thức và xác nhận
-            hoàn thành được xử lý trong quy trình đặt lịch riêng.
+            Tạo khách, cấp thông tin đăng nhập và lập yêu cầu giúp khách. Theo dõi và cập nhật tiến
+            độ trong danh sách lịch hẹn bên dưới.
           </p>
         </div>
       </div>
