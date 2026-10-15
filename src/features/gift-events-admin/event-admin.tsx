@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import {
   CalendarDays,
   CheckCircle2,
@@ -216,6 +217,9 @@ export function GiftEventAdmin() {
             backend quyết định.
           </p>
         </div>
+        <Link className="mm-ge-report-link" href="/quan-tri/su-kien/bao-cao">
+          Đối soát & báo cáo
+        </Link>
         <span className="mm-ge-shield">
           <ShieldCheck size={15} /> Super Admin
         </span>
