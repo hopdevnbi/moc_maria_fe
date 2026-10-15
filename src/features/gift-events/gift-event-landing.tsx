@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { apiRequest, parseApiResponse } from "@/features/auth/auth-api";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { WalletQr } from "./wallet-qr";
 import {
   boxImages,
   eligibilityCopy,
@@ -73,10 +74,12 @@ function WalletPanel({
   gifts,
   loading,
   failed,
+  authFetch,
 }: {
   gifts: WalletGift[] | undefined;
   loading: boolean;
   failed: boolean;
+  authFetch: <T>(path: string, init?: RequestInit) => Promise<T>;
 }) {
   const [detail, setDetail] = useState<string | null>(null);
   const item = gifts?.find((gift) => gift.id === detail) ?? null;
@@ -146,9 +149,10 @@ function WalletPanel({
             <dd>{item.allowedBranchIds.length + " cơ sở được chỉ định khi cấp quà"}</dd>
           </dl>
           <p className="mm-ev-wallet-warning">
-            <LockKeyhole size={16} /> Chức năng xuất QR và xác nhận nhận quà tại quầy đang được hoàn
-            thiện riêng. Vui lòng không sử dụng ảnh màn hình này thay cho phiếu đổi quà.
+            <LockKeyhole size={16} /> Chỉ mở QR trước mặt nhân viên. Đừng chia sẻ ảnh mã cho người
+            khác; nhân viên sẽ xác minh trạng thái trực tiếp với máy chủ.
           </p>
+          <WalletQr key={item.id} gift={item} authFetch={authFetch} />
         </div>
       )}
     </section>
@@ -511,7 +515,12 @@ export function GiftEventLanding() {
               </button>
             </div>
             {showWallet && (
-              <WalletPanel gifts={wallet.data} loading={wallet.isPending} failed={wallet.isError} />
+              <WalletPanel
+                gifts={wallet.data}
+                loading={wallet.isPending}
+                failed={wallet.isError}
+                authFetch={authFetch}
+              />
             )}
           </section>
         )}
