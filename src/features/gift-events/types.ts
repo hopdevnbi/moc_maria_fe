@@ -53,6 +53,23 @@ export type WalletGift = {
   redeemedAt: string | null;
   redeemedBranchId: string | null;
 };
+export type GiftOpenResult = {
+  openId: string;
+  eventId: string;
+  boxId: number;
+  termsVersion: number;
+  createdAt: string;
+  reward: {
+    id: string;
+    prizeId: string;
+    name: string;
+    description: string;
+    kind: string;
+    config: Record<string, unknown>;
+    expiresAt: string;
+    status: WalletGift["status"];
+  };
+};
 
 export const boxImages = [1, 2, 3, 4, 5, 6] as const;
 export const statusLabels: Record<GiftEventStatus, string> = {
