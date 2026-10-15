@@ -3,7 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GiftEventLanding } from "./gift-event-landing";
 import { eligibilityCopy, type CurrentEvent, type EventMe } from "./types";
 
-const mocks = vi.hoisted(() => ({ authenticated: false, campaign: false, eligible: false, authFetch: vi.fn(), refetch: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  authenticated: false,
+  campaign: false,
+  eligible: false,
+  authFetch: vi.fn(),
+  refetch: vi.fn(),
+}));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
     status: mocks.authenticated ? "authenticated" : "anonymous",
@@ -100,10 +106,21 @@ describe("P09 Mộc Maria event landing", () => {
     mocks.campaign = true;
     mocks.eligible = true;
     mocks.authFetch.mockResolvedValueOnce({
-      openId: "open-1", eventId: "1234", boxId: 2, termsVersion: 1, createdAt: "2026-10-15T00:00:00Z",
-      reward: { id: "reward-1", prizeId: "prize-1", name: "Voucher massage 20%",
-        description: "Áp dụng theo điều lệ", kind: "VOUCHER_PERCENT", config: { percent: 20 },
-        expiresAt: "2026-11-15T00:00:00Z", status: "ISSUED" },
+      openId: "open-1",
+      eventId: "1234",
+      boxId: 2,
+      termsVersion: 1,
+      createdAt: "2026-10-15T00:00:00Z",
+      reward: {
+        id: "reward-1",
+        prizeId: "prize-1",
+        name: "Voucher massage 20%",
+        description: "Áp dụng theo điều lệ",
+        kind: "VOUCHER_PERCENT",
+        config: { percent: 20 },
+        expiresAt: "2026-11-15T00:00:00Z",
+        status: "ISSUED",
+      },
     });
     render(<GiftEventLanding />);
     fireEvent.click(screen.getByRole("button", { name: /HỘP 02/ }));
@@ -111,9 +128,12 @@ describe("P09 Mộc Maria event landing", () => {
     expect(open).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox", { name: /Tôi đã đọc và đồng ý/ }));
     fireEvent.click(open);
-    await waitFor(() => expect(mocks.authFetch).toHaveBeenCalledWith(
-      "/gift-events/1234/open", expect.objectContaining({ method: "POST" }),
-    ));
+    await waitFor(() =>
+      expect(mocks.authFetch).toHaveBeenCalledWith(
+        "/gift-events/1234/open",
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
     const body = JSON.parse(mocks.authFetch.mock.calls[0][1].body);
     expect(body).toMatchObject({ boxId: 2, termsVersion: 1, termsAccepted: true });
     expect(body.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/i);

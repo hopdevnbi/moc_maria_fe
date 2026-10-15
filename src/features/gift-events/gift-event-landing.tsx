@@ -275,15 +275,26 @@ export function GiftEventLanding() {
       const result = await authFetch<GiftOpenResult>(`/gift-events/${event.id}/open`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boxId, idempotencyKey: key, termsVersion: event.termsVersion, termsAccepted: true }),
+        body: JSON.stringify({
+          boxId,
+          idempotencyKey: key,
+          termsVersion: event.termsVersion,
+          termsAccepted: true,
+        }),
       });
       setOpenedGift(result);
-      try { window.sessionStorage.removeItem(storageKey); } catch { /* blocked storage */ }
+      try {
+        window.sessionStorage.removeItem(storageKey);
+      } catch {
+        /* blocked storage */
+      }
       setPendingKey(null);
       void me.refetch();
       if (showWallet) void wallet.refetch();
     } catch {
-      setOpenError("Chưa xác nhận được kết quả. Bấm thử lại để tra cứu cùng yêu cầu, không dùng thêm lượt.");
+      setOpenError(
+        "Chưa xác nhận được kết quả. Bấm thử lại để tra cứu cùng yêu cầu, không dùng thêm lượt.",
+      );
       void me.refetch();
     } finally {
       setOpening(false);
@@ -408,7 +419,9 @@ export function GiftEventLanding() {
                   className={"mm-ev-box" + (boxId === id ? " is-picked" : "")}
                   type="button"
                   key={id}
-                  onClick={() => { if (!opening && !openedGift && !pendingKey) setBoxId(id); }}
+                  onClick={() => {
+                    if (!opening && !openedGift && !pendingKey) setBoxId(id);
+                  }}
                   disabled={opening || !!openedGift || !!pendingKey}
                   aria-pressed={boxId === id}
                 >
@@ -465,23 +478,60 @@ export function GiftEventLanding() {
                   Đăng nhập để tham gia <ArrowRight size={16} />
                 </Link>
               ) : (
-                <button type="button" disabled={!eligibleBox || !boxId || !agreed || opening || !!openedGift}
-                  className="mm-ev-primary" onClick={() => void openSelectedBox()}>
-                  {opening ? "Đang xác nhận quà..." : openedGift ? "Đã nhận quà" : eligibleBox && boxId
-                    ? "Mở hộp số " + boxId : me.data?.reason === "ALREADY_PLAYED" ? "Đã dùng lượt" : "Chọn hộp để mở"}
+                <button
+                  type="button"
+                  disabled={!eligibleBox || !boxId || !agreed || opening || !!openedGift}
+                  className="mm-ev-primary"
+                  onClick={() => void openSelectedBox()}
+                >
+                  {opening
+                    ? "Đang xác nhận quà..."
+                    : openedGift
+                      ? "Đã nhận quà"
+                      : eligibleBox && boxId
+                        ? "Mở hộp số " + boxId
+                        : me.data?.reason === "ALREADY_PLAYED"
+                          ? "Đã dùng lượt"
+                          : "Chọn hộp để mở"}
                 </button>
               )}
-              {eligibleBox && !agreed && <small>Vui lòng đọc và đồng ý thể lệ bên dưới trước khi mở quà.</small>}
-              {opening && <small role="status">Máy chủ đang xác nhận kết quả; không đóng trang hoặc mở lần nữa.</small>}
+              {eligibleBox && !agreed && (
+                <small>Vui lòng đọc và đồng ý thể lệ bên dưới trước khi mở quà.</small>
+              )}
+              {opening && (
+                <small role="status">
+                  Máy chủ đang xác nhận kết quả; không đóng trang hoặc mở lần nữa.
+                </small>
+              )}
               {openError && <small role="alert">{openError}</small>}
-              {openedGift && <div className={"mm-ev-gift-details" + (skipEffect ? "" : " mm-ev-prize-reveal")} role="status" aria-live="polite">
-                <strong>{skipEffect ? "Quà của bạn" : "Xin chúc mừng! Quà của bạn"}</strong>
-                <h3>{openedGift.reward.name}</h3>
-                <p>{openedGift.reward.description}</p>
-                <p>Hạn dùng: {formatLocal(openedGift.reward.expiresAt)}</p>
-                <button type="button" onClick={() => { setShowWallet(true); document.getElementById("mm-ev-wallet-area")?.scrollIntoView({ behavior: "smooth" }); }}>Xem quà trong ví</button>
-                {!skipEffect && <button type="button" onClick={() => setSkipEffect(true)}>Bỏ qua hiệu ứng</button>}
-              </div>}
+              {openedGift && (
+                <div
+                  className={"mm-ev-gift-details" + (skipEffect ? "" : " mm-ev-prize-reveal")}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <strong>{skipEffect ? "Quà của bạn" : "Xin chúc mừng! Quà của bạn"}</strong>
+                  <h3>{openedGift.reward.name}</h3>
+                  <p>{openedGift.reward.description}</p>
+                  <p>Hạn dùng: {formatLocal(openedGift.reward.expiresAt)}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowWallet(true);
+                      document
+                        .getElementById("mm-ev-wallet-area")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    Xem quà trong ví
+                  </button>
+                  {!skipEffect && (
+                    <button type="button" onClick={() => setSkipEffect(true)}>
+                      Bỏ qua hiệu ứng
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -539,7 +589,8 @@ export function GiftEventLanding() {
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
                 />
-                Tôi đã đọc và đồng ý điều lệ phiên bản {event.termsVersion}. Lượt chỉ được dùng khi tôi bấm Mở hộp.
+                Tôi đã đọc và đồng ý điều lệ phiên bản {event.termsVersion}. Lượt chỉ được dùng khi
+                tôi bấm Mở hộp.
               </label>
             )}
           </div>
