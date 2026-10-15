@@ -4,6 +4,17 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   cacheComponents: true,
   partialPrefetching: true,
+  async rewrites() {
+    // P16: only the event host's root is the Event landing.
+    // The primary Mộc Maria site and every other path keep existing routing.
+    return [
+      {
+        source: "/",
+        has: [{ type: "host", value: "event.mocmaria.com" }],
+        destination: "/event",
+      },
+    ];
+  },
   async headers() {
     return [
       {
