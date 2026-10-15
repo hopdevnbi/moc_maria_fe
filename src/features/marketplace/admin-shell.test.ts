@@ -17,6 +17,7 @@ describe("Admin sidebar RBAC navigation", () => {
       "/quan-tri/ktv",
       "/quan-tri/danh-gia-ktv",
       "/quan-tri/dich-vu",
+      "/quan-tri/su-kien",
       "/quan-tri/co-so",
       "/quan-tri/khach-hang",
       "/quan-tri/hoi-vien-vip",
@@ -49,6 +50,21 @@ describe("Admin sidebar RBAC navigation", () => {
     expect(
       groups.flatMap((group) => group.items).some((item) => item.href === "/quan-tri/phan-quyen"),
     ).toBe(false);
+  });
+
+  it("shows event gift management only to Super Admin, never ordinary operators", () => {
+    const normal = adminVisibleGroups(
+      asUser(["ADMIN"], ["admin.portal", "staff.manage", "customers.manage"]),
+    );
+    const superAdmin = adminVisibleGroups(
+      asUser(["SUPER_ADMIN"], ["admin.portal", "staff.manage", "customers.manage"]),
+    );
+    expect(
+      normal.flatMap((group) => group.items).some((item) => item.href === "/quan-tri/su-kien"),
+    ).toBe(false);
+    expect(
+      superAdmin.flatMap((group) => group.items).some((item) => item.href === "/quan-tri/su-kien"),
+    ).toBe(true);
   });
 
   it("shows operational modules only with staff.manage", () => {
