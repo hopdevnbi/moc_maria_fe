@@ -1,14 +1,14 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GiftEventLanding } from "./gift-event-landing";
 import { eligibilityCopy, type CurrentEvent, type EventMe } from "./types";
 
-const mocks = vi.hoisted(() => ({ authenticated: false, campaign: false, eligible: false }));
+const mocks = vi.hoisted(() => ({ authenticated: false, campaign: false, eligible: false, authFetch: vi.fn(), refetch: vi.fn() }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
     status: mocks.authenticated ? "authenticated" : "anonymous",
     user: mocks.authenticated ? { id: "test-user", roles: ["CUSTOMER"] } : null,
-    authFetch: vi.fn(),
+    authFetch: mocks.authFetch,
   }),
 }));
 const event = {
@@ -45,6 +45,7 @@ vi.mock("@tanstack/react-query", () => ({
           dataUpdatedAt: Date.now(),
           isPending: false,
           isError: false,
+          refetch: mocks.refetch,
         }
       : queryKey[1] === "me"
         ? {
@@ -53,14 +54,17 @@ vi.mock("@tanstack/react-query", () => ({
               : undefined,
             isPending: false,
             isError: false,
+            refetch: mocks.refetch,
           }
-        : { data: [], isPending: false, isError: false },
+        : { data: [], isPending: false, isError: false, refetch: mocks.refetch },
 }));
 
 beforeEach(() => {
   mocks.authenticated = false;
   mocks.campaign = false;
   mocks.eligible = false;
+  mocks.authFetch.mockReset();
+  mocks.refetch.mockReset();
 });
 afterEach(() => cleanup());
 
@@ -80,7 +84,7 @@ describe("P09 Mộc Maria event landing", () => {
     );
     expect(screen.queryByText("Bạn đã trúng")).not.toBeInTheDocument();
   });
-  it("allows visual selection but never performs POST open before P10", () => {
+  it("allows visual selection but requires agreement before sending POST open", () => {
     mocks.authenticated = true;
     mocks.campaign = true;
     mocks.eligible = true;
@@ -88,8 +92,33 @@ describe("P09 Mộc Maria event landing", () => {
     const gift = screen.getByRole("button", { name: /HỘP 02/ });
     fireEvent.click(gift);
     expect(gift).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: /Đã chọn hộp số 2/ })).toBeDisabled();
-    expect(screen.getByText(/Chưa phát quà/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Mở hộp số 2/ })).toBeDisabled();
+    expect(screen.getByText(/Vui lòng đọc và đồng ý thể lệ/)).toBeInTheDocument();
+  });
+  it("requests reward only after explicit terms acceptance and renders server response", async () => {
+    mocks.authenticated = true;
+    mocks.campaign = true;
+    mocks.eligible = true;
+    mocks.authFetch.mockResolvedValueOnce({
+      openId: "open-1", eventId: "1234", boxId: 2, termsVersion: 1, createdAt: "2026-10-15T00:00:00Z",
+      reward: { id: "reward-1", prizeId: "prize-1", name: "Voucher massage 20%",
+        description: "Áp dụng theo điều lệ", kind: "VOUCHER_PERCENT", config: { percent: 20 },
+        expiresAt: "2026-11-15T00:00:00Z", status: "ISSUED" },
+    });
+    render(<GiftEventLanding />);
+    fireEvent.click(screen.getByRole("button", { name: /HỘP 02/ }));
+    const open = screen.getByRole("button", { name: /Mở hộp số 2/ });
+    expect(open).toBeDisabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Tôi đã đọc và đồng ý/ }));
+    fireEvent.click(open);
+    await waitFor(() => expect(mocks.authFetch).toHaveBeenCalledWith(
+      "/gift-events/1234/open", expect.objectContaining({ method: "POST" }),
+    ));
+    const body = JSON.parse(mocks.authFetch.mock.calls[0][1].body);
+    expect(body).toMatchObject({ boxId: 2, termsVersion: 1, termsAccepted: true });
+    expect(body.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(await screen.findByText("Voucher massage 20%")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Đã nhận quà" })).toBeDisabled();
   });
   it("describes exact VIP tiers and already-played state from backend", () => {
     const campaign = { ...event, eligibleTiers: ["STANDARD", "VIP2"] } as unknown as NonNullable<

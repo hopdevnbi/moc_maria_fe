@@ -1108,3 +1108,10 @@
     scroll-behavior: auto !important;
   }
 }
+@keyframes mm-event-reveal {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mm-ev-prize-reveal {
+  animation: mm-event-reveal .38s ease-out both;
+}
