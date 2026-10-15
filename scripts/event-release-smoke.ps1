@@ -20,8 +20,8 @@ function Check-Get([string]$Name,[string]$Url,[string]$Expected) {
 $EventBaseUrl=$EventBaseUrl.TrimEnd('/')
 $SiteBaseUrl=$SiteBaseUrl.TrimEnd('/')
 $ApiBaseUrl=$ApiBaseUrl.TrimEnd('/')
-Check-Get 'Event host root' "$EventBaseUrl/" 'Mở hộp quà'
-Check-Get 'Event landing path' "$EventBaseUrl/event" 'Mở hộp quà'
+Check-Get 'Event host root' "$EventBaseUrl/" 'gift-boxes'
+Check-Get 'Event landing path' "$EventBaseUrl/event" 'gift-boxes'
 Check-Get 'Event release' "$EventBaseUrl/api/release" ''
 Check-Get 'Main homepage' "$SiteBaseUrl/" ''
 Check-Get 'Public Event API' "$ApiBaseUrl/gift-events/current" ''
