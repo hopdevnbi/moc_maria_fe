@@ -50,6 +50,7 @@ type PrizeForm = {
   fairValueVnd: string;
   coverUrl: string;
   branchIds: string[];
+  allowedServiceIds: string[];
 };
 const labels: Record<Kind, string> = {
   VOUCHER_FIXED: "Voucher giảm tiền",
@@ -75,6 +76,7 @@ const fresh: PrizeForm = {
   fairValueVnd: "0",
   coverUrl: "",
   branchIds: [],
+  allowedServiceIds: [],
 };
 const get = (x: unknown, defaultValue: string) =>
   typeof x === "string" || typeof x === "number" ? String(x) : defaultValue;
@@ -95,6 +97,9 @@ function fromPrize(prize: Prize): PrizeForm {
     fairValueVnd: get(prize.config.fairValueVnd, "0"),
     coverUrl: get(prize.config.coverUrl, ""),
     branchIds: prize.branchIds,
+    allowedServiceIds: Array.isArray(prize.config.allowedServiceIds)
+      ? prize.config.allowedServiceIds.filter((id): id is string => typeof id === "string")
+      : [],
   };
 }
 
@@ -105,6 +110,10 @@ export function GiftPrizesAdmin({ event }: { event: GiftEvent | null }) {
     !!event,
   );
   const branches = usePrivateData<Branch[]>("/admin/branches", !!event);
+  const services = usePrivateData<Array<{ id: string; name: string; isPublished: boolean }>>(
+    "/admin/services",
+    !!event,
+  );
   const saveMutation = usePrivateMutation<Prize>();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PrizeForm>(fresh);
@@ -135,6 +144,7 @@ export function GiftPrizesAdmin({ event }: { event: GiftEvent | null }) {
     if (form.kind === "VOUCHER_PERCENT") {
       x.percent = Number(form.percent);
       x.maxDiscountVnd = Number(form.maxDiscountVnd);
+      x.allowedServiceIds = form.allowedServiceIds;
     }
     if (form.kind.startsWith("VOUCHER")) x.minSpendVnd = Number(form.minSpendVnd);
     if (["PHYSICAL_ITEM", "TAKEAWAY_DRINK"].includes(form.kind)) {
@@ -334,6 +344,30 @@ export function GiftPrizesAdmin({ event }: { event: GiftEvent | null }) {
                     onChange={(e) => set("maxDiscountVnd", e.target.value)}
                   />
                 </label>
+                <fieldset className="wide">
+                  <legend>Áp dụng cho các dịch vụ và đồ uống có trong catalog</legend>
+                  <p>Chỉ những sản phẩm được tích chọn mới được tính ưu đãi tại quầy.</p>
+                  {services.data
+                    ?.filter((item) => item.isPublished)
+                    .map((item) => (
+                      <label className="mm-gp-check" key={item.id}>
+                        <input
+                          type="checkbox"
+                          checked={form.allowedServiceIds.includes(item.id)}
+                          onChange={(e) =>
+                            set(
+                              "allowedServiceIds",
+                              e.target.checked
+                                ? [...form.allowedServiceIds, item.id]
+                                : form.allowedServiceIds.filter((id) => id !== item.id),
+                            )
+                          }
+                        />
+                        {item.name}
+                      </label>
+                    ))}
+                  {!services.data?.length && <p>Chưa có catalog dịch vụ để áp dụng tự động.</p>}
+                </fieldset>
               </>
             )}
             {form.kind.startsWith("VOUCHER") && (

@@ -220,6 +220,9 @@ export function GiftEventAdmin() {
         <Link className="mm-ge-report-link" href="/quan-tri/su-kien/bao-cao">
           Đối soát & báo cáo
         </Link>
+        <Link className="mm-ge-report-link" href="/quan-tri/su-kien/voucher">
+          Quản lý voucher
+        </Link>
         <span className="mm-ge-shield">
           <ShieldCheck size={15} /> Super Admin
         </span>
