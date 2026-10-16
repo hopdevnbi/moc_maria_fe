@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -71,6 +71,11 @@ type FormValue = {
   eligibleTiers: string[];
   heroUrl: string;
 };
+const allCustomerTiers = ["STANDARD", ...Array.from({ length: 99 }, (_, i) => `VIP${i + 1}`)];
+const tierSummary = (tiers: string[]) =>
+  allCustomerTiers.every((tier) => tiers.includes(tier))
+    ? "Tất cả khách hàng đều có thể tham gia"
+    : tiers.join(", ").replace("STANDARD", "THƯỜNG");
 const fresh: FormValue = {
   code: "",
   slug: "",
@@ -108,11 +113,19 @@ export function GiftEventAdmin() {
   const events = usePrivateData<GiftEvent[]>("/admin/gift-events", isSuper);
   const mutation = usePrivateMutation<GiftEvent>();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [initializedSelection, setInitializedSelection] = useState(false);
   const [form, setForm] = useState<FormValue>(fresh);
   const [tierInput, setTierInput] = useState("VIP1");
   const [step, setStep] = useState(1);
   const [reason, setReason] = useState("");
   const [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (initializedSelection || !events.data?.length) return;
+    const selected = events.data.find((item) => item.effectiveStatus === "LIVE") ?? events.data[0];
+    setSelectedId(selected.id);
+    setForm(fromEvent(selected));
+    setInitializedSelection(true);
+  }, [events.data, initializedSelection]);
   const current = events.data?.find((event) => event.id === selectedId) || null;
   const editable = !current || ["DRAFT", "SCHEDULED"].includes(current.status);
   const isDirty = useMemo(
@@ -123,6 +136,7 @@ export function GiftEventAdmin() {
   const set = (key: keyof FormValue, value: string | string[]) =>
     setForm((f) => ({ ...f, [key]: value }));
   const choose = (event: GiftEvent) => {
+    setInitializedSelection(true);
     setSelectedId(event.id);
     setForm(fromEvent(event));
     setNotice("");
@@ -130,6 +144,7 @@ export function GiftEventAdmin() {
     setStep(1);
   };
   const reset = () => {
+    setInitializedSelection(true);
     setSelectedId(null);
     setForm(fresh);
     setNotice("");
@@ -265,7 +280,7 @@ export function GiftEventAdmin() {
               <span>{statuses[item.effectiveStatus]}</span>
               <small>
                 Phiên bản {item.version} ·{" "}
-                {item.eligibleTiers.join(", ").replace("STANDARD", "THƯỜNG")}
+                {tierSummary(item.eligibleTiers)}
               </small>
             </button>
           ))}
@@ -487,7 +502,7 @@ export function GiftEventAdmin() {
                   <dd>{form.title || "Chưa đặt tên"}</dd>
                   <dt>Hạng được tham gia</dt>
                   <dd>
-                    {form.eligibleTiers.join(", ").replace("STANDARD", "THƯỜNG") || "Chưa chọn"}
+                    {form.eligibleTiers.length ? tierSummary(form.eligibleTiers) : "Chưa chọn"}
                   </dd>
                   <dt>Ngân sách</dt>
                   <dd>{Number(form.budgetCapVnd || 0).toLocaleString("vi-VN")} ₫</dd>
