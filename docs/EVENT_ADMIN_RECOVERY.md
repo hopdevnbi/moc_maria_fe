@@ -18,4 +18,11 @@ Production `/quan-tri/su-kien` failed before authentication or any event API que
 - After fix: actual Next route reaches the existing authentication gate without the event render crash.
 - Ten new regression cases cover the server entry/client-only export boundary, Suspense placement, all five deep links, invalid/repeated parameters, one-page tab changes and Back navigation.
 - Full frontend quality/build and main CI/deployment evidence are recorded in the project release tracker. Existing unrelated lint warnings are retained.
-- No backend deploy, migration, campaign setting change, voucher redemption, email or customer mutation is part of this repair. Live authenticated content requires an owner login; anonymous production checks validate the repaired server entry and existing auth gate.
+- The owner then signed in for a read-only production audit. Campaign, counter and voucher panels loaded their persisted records. This exposed a separate backend defect in both report panels: PostgreSQL rejected the implicit `day` alias with error `42601`, although mock-based unit tests had passed.
+
+## Authenticated report recovery
+
+- Quote the daily bucket alias explicitly as `AS "day"`, including `GROUP BY` and `ORDER BY`, in both gift-report and gift-operations services. Preserve the response keys and Vietnam timezone.
+- Add real PostgreSQL regression coverage for empty campaigns, issued rewards, reconciliation, Vietnam midnight, event/date filters and all-campaign aggregation, using only a disposable isolated database.
+- Release evidence and the backend image digest are recorded in the backend scoped deployment record and project tracker.
+- Production verification is read-only: no campaign setting changes, real voucher redemption, email, customer mutations or database migration. Camera availability is checked in the counter UI; camera access and an actual redemption are not exercised.
