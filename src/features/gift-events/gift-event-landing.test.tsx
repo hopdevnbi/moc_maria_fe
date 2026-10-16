@@ -47,9 +47,12 @@ vi.mock("@tanstack/react-query", () => ({
           data: {
             status: "ACTIVE",
             campaign: mocks.campaign
-              ? { ...event, eligibleTiers: mocks.allTiers
-                  ? ["STANDARD", ...Array.from({ length: 99 }, (_, i) => `VIP${i + 1}`)]
-                  : event.eligibleTiers }
+              ? {
+                  ...event,
+                  eligibleTiers: mocks.allTiers
+                    ? ["STANDARD", ...Array.from({ length: 99 }, (_, i) => `VIP${i + 1}`)]
+                    : event.eligibleTiers,
+                }
               : null,
             serverNow: "2026-10-15T04:00:00Z",
           },
