@@ -180,3 +180,42 @@
     padding: 19px;
   }
 }
+.mm-gc-scanner {
+  display: grid;
+  gap: 10px;
+}
+.mm-gc-card .mm-gc-camera-button {
+  background: #edf4ec;
+  border: 1px solid #cce1ca;
+  color: #20533a;
+}
+.mm-gc-camera-preview {
+  border-radius: 13px;
+  background: #17382a;
+  overflow: hidden;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+.mm-gc-camera-preview video {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #102d24;
+}
+.mm-gc-camera-preview small {
+  color: #e2f1de;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.5;
+}
+.mm-gc-discount {
+  width: max-content;
+  display: inline-flex;
+  color: #176443;
+  background: #e0efdf;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+}
