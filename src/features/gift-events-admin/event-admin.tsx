@@ -128,7 +128,8 @@ export function GiftEventAdmin() {
         null;
   const editorForm = selectedId === null && current ? fromEvent(current) : form;
   const editable = !current || ["DRAFT", "SCHEDULED"].includes(current.status);
-  const isDirty = JSON.stringify(editorForm) !== JSON.stringify(current ? fromEvent(current) : fresh);
+  const isDirty =
+    JSON.stringify(editorForm) !== JSON.stringify(current ? fromEvent(current) : fresh);
   const disabled = mutation.isPending || !isSuper;
   const set = (key: keyof FormValue, value: string | string[]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -496,7 +497,9 @@ export function GiftEventAdmin() {
                   <dd>{editorForm.title || "Chưa đặt tên"}</dd>
                   <dt>Hạng được tham gia</dt>
                   <dd>
-                    {editorForm.eligibleTiers.length ? tierSummary(editorForm.eligibleTiers) : "Chưa chọn"}
+                    {editorForm.eligibleTiers.length
+                      ? tierSummary(editorForm.eligibleTiers)
+                      : "Chưa chọn"}
                   </dd>
                   <dt>Ngân sách</dt>
                   <dd>{Number(editorForm.budgetCapVnd || 0).toLocaleString("vi-VN")} ₫</dd>
