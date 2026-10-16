@@ -10,12 +10,14 @@ const mocks = vi.hoisted(() => ({
   allTiers: false,
   authFetch: vi.fn(),
   refetch: vi.fn(),
+  logout: vi.fn(),
 }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
     status: mocks.authenticated ? "authenticated" : "anonymous",
     user: mocks.authenticated ? { id: "test-user", roles: ["CUSTOMER"] } : null,
     authFetch: mocks.authFetch,
+    logout: mocks.logout,
   }),
 }));
 const event = {
@@ -80,10 +82,49 @@ beforeEach(() => {
   mocks.allTiers = false;
   mocks.authFetch.mockReset();
   mocks.refetch.mockReset();
+  mocks.logout.mockReset();
 });
 afterEach(() => cleanup());
 
 describe("P09 Mộc Maria event landing", () => {
+  it("links the Event logo and footer home link to the main Mộc Maria domain", () => {
+    render(<GiftEventLanding />);
+    expect(screen.getByRole("link", { name: "Trở về trang chủ Mộc Maria" })).toHaveAttribute(
+      "href",
+      "https://mocmaria.com/",
+    );
+    expect(screen.getByRole("link", { name: /Trang chủ/ })).toHaveAttribute(
+      "href",
+      "https://mocmaria.com/",
+    );
+  });
+  it("shows event account login and registration actions to guests", () => {
+    mocks.campaign = true;
+    render(<GiftEventLanding />);
+    expect(screen.getByRole("link", { name: "Đăng nhập" })).toHaveAttribute(
+      "href",
+      "/dang-nhap?returnTo=%2Fevent",
+    );
+    expect(screen.getByRole("link", { name: "Đăng ký" })).toHaveAttribute(
+      "href",
+      "/dang-ky?returnTo=%2Fevent",
+    );
+    expect(screen.getByRole("link", { name: /Chưa có tài khoản/ })).toBeInTheDocument();
+  });
+  it("offers authenticated users wallet, account management and sign-out", async () => {
+    mocks.authenticated = true;
+    mocks.campaign = true;
+    mocks.eligible = true;
+    mocks.logout.mockResolvedValue(undefined);
+    render(<GiftEventLanding />);
+    expect(screen.getByRole("link", { name: /Tài khoản/ })).toHaveAttribute(
+      "href",
+      "/tai-khoan",
+    );
+    expect(screen.getByRole("button", { name: /Ví quà/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Đăng xuất khỏi tài khoản Mộc Maria" }));
+    await waitFor(() => expect(mocks.logout).toHaveBeenCalledTimes(1));
+  });
   it("renders public six original gift boxes while no event is published", () => {
     render(<GiftEventLanding />);
     expect(screen.getAllByRole("button", { name: /HỘP 0[1-6]/ })).toHaveLength(6);
