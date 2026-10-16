@@ -1,0 +1,35 @@
+name: Verify catalog redesign once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/catalog-verify-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.1
+          cache: npm
+      - run: npm ci
+      - name: Format new regression test
+        run: npx prettier --write src/features/marketplace/catalog-admin.test.tsx
+      - name: Run complete frontend quality gate
+        run: npm run quality
+      - name: Save format and remove temporary workflow
+        run: |
+          git rm -f .github/workflows/catalog-verify-once.yml
+          git add src/features/marketplace/catalog-admin.test.tsx
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test(admin): format and verify catalog management redesign"
+          git push origin HEAD:main
