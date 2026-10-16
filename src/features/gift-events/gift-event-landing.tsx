@@ -533,6 +533,20 @@ export function GiftEventLanding() {
               )}
             </div>
             <div className="mm-ev-play-cta">
+              {eligibleBox && !openedGift && (
+                <label className="mm-ev-agreement mm-ev-agreement-inline" htmlFor={termsId}>
+                  <input
+                    type="checkbox"
+                    id={termsId}
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                  />
+                  <span>
+                    Tôi đã đọc và đồng ý <a href="#the-le" onClick={(e) => e.stopPropagation()}>thể lệ sự kiện</a>
+                    {" "}(phiên bản {event?.termsVersion}) trước khi mở hộp.
+                  </span>
+                </label>
+              )}
               {status === "anonymous" && event?.effectiveStatus === "LIVE" ? (
                 <>
                   <Link className="mm-ev-primary" href="/dang-nhap?returnTo=%2Fevent">
@@ -561,7 +575,7 @@ export function GiftEventLanding() {
                 </button>
               )}
               {eligibleBox && !agreed && (
-                <small>Vui lòng đọc và đồng ý thể lệ bên dưới trước khi mở quà.</small>
+                <small>Hãy tích ô đồng ý thể lệ ngay phía trên để mở hộp.</small>
               )}
               {opening && (
                 <small role="status">
@@ -649,16 +663,10 @@ export function GiftEventLanding() {
               </p>
             )}
             {event && (
-              <label className="mm-ev-agreement" htmlFor={termsId}>
-                <input
-                  type="checkbox"
-                  id={termsId}
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                />
-                Tôi đã đọc và đồng ý điều lệ phiên bản {event.termsVersion}. Lượt chỉ được dùng khi
-                tôi bấm Mở hộp.
-              </label>
+              <p className="mm-ev-terms-confirmation">
+                Xác nhận đồng ý thể lệ được đặt ngay cạnh nút mở hộp. Lượt chỉ được dùng khi bạn
+                chủ động bấm Mở hộp.
+              </p>
             )}
           </div>
         </section>
