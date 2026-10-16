@@ -1,4 +1,5 @@
 name: Verify catalog redesign once
+# Re-verify updated accessibility assertions before self-removal.
 
 on:
   push:
