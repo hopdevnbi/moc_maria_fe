@@ -67,9 +67,7 @@ vi.mock("./booking-settings", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ children, ...props }: React.ComponentProps<"a">) => (
-    <a {...props}>{children}</a>
-  ),
+  default: ({ children, ...props }: React.ComponentProps<"a">) => <a {...props}>{children}</a>,
 }));
 
 afterEach(() => {
