@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { ApiError } from "@/features/auth/auth-api";
 import { GiftQrScanner } from "./gift-qr-scanner";
 import "./gift-counter.css";
 
@@ -154,10 +155,29 @@ export function GiftCounter() {
       );
       if (result.rewardId !== verified.rewardId) throw new Error("VOUCHER_CHANGED");
       setQuote(result);
-    } catch {
-      setError(
-        "Không tính được giảm giá từ catalog tại cơ sở này. Kiểm tra sản phẩm áp dụng và trạng thái voucher.",
-      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        [
+          "QR_EXPIRED",
+          "QR_REPLACED",
+          "QR_NOT_FOUND",
+          "REWARD_EXPIRED",
+          "REWARD_NOT_REDEEMABLE",
+        ].includes(error.message)
+      ) {
+        setVerified(null);
+        setKey("");
+        setError(
+          "Mã nhận quà đã hết hạn hoặc không còn hiệu lực. Nhờ khách lấy mã mới rồi kiểm tra lại quyền lợi.",
+        );
+      } else if (error instanceof ApiError && error.status === 429) {
+        setError("Bạn vừa kiểm tra nhiều lần. Vui lòng chờ một chút rồi thử lại.");
+      } else {
+        setError(
+          "Chưa tính được tiền giảm. Kiểm tra dịch vụ áp dụng, kết nối mạng và thử lại. Nếu mã đã quá 5 phút, nhờ khách lấy mã mới.",
+        );
+      }
     } finally {
       setWaiting(false);
     }
@@ -175,7 +195,7 @@ export function GiftCounter() {
           idempotencyKey: key,
           ...(verified.kind === "VOUCHER_PERCENT" && quote
             ? {
-                saleReference: saleReference.trim(),
+                ...(saleReference.trim() ? { saleReference: saleReference.trim() } : {}),
                 items: [{ variantId: chosenVariant, quantity: 1 }],
               }
             : {}),
@@ -315,8 +335,8 @@ export function GiftCounter() {
                 {verified.kind === "VOUCHER_PERCENT" && (
                   <div>
                     <p>
-                      Voucher giảm giá phải được đối chiếu với đơn bán hàng thực tế, không tự coi
-                      lịch đặt là đã thanh toán.
+                      Chọn đúng dịch vụ khách sử dụng để tính giảm giá. Chỉ xác nhận sau khi đã đối
+                      chiếu và thu tiền thực tế tại quầy.
                     </p>
                     <>
                       <label>
@@ -339,14 +359,18 @@ export function GiftCounter() {
                         <p role="alert">Không có sản phẩm phù hợp với voucher tại cơ sở này.</p>
                       )}
                       <label>
-                        Mã hóa đơn / phiếu bán hàng đã được xác nhận
+                        Mã đối soát nội bộ (không bắt buộc)
                         <input
                           value={saleReference}
                           onChange={(e) => setSaleReference(e.target.value)}
-                          placeholder="Ví dụ: POS-202611-0001"
+                          placeholder="Có thể để trống"
                           maxLength={100}
                         />
                       </label>
+                      <p>
+                        Không có mã vẫn xác nhận được. Hệ thống lưu nhân viên, cơ sở và thời điểm áp
+                        dụng voucher để đối soát.
+                      </p>
                       <button
                         type="button"
                         disabled={waiting || !chosenVariant}
@@ -368,10 +392,7 @@ export function GiftCounter() {
                   type="button"
                   disabled={
                     waiting ||
-                    (verified.kind === "VOUCHER_PERCENT" &&
-                      (!quote ||
-                        quote.discountVnd <= 0 ||
-                        !/^[\w/-]{5,100}$/.test(saleReference.trim())))
+                    (verified.kind === "VOUCHER_PERCENT" && (!quote || quote.discountVnd <= 0))
                   }
                   onClick={() => void redeem()}
                 >
