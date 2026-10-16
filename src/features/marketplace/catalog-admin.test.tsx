@@ -97,13 +97,13 @@ describe("Catalog admin studio", () => {
   it("opens only the selected category form and keeps catalog editing separate", () => {
     render(<CatalogAdmin />);
     fireEvent.click(screen.getByRole("tab", { name: /Danh mục/ }));
-    expect(screen.queryByLabelText("Đường dẫn")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Đường dẫn/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: "Chỉnh sửa" })[0]);
-    expect(screen.getByLabelText("Đường dẫn")).toHaveValue("massage-tri-lieu");
+    expect(screen.getByLabelText(/Đường dẫn/)).toHaveValue("massage-tri-lieu");
     expect(screen.getAllByRole("textbox", { name: "Tên danh mục" })).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("tab", { name: /Dịch vụ/ }));
-    expect(screen.queryByLabelText("Đường dẫn")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Đường dẫn/)).not.toBeInTheDocument();
   });
 });
