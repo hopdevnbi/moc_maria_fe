@@ -1,104 +1,395 @@
 "use client";
+
 import { useState, type FormEvent } from "react";
-import { Pencil, Plus } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowUpRight,
+  Check,
+  ChevronRight,
+  CircleDashed,
+  Eye,
+  EyeOff,
+  Layers3,
+  Pencil,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  Tags,
+  X,
+} from "lucide-react";
 import { usePrivateData, usePrivateMutation, mutationMessage } from "./private-api";
 import { EmptyState } from "./components";
 import { formatPrice } from "./format";
 import type { Category, Service, Variant } from "./types";
 import { BookingSettingsAdmin } from "./booking-settings";
+import "./catalog-admin.css";
+
+type CatalogView = "services" | "categories";
+type PublishFilter = "all" | "visible" | "draft";
 
 export function CatalogAdmin() {
   const categories = usePrivateData<Category[]>("/admin/service-categories");
   const services = usePrivateData<Service[]>("/admin/services");
-  const [selected, setSelected] = useState<Service | null>(null);
+  const [view, setView] = useState<CatalogView>("services");
+  const [query, setQuery] = useState("");
+  const [categoryId, setCategoryId] = useState("all");
+  const [publishFilter, setPublishFilter] = useState<PublishFilter>("all");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  if (categories.isPending || services.isPending) return <p role="status">Đang tải danh mục...</p>;
-  if (categories.isError || services.isError)
+  const [newCategory, setNewCategory] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+
+  if (categories.isPending || services.isPending) {
     return (
-      <EmptyState title="Chưa tải được danh mục" error>
+      <div className="mm-cat-loading" role="status">
+        <Sparkles size={23} aria-hidden="true" />
+        Đang chuẩn bị không gian quản lý dịch vụ…
+      </div>
+    );
+  }
+  if (categories.isError || services.isError) {
+    return (
+      <EmptyState title="Chưa tải được danh mục dịch vụ" error>
         <button
           className="market-button"
+          type="button"
           onClick={() => {
             void categories.refetch();
             void services.refetch();
           }}
         >
-          Thử lại
+          Thử tải lại
         </button>
       </EmptyState>
     );
+  }
+
+  const categoryList = [...categories.data].sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "vi"),
+  );
+  const categoryById = new Map(categoryList.map((category) => [category.id, category]));
+  const allServices = [...services.data].sort((a, b) => a.name.localeCompare(b.name, "vi"));
+  const isVisible = (service: Service) =>
+    service.isPublished && categoryById.get(service.categoryId)?.isPublished === true;
+  const liveCount = allServices.filter(isVisible).length;
+  const draftCount = allServices.length - liveCount;
+  const search = query.trim().toLocaleLowerCase("vi");
+  const matchingServices = allServices.filter((service) => {
+    const category = categoryById.get(service.categoryId);
+    return (
+      (!search ||
+        [service.name, service.description || "", category?.name || ""]
+          .join(" ")
+          .toLocaleLowerCase("vi")
+          .includes(search)) &&
+      (categoryId === "all" || service.categoryId === categoryId) &&
+      (publishFilter === "all" ||
+        (publishFilter === "visible" ? isVisible(service) : !isVisible(service)))
+    );
+  });
+  const selected = allServices.find((service) => service.id === selectedId) ?? null;
+  const editorOpen = creating || !!selected;
+  const resetFilters = () => {
+    setQuery("");
+    setCategoryId("all");
+    setPublishFilter("all");
+  };
+
   return (
-    <>
-      <p className="market-notice">
-        Chỉ nhập dịch vụ và giá chính thức của Mộc Maria. Dịch vụ ở trạng thái bản nháp sẽ chưa xuất
-        hiện trên website.
-      </p>
-      <div className="market-two-column">
-        <section>
-          <div className="market-toolbar">
-            <h2 className="market-subtitle">Gói chăm sóc</h2>
+    <div className="mm-cat">
+      <section className="mm-cat-hero" aria-label="Tổng quan dịch vụ">
+        <div className="mm-cat-hero-content">
+          <span className="mm-cat-eyebrow">
+            <Sparkles size={14} aria-hidden="true" /> CATALOG STUDIO · MỘC MARIA
+          </span>
+          <h2>Chăm sóc từng dịch vụ, chỉn chu từng mức giá.</h2>
+          <p>
+            Từ danh mục đến từng gói thời lượng, mọi thay đổi được quản lý tại một nơi.
+          </p>
+          <div className="mm-cat-hero-actions">
             <button
-              className="market-button"
+              type="button"
+              className="mm-cat-action-primary"
+              disabled={!categoryList.length}
               onClick={() => {
+                setView("services");
                 setCreating(true);
-                setSelected(null);
+                setSelectedId(null);
               }}
-              disabled={!categories.data.length}
             >
-              <Plus size={17} />
-              Thêm dịch vụ
+              <Plus size={18} aria-hidden="true" /> Thêm dịch vụ
+            </button>
+            <Link href="/dich-vu" target="_blank" rel="noopener noreferrer" className="mm-cat-action-ghost">
+              Xem trang khách hàng <ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+        <div className="mm-cat-hero-decoration" aria-hidden="true">
+          <span className="mm-cat-deco-small">MỘC</span>
+          <Sparkles size={58} strokeWidth={1.1} />
+          <span>WELLNESS · CARE</span>
+        </div>
+      </section>
+
+      <div className="mm-cat-summary" aria-label="Thống kê danh mục">
+        <div className="mm-cat-stat">
+          <span className="mm-cat-stat-icon"><Layers3 size={19} /></span>
+          <div><strong>{allServices.length}</strong><span>Tổng dịch vụ</span></div>
+        </div>
+        <div className="mm-cat-stat">
+          <span className="mm-cat-stat-icon mm-cat-stat-icon-live"><Eye size={19} /></span>
+          <div><strong>{liveCount}</strong><span>Đang hiển thị</span></div>
+        </div>
+        <div className="mm-cat-stat">
+          <span className="mm-cat-stat-icon mm-cat-stat-icon-draft"><CircleDashed size={19} /></span>
+          <div><strong>{draftCount}</strong><span>Chưa hiển thị</span></div>
+        </div>
+        <div className="mm-cat-stat">
+          <span className="mm-cat-stat-icon"><Tags size={19} /></span>
+          <div><strong>{categoryList.length}</strong><span>Danh mục</span></div>
+        </div>
+      </div>
+
+      <div className="mm-cat-section-tabs" role="tablist" aria-label="Nội dung quản lý">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === "services"}
+          className={view === "services" ? "is-active" : ""}
+          onClick={() => setView("services")}
+        >
+          <Layers3 size={18} /> Dịch vụ <span>{allServices.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === "categories"}
+          className={view === "categories" ? "is-active" : ""}
+          onClick={() => setView("categories")}
+        >
+          <Tags size={18} /> Danh mục <span>{categoryList.length}</span>
+        </button>
+      </div>
+
+      {view === "services" ? (
+        <section className="mm-cat-workspace" aria-label="Quản lý dịch vụ">
+          <div className="mm-cat-main-list">
+            <div className="mm-cat-section-heading">
+              <div>
+                <h2>Danh sách dịch vụ</h2>
+                <p>Tìm nhanh, chọn dịch vụ để sửa thông tin và bảng giá.</p>
+              </div>
+            </div>
+            <div className="mm-cat-filters">
+              <label className="mm-cat-search">
+                <Search size={18} aria-hidden="true" />
+                <span className="sr-only">Tìm dịch vụ</span>
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  type="search"
+                  placeholder="Tìm dịch vụ, mô tả, danh mục…"
+                />
+              </label>
+              <label className="mm-cat-filter-select">
+                <span className="sr-only">Lọc danh mục</span>
+                <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+                  <option value="all">Tất cả danh mục</option>
+                  {categoryList.map((category) => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="mm-cat-filter-select">
+                <span className="sr-only">Lọc trạng thái</span>
+                <select
+                  value={publishFilter}
+                  onChange={(event) => setPublishFilter(event.target.value as PublishFilter)}
+                >
+                  <option value="all">Mọi trạng thái</option>
+                  <option value="visible">Đang hiển thị</option>
+                  <option value="draft">Chưa hiển thị</option>
+                </select>
+              </label>
+            </div>
+            <div className="mm-cat-results">
+              <span><SlidersHorizontal size={15} /> {matchingServices.length} / {allServices.length} dịch vụ</span>
+              {(query || categoryId !== "all" || publishFilter !== "all") && (
+                <button type="button" onClick={resetFilters}>Xóa bộ lọc <X size={14} /></button>
+              )}
+            </div>
+            {matchingServices.length ? (
+              <div className="mm-cat-service-list">
+                {matchingServices.map((service, index) => {
+                  const category = categoryById.get(service.categoryId);
+                  const visible = isVisible(service);
+                  const active = selectedId === service.id && !creating;
+                  return (
+                    <article key={service.id} className={"mm-cat-service-item" + (active ? " is-selected" : "")}>
+                      <button
+                        type="button"
+                        className="mm-cat-service-trigger"
+                        aria-pressed={active}
+                        onClick={() => {
+                          setSelectedId(service.id);
+                          setCreating(false);
+                        }}
+                      >
+                        <span className="mm-cat-service-number">{String(index + 1).padStart(2, "0")}</span>
+                        <span className="mm-cat-service-content">
+                          <span className="mm-cat-service-name">{service.name}</span>
+                          <span className="mm-cat-service-category">{category?.name || "Chưa phân loại"}</span>
+                          {service.description && (
+                            <span className="mm-cat-service-description">{service.description}</span>
+                          )}
+                        </span>
+                        <span className="mm-cat-service-end">
+                          <span className={"mm-cat-status " + (visible ? "is-live" : "is-draft")}>
+                            {visible ? <Eye size={13} /> : <EyeOff size={13} />}
+                            {visible ? "Hiển thị" : service.isPublished ? "Danh mục ẩn" : "Bản nháp"}
+                          </span>
+                          <span className="mm-cat-service-edit">
+                            {active ? "Đang chỉnh sửa" : "Sửa & bảng giá"}
+                            <ChevronRight size={16} aria-hidden="true" />
+                          </span>
+                        </span>
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mm-cat-empty">
+                <Search size={27} aria-hidden="true" />
+                <h3>Không tìm thấy dịch vụ phù hợp</h3>
+                <p>Thử tìm một tên khác hoặc xóa bộ lọc để xem lại toàn bộ dịch vụ.</p>
+                <button type="button" className="market-button market-button-secondary" onClick={resetFilters}>
+                  Xem tất cả dịch vụ
+                </button>
+              </div>
+            )}
+          </div>
+
+          <aside className={"mm-cat-side-panel" + (editorOpen ? " is-editing" : "")} aria-label="Chi tiết dịch vụ">
+            {editorOpen ? (
+              <ServiceEditor
+                key={selected?.id || "new"}
+                service={selected}
+                categories={categoryList}
+                onClose={() => {
+                  setSelectedId(null);
+                  setCreating(false);
+                }}
+              />
+            ) : (
+              <div className="mm-cat-guidance">
+                <div className="mm-cat-guidance-symbol"><Pencil size={27} strokeWidth={1.5} /></div>
+                <span className="mm-cat-mini-label">QUẢN LÝ NHẸ NHÀNG HƠN</span>
+                <h3>Mọi thứ bắt đầu từ một dịch vụ.</h3>
+                <p>Chọn một dịch vụ bên trái để cập nhật tên, trạng thái và quản lý từng gói thời lượng.</p>
+                <div className="mm-cat-guidance-steps">
+                  <div><span>01</span> Chọn dịch vụ cần chỉnh sửa</div>
+                  <div><span>02</span> Cập nhật thông tin, gói & giá</div>
+                  <div><span>03</span> Lưu để đồng bộ lên hệ thống</div>
+                </div>
+                <div className="mm-cat-guidance-note">
+                  <Check size={16} />
+                  Dịch vụ chỉ xuất hiện với khách khi cả dịch vụ và danh mục đều được công bố.
+                </div>
+              </div>
+            )}
+          </aside>
+        </section>
+      ) : (
+        <section className="mm-cat-categories" aria-label="Quản lý danh mục">
+          <div className="mm-cat-category-heading">
+            <div>
+              <h2>Nhóm dịch vụ khoa học hơn</h2>
+              <p>Chỉ mở biểu mẫu khi cần chỉnh sửa. Các nhóm giúp khách tìm đúng trải nghiệm chăm sóc.</p>
+            </div>
+            <button
+              type="button"
+              className="mm-cat-action-primary"
+              onClick={() => {
+                setNewCategory((current) => !current);
+                setEditingCategory(null);
+              }}
+            >
+              {newCategory ? <X size={18} /> : <Plus size={18} />}
+              {newCategory ? "Đóng biểu mẫu" : "Thêm danh mục"}
             </button>
           </div>
-          {creating || selected ? (
-            <ServiceEditor
-              key={selected?.id || "new"}
-              service={selected}
-              categories={categories.data}
-              onClose={() => {
-                setSelected(null);
-                setCreating(false);
-              }}
-            />
-          ) : null}
-          {services.data.length ? (
-            services.data.map((service) => (
-              <article className="market-panel mb-6" key={service.id}>
-                <span className="market-badge">
-                  {service.isPublished ? "Đã công bố" : "Bản nháp"}
-                </span>
-                <h2 className="mt-4!">{service.name}</h2>
-                <p>{service.description || "Chưa có mô tả"}</p>
-                <button
-                  className="market-button market-button-secondary"
-                  onClick={() => {
-                    setSelected(service);
-                    setCreating(false);
-                  }}
-                >
-                  <Pencil size={16} />
-                  Chỉnh sửa & quản lý gói
-                </button>
-              </article>
-            ))
+          {newCategory && (
+            <div className="mm-cat-category-form">
+              <CategoryEditor onClose={() => setNewCategory(false)} />
+            </div>
+          )}
+          {categoryList.length ? (
+            <div className="mm-cat-category-list">
+              {categoryList.map((category) => {
+                const count = allServices.filter((service) => service.categoryId === category.id).length;
+                const editing = editingCategory === category.id;
+                return (
+                  <article key={category.id} className={"mm-cat-category-card" + (editing ? " is-editing" : "")}>
+                    <div className="mm-cat-category-card-top">
+                      <span className="mm-cat-category-icon"><Tags size={20} /></span>
+                      <div className="mm-cat-category-info">
+                        <h3>{category.name}</h3>
+                        <span>{count} dịch vụ · Thứ tự {category.sortOrder}</span>
+                      </div>
+                      <span className={"mm-cat-status " + (category.isPublished ? "is-live" : "is-draft")}>
+                        {category.isPublished ? "Đã công bố" : "Bản nháp"}
+                      </span>
+                      <button
+                        type="button"
+                        className="mm-cat-category-edit"
+                        aria-expanded={editing}
+                        onClick={() => {
+                          setEditingCategory(editing ? null : category.id);
+                          setNewCategory(false);
+                        }}
+                      >
+                        {editing ? <X size={17} /> : <Pencil size={17} />}
+                        {editing ? "Đóng" : "Chỉnh sửa"}
+                      </button>
+                    </div>
+                    {category.description && !editing && (
+                      <p className="mm-cat-category-description">{category.description}</p>
+                    )}
+                    {editing && (
+                      <div className="mm-cat-category-form">
+                        <CategoryEditor
+                          key={category.id + category.updatedAt}
+                          category={category}
+                          onClose={() => setEditingCategory(null)}
+                        />
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
           ) : (
-            <EmptyState title="Chưa có dịch vụ">
-              <p>Tạo danh mục, sau đó thêm dịch vụ và các gói thời lượng với giá chính thức.</p>
-            </EmptyState>
+            <div className="mm-cat-empty">
+              <Tags size={27} aria-hidden="true" />
+              <h3>Chưa có danh mục nào</h3>
+              <p>Hãy tạo danh mục đầu tiên để bắt đầu sắp xếp dịch vụ.</p>
+            </div>
           )}
         </section>
-        <section>
-          <h2 className="market-subtitle">Danh mục dịch vụ</h2>
-          <CategoryEditor />
-          {categories.data.map((category) => (
-            <CategoryEditor key={category.id + category.updatedAt} category={category} />
-          ))}
-        </section>
-      </div>
-    </>
+      )}
+    </div>
   );
 }
 
-function CategoryEditor({ category }: { category?: Category }) {
+function CategoryEditor({
+  category,
+  onClose,
+}: {
+  category?: Category;
+  onClose?: () => void;
+}) {
   const mutation = usePrivateMutation();
   const [notice, setNotice] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -119,14 +410,17 @@ function CategoryEditor({ category }: { category?: Category }) {
         body,
       });
       setNotice("Đã lưu danh mục.");
-      if (!category) form.reset();
+      if (!category) {
+        form.reset();
+        onClose?.();
+      }
     } catch (error) {
       setNotice(mutationMessage(error));
     }
   }
   return (
-    <article className="market-panel mb-6">
-      <h2>{category ? category.name : "Thêm danh mục"}</h2>
+    <article className="mm-cat-editor-form">
+      <div className="mm-cat-form-heading"><h3>{category ? "Cập nhật danh mục" : "Thêm danh mục mới"}</h3></div>
       <form className="market-form" onSubmit={submit}>
         <label>
           Tên danh mục
@@ -214,10 +508,10 @@ function ServiceEditor({
     }
   }
   return (
-    <article className="market-panel mb-6">
-      <div className="market-toolbar">
-        <h2>{service ? "Chỉnh sửa dịch vụ" : "Dịch vụ mới"}</h2>
-        <button className="market-button market-button-secondary" onClick={onClose}>
+    <article className="mm-cat-editor-form">
+      <div className="market-toolbar mm-cat-edit-header">
+        <div><span className="mm-cat-mini-label">CHI TIẾT & BẢNG GIÁ</span><h2>{service ? service.name : "Tạo dịch vụ mới"}</h2></div>
+        <button type="button" className="mm-cat-close-editor" onClick={onClose} aria-label="Đóng trình chỉnh sửa"><X size={18} /></button>
           Đóng
         </button>
       </div>
@@ -321,7 +615,7 @@ function VariantEditor({ serviceId, variant }: { serviceId: string; variant?: Va
     }
   }
   return (
-    <details className="market-admin-details" open={!variant}>
+    <details className="market-admin-details">
       <summary>
         {variant
           ? variant.name +
