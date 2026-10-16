@@ -104,7 +104,9 @@
   padding: 11px 17px;
   font-size: 13px;
   font-weight: 750;
-  transition: transform 140ms ease, background 140ms ease;
+  transition:
+    transform 140ms ease,
+    background 140ms ease;
 }
 
 .mm-cat-action-primary {
@@ -394,7 +396,9 @@
   border: 1px solid #e4eae1;
   border-radius: 13px;
   background: #fff;
-  transition: border-color 140ms ease, box-shadow 140ms ease;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .mm-cat-service-item:hover,

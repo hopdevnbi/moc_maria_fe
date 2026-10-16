@@ -104,9 +104,7 @@ export function CatalogAdmin() {
             <Sparkles size={14} aria-hidden="true" /> CATALOG STUDIO · MỘC MARIA
           </span>
           <h2>Chăm sóc từng dịch vụ, chỉn chu từng mức giá.</h2>
-          <p>
-            Từ danh mục đến từng gói thời lượng, mọi thay đổi được quản lý tại một nơi.
-          </p>
+          <p>Từ danh mục đến từng gói thời lượng, mọi thay đổi được quản lý tại một nơi.</p>
           <div className="mm-cat-hero-actions">
             <button
               type="button"
@@ -120,7 +118,12 @@ export function CatalogAdmin() {
             >
               <Plus size={18} aria-hidden="true" /> Thêm dịch vụ
             </button>
-            <Link href="/dich-vu" target="_blank" rel="noopener noreferrer" className="mm-cat-action-ghost">
+            <Link
+              href="/dich-vu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mm-cat-action-ghost"
+            >
               Xem trang khách hàng <ArrowUpRight size={16} aria-hidden="true" />
             </Link>
           </div>
@@ -134,20 +137,40 @@ export function CatalogAdmin() {
 
       <div className="mm-cat-summary" aria-label="Thống kê danh mục">
         <div className="mm-cat-stat">
-          <span className="mm-cat-stat-icon"><Layers3 size={19} /></span>
-          <div><strong>{allServices.length}</strong><span>Tổng dịch vụ</span></div>
+          <span className="mm-cat-stat-icon">
+            <Layers3 size={19} />
+          </span>
+          <div>
+            <strong>{allServices.length}</strong>
+            <span>Tổng dịch vụ</span>
+          </div>
         </div>
         <div className="mm-cat-stat">
-          <span className="mm-cat-stat-icon mm-cat-stat-icon-live"><Eye size={19} /></span>
-          <div><strong>{liveCount}</strong><span>Đang hiển thị</span></div>
+          <span className="mm-cat-stat-icon mm-cat-stat-icon-live">
+            <Eye size={19} />
+          </span>
+          <div>
+            <strong>{liveCount}</strong>
+            <span>Đang hiển thị</span>
+          </div>
         </div>
         <div className="mm-cat-stat">
-          <span className="mm-cat-stat-icon mm-cat-stat-icon-draft"><CircleDashed size={19} /></span>
-          <div><strong>{draftCount}</strong><span>Chưa hiển thị</span></div>
+          <span className="mm-cat-stat-icon mm-cat-stat-icon-draft">
+            <CircleDashed size={19} />
+          </span>
+          <div>
+            <strong>{draftCount}</strong>
+            <span>Chưa hiển thị</span>
+          </div>
         </div>
         <div className="mm-cat-stat">
-          <span className="mm-cat-stat-icon"><Tags size={19} /></span>
-          <div><strong>{categoryList.length}</strong><span>Danh mục</span></div>
+          <span className="mm-cat-stat-icon">
+            <Tags size={19} />
+          </span>
+          <div>
+            <strong>{categoryList.length}</strong>
+            <span>Danh mục</span>
+          </div>
         </div>
       </div>
 
@@ -197,7 +220,9 @@ export function CatalogAdmin() {
                 <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
                   <option value="all">Tất cả danh mục</option>
                   {categoryList.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -214,9 +239,14 @@ export function CatalogAdmin() {
               </label>
             </div>
             <div className="mm-cat-results">
-              <span><SlidersHorizontal size={15} /> {matchingServices.length} / {allServices.length} dịch vụ</span>
+              <span>
+                <SlidersHorizontal size={15} /> {matchingServices.length} / {allServices.length}{" "}
+                dịch vụ
+              </span>
               {(query || categoryId !== "all" || publishFilter !== "all") && (
-                <button type="button" onClick={resetFilters}>Xóa bộ lọc <X size={14} /></button>
+                <button type="button" onClick={resetFilters}>
+                  Xóa bộ lọc <X size={14} />
+                </button>
               )}
             </div>
             {matchingServices.length ? (
@@ -226,7 +256,10 @@ export function CatalogAdmin() {
                   const visible = isVisible(service);
                   const active = selectedId === service.id && !creating;
                   return (
-                    <article key={service.id} className={"mm-cat-service-item" + (active ? " is-selected" : "")}>
+                    <article
+                      key={service.id}
+                      className={"mm-cat-service-item" + (active ? " is-selected" : "")}
+                    >
                       <button
                         type="button"
                         className="mm-cat-service-trigger"
@@ -236,18 +269,28 @@ export function CatalogAdmin() {
                           setCreating(false);
                         }}
                       >
-                        <span className="mm-cat-service-number">{String(index + 1).padStart(2, "0")}</span>
+                        <span className="mm-cat-service-number">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
                         <span className="mm-cat-service-content">
                           <span className="mm-cat-service-name">{service.name}</span>
-                          <span className="mm-cat-service-category">{category?.name || "Chưa phân loại"}</span>
+                          <span className="mm-cat-service-category">
+                            {category?.name || "Chưa phân loại"}
+                          </span>
                           {service.description && (
-                            <span className="mm-cat-service-description">{service.description}</span>
+                            <span className="mm-cat-service-description">
+                              {service.description}
+                            </span>
                           )}
                         </span>
                         <span className="mm-cat-service-end">
                           <span className={"mm-cat-status " + (visible ? "is-live" : "is-draft")}>
                             {visible ? <Eye size={13} /> : <EyeOff size={13} />}
-                            {visible ? "Hiển thị" : service.isPublished ? "Danh mục ẩn" : "Bản nháp"}
+                            {visible
+                              ? "Hiển thị"
+                              : service.isPublished
+                                ? "Danh mục ẩn"
+                                : "Bản nháp"}
                           </span>
                           <span className="mm-cat-service-edit">
                             {active ? "Đang chỉnh sửa" : "Sửa & bảng giá"}
@@ -264,14 +307,21 @@ export function CatalogAdmin() {
                 <Search size={27} aria-hidden="true" />
                 <h3>Không tìm thấy dịch vụ phù hợp</h3>
                 <p>Thử tìm một tên khác hoặc xóa bộ lọc để xem lại toàn bộ dịch vụ.</p>
-                <button type="button" className="market-button market-button-secondary" onClick={resetFilters}>
+                <button
+                  type="button"
+                  className="market-button market-button-secondary"
+                  onClick={resetFilters}
+                >
                   Xem tất cả dịch vụ
                 </button>
               </div>
             )}
           </div>
 
-          <aside className={"mm-cat-side-panel" + (editorOpen ? " is-editing" : "")} aria-label="Chi tiết dịch vụ">
+          <aside
+            className={"mm-cat-side-panel" + (editorOpen ? " is-editing" : "")}
+            aria-label="Chi tiết dịch vụ"
+          >
             {editorOpen ? (
               <ServiceEditor
                 key={selected?.id || "new"}
@@ -284,14 +334,25 @@ export function CatalogAdmin() {
               />
             ) : (
               <div className="mm-cat-guidance">
-                <div className="mm-cat-guidance-symbol"><Pencil size={27} strokeWidth={1.5} /></div>
+                <div className="mm-cat-guidance-symbol">
+                  <Pencil size={27} strokeWidth={1.5} />
+                </div>
                 <span className="mm-cat-mini-label">QUẢN LÝ NHẸ NHÀNG HƠN</span>
                 <h3>Mọi thứ bắt đầu từ một dịch vụ.</h3>
-                <p>Chọn một dịch vụ bên trái để cập nhật tên, trạng thái và quản lý từng gói thời lượng.</p>
+                <p>
+                  Chọn một dịch vụ bên trái để cập nhật tên, trạng thái và quản lý từng gói thời
+                  lượng.
+                </p>
                 <div className="mm-cat-guidance-steps">
-                  <div><span>01</span> Chọn dịch vụ cần chỉnh sửa</div>
-                  <div><span>02</span> Cập nhật thông tin, gói & giá</div>
-                  <div><span>03</span> Lưu để đồng bộ lên hệ thống</div>
+                  <div>
+                    <span>01</span> Chọn dịch vụ cần chỉnh sửa
+                  </div>
+                  <div>
+                    <span>02</span> Cập nhật thông tin, gói & giá
+                  </div>
+                  <div>
+                    <span>03</span> Lưu để đồng bộ lên hệ thống
+                  </div>
                 </div>
                 <div className="mm-cat-guidance-note">
                   <Check size={16} />
@@ -306,7 +367,10 @@ export function CatalogAdmin() {
           <div className="mm-cat-category-heading">
             <div>
               <h2>Nhóm dịch vụ khoa học hơn</h2>
-              <p>Chỉ mở biểu mẫu khi cần chỉnh sửa. Các nhóm giúp khách tìm đúng trải nghiệm chăm sóc.</p>
+              <p>
+                Chỉ mở biểu mẫu khi cần chỉnh sửa. Các nhóm giúp khách tìm đúng trải nghiệm chăm
+                sóc.
+              </p>
             </div>
             <button
               type="button"
@@ -328,17 +392,30 @@ export function CatalogAdmin() {
           {categoryList.length ? (
             <div className="mm-cat-category-list">
               {categoryList.map((category) => {
-                const count = allServices.filter((service) => service.categoryId === category.id).length;
+                const count = allServices.filter(
+                  (service) => service.categoryId === category.id,
+                ).length;
                 const editing = editingCategory === category.id;
                 return (
-                  <article key={category.id} className={"mm-cat-category-card" + (editing ? " is-editing" : "")}>
+                  <article
+                    key={category.id}
+                    className={"mm-cat-category-card" + (editing ? " is-editing" : "")}
+                  >
                     <div className="mm-cat-category-card-top">
-                      <span className="mm-cat-category-icon"><Tags size={20} /></span>
+                      <span className="mm-cat-category-icon">
+                        <Tags size={20} />
+                      </span>
                       <div className="mm-cat-category-info">
                         <h3>{category.name}</h3>
-                        <span>{count} dịch vụ · Thứ tự {category.sortOrder}</span>
+                        <span>
+                          {count} dịch vụ · Thứ tự {category.sortOrder}
+                        </span>
                       </div>
-                      <span className={"mm-cat-status " + (category.isPublished ? "is-live" : "is-draft")}>
+                      <span
+                        className={
+                          "mm-cat-status " + (category.isPublished ? "is-live" : "is-draft")
+                        }
+                      >
                         {category.isPublished ? "Đã công bố" : "Bản nháp"}
                       </span>
                       <button
@@ -383,13 +460,7 @@ export function CatalogAdmin() {
   );
 }
 
-function CategoryEditor({
-  category,
-  onClose,
-}: {
-  category?: Category;
-  onClose?: () => void;
-}) {
+function CategoryEditor({ category, onClose }: { category?: Category; onClose?: () => void }) {
   const mutation = usePrivateMutation();
   const [notice, setNotice] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -420,7 +491,9 @@ function CategoryEditor({
   }
   return (
     <article className="mm-cat-editor-form">
-      <div className="mm-cat-form-heading"><h3>{category ? "Cập nhật danh mục" : "Thêm danh mục mới"}</h3></div>
+      <div className="mm-cat-form-heading">
+        <h3>{category ? "Cập nhật danh mục" : "Thêm danh mục mới"}</h3>
+      </div>
       <form className="market-form" onSubmit={submit}>
         <label>
           Tên danh mục
