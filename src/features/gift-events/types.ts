@@ -18,6 +18,7 @@ export type EventCampaign = {
   budgetReservedVnd: number;
   guaranteePrize: true;
   maxOpensPerUser: 1;
+  requiresCompletedService: boolean;
   version: number;
 };
 export type CurrentEvent = {
@@ -133,6 +134,12 @@ export function eligibilityCopy(
       tone: "success",
       heading: "Một món quà đã được dành cho bạn",
       detail: "Mỗi tài khoản chỉ có một lượt cho mỗi sự kiện. Hãy xem lại món quà trong ví.",
+    };
+  if (me.reason === "SERVICE_NOT_COMPLETED")
+    return {
+      tone: "warning",
+      heading: "Sự kiện này dành cho khách đã trải nghiệm dịch vụ",
+      detail: "Theo cấu hình của sự kiện, cần có ít nhất một buổi chăm sóc đã hoàn thành.",
     };
   if (me.reason === "INELIGIBLE_TIER")
     return {
