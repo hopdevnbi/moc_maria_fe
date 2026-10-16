@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { GiftQrScanner } from "./gift-qr-scanner";
 import "./gift-counter.css";
 
 type Branch = { id: string; name: string };
@@ -19,6 +20,8 @@ type Verified = {
   eventId: string;
   name: string;
   kind: string;
+  allowedServiceIds: string[];
+  discountPercent: number | null;
   expiresAt: string;
   branchId: string;
   status: "ISSUED";
@@ -63,8 +66,20 @@ export function GiftCounter() {
   const [variantId, setVariantId] = useState("");
   const [saleReference, setSaleReference] = useState("");
   const [quote, setQuote] = useState<Quote | null>(null);
+  const eligibleVariants =
+    catalog.data
+      ?.filter(
+        (entry) =>
+          verified?.kind !== "VOUCHER_PERCENT" ||
+          (verified.allowedServiceIds ?? []).includes(entry.service.id),
+      )
+      .flatMap((entry) =>
+        entry.variants.map((variant) => ({ ...variant, serviceName: entry.service.name })),
+      ) ?? [];
   const chosenVariant =
-    variantId || catalog.data?.flatMap((entry) => entry.variants).find((v) => !!v.id)?.id || "";
+    (variantId && eligibleVariants.some((item) => item.id === variantId) ? variantId : "") ||
+    eligibleVariants[0]?.id ||
+    "";
   const request = async <T,>(path: string, body: object): Promise<T> =>
     authFetch<T>(path, {
       method: "POST",
@@ -79,6 +94,7 @@ export function GiftCounter() {
     setError("");
     setKey("");
     setQuote(null);
+    setSaleReference("");
   }
   function changeBranch(value: string) {
     setBranchId(value);
@@ -89,23 +105,23 @@ export function GiftCounter() {
     setQuote(null);
     setVariantId("");
   }
-  async function verify(e: FormEvent) {
-    e.preventDefault();
-    if (waiting || !selectedBranch || !token) return;
+  async function verifyCredential(value: string, mode: "CODE" | "QR") {
+    if (waiting || !selectedBranch || !value) return;
     setWaiting(true);
     setError("");
     setVerified(null);
     setConfirmed(null);
     try {
       const result = await request<Verified>(
-        `/staff/gift-redemptions/${inputMode === "CODE" ? "verify-code" : "verify"}`,
+        `/staff/gift-redemptions/${mode === "CODE" ? "verify-code" : "verify"}`,
         {
-          ...(inputMode === "CODE" ? { code: token } : { token }),
+          ...(mode === "CODE" ? { code: value } : { token: value }),
           branchId: selectedBranch,
         },
       );
       setVerified(result);
       setQuote(null);
+      setVariantId("");
       setKey(crypto.randomUUID() + "-redeem");
     } catch {
       setError("Mã không hợp lệ, đã hết hạn, đã đổi hoặc nhân viên chưa có quyền tại cơ sở này.");
@@ -113,17 +129,29 @@ export function GiftCounter() {
       setWaiting(false);
     }
   }
+  async function verify(e: FormEvent) {
+    e.preventDefault();
+    await verifyCredential(token, inputMode);
+  }
+  function scannedQr(value: string) {
+    changeToken(value);
+    setInputMode("QR");
+    void verifyCredential(value, "QR");
+  }
   async function calculate() {
-    if (!verified || inputMode !== "CODE" || !chosenVariant || waiting) return;
+    if (!verified || !chosenVariant || waiting) return;
     setWaiting(true);
     setError("");
     setQuote(null);
     try {
-      const result = await request<Quote>("/staff/gift-redemptions/quote-code", {
-        code: token,
+      const result = await request<Quote>(
+        `/staff/gift-redemptions/${inputMode === "CODE" ? "quote-code" : "quote-qr"}`,
+        {
+        ...(inputMode === "CODE" ? { code: token } : { token }),
         branchId: selectedBranch,
         items: [{ variantId: chosenVariant, quantity: 1 }],
-      });
+        },
+      );
       if (result.rewardId !== verified.rewardId) throw new Error("VOUCHER_CHANGED");
       setQuote(result);
     } catch {
@@ -145,7 +173,7 @@ export function GiftCounter() {
           ...(inputMode === "CODE" ? { code: token } : { token }),
           branchId: selectedBranch,
           idempotencyKey: key,
-          ...(verified.kind === "VOUCHER_PERCENT" && inputMode === "CODE" && quote
+          ...(verified.kind === "VOUCHER_PERCENT" && quote
             ? {
                 saleReference: saleReference.trim(),
                 items: [{ variantId: chosenVariant, quantity: 1 }],
@@ -233,6 +261,9 @@ export function GiftCounter() {
                 placeholder={inputMode === "CODE" ? "Ví dụ: 482916" : "Quét QR để nhập mã nhận quà"}
               />
             </label>
+            {inputMode === "QR" && (
+              <GiftQrScanner onRead={scannedQr} disabled={waiting || !selectedBranch} />
+            )}
             <p>
               Mã 6 số và mã QR chỉ có hiệu lực tối đa 5 phút. Luôn xác minh online trước khi xác
               nhận.
@@ -269,6 +300,9 @@ export function GiftCounter() {
               <div className="mm-gc-result">
                 <span>PHIẾU CÒN HIỆU LỰC</span>
                 <h3>{verified.name}</h3>
+                {verified.kind === "VOUCHER_PERCENT" && !!verified.discountPercent && (
+                  <strong className="mm-gc-discount">Giảm {verified.discountPercent}% khi thanh toán</strong>
+                )}
                 <p>
                   Hạn cuối:{" "}
                   {new Date(verified.expiresAt).toLocaleString("vi-VN", {
@@ -282,12 +316,7 @@ export function GiftCounter() {
                       Voucher giảm giá phải được đối chiếu với đơn bán hàng thực tế, không tự coi
                       lịch đặt là đã thanh toán.
                     </p>
-                    {inputMode === "QR" ? (
-                      <p role="alert">
-                        Vui lòng yêu cầu khách lấy mã 6 số để áp dụng giảm giá tại quầy.
-                      </p>
-                    ) : (
-                      <>
+                    <>
                         <label>
                           Sản phẩm hoặc gói dịch vụ đã bán
                           <select
@@ -297,20 +326,16 @@ export function GiftCounter() {
                               setQuote(null);
                             }}
                           >
-                            {catalog.data
-                              ?.flatMap((entry) =>
-                                entry.variants.map((variant) => ({
-                                  ...variant,
-                                  serviceName: entry.service.name,
-                                })),
-                              )
-                              .map((variant) => (
+                            {eligibleVariants.map((variant) => (
                                 <option key={variant.id} value={variant.id}>
                                   {variant.serviceName} - {variant.name}
                                 </option>
                               ))}
                           </select>
                         </label>
+                        {!eligibleVariants.length && (
+                          <p role="alert">Không có sản phẩm phù hợp với voucher tại cơ sở này.</p>
+                        )}
                         <label>
                           Mã hóa đơn / phiếu bán hàng đã được xác nhận
                           <input
@@ -334,8 +359,7 @@ export function GiftCounter() {
                             {quote.payableVnd.toLocaleString("vi-VN")}đ
                           </p>
                         )}
-                      </>
-                    )}
+                    </>
                   </div>
                 )}
                 <button
@@ -343,15 +367,14 @@ export function GiftCounter() {
                   disabled={
                     waiting ||
                     (verified.kind === "VOUCHER_PERCENT" &&
-                      (inputMode !== "CODE" ||
-                        !quote ||
+                      (!quote ||
                         quote.discountVnd <= 0 ||
                         !/^[\w/-]{5,100}$/.test(saleReference.trim())))
                   }
                   onClick={() => void redeem()}
                 >
                   <CheckCircle2 size={17} />
-                  {waiting ? "Đang xác nhận…" : "Xác nhận đã giao quà"}
+                  {waiting ? "Đang xác nhận…" : verified.kind === "VOUCHER_PERCENT" ? "Xác nhận áp dụng voucher" : "Xác nhận đã giao quà"}
                 </button>
               </div>
             )}
