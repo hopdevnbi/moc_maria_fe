@@ -1,0 +1,32 @@
+name: Format catalog page once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/catalog-format-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.1
+          cache: npm
+      - run: npm ci
+      - name: Format catalog files and remove temporary workflow
+        run: |
+          npx prettier --write src/features/marketplace/catalog-admin.tsx src/features/marketplace/catalog-admin.css
+          git rm -f .github/workflows/catalog-format-once.yml
+          git add src/features/marketplace/catalog-admin.tsx src/features/marketplace/catalog-admin.css
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "style(admin): format catalog studio and remove one-time formatter"
+          git push origin HEAD:main
