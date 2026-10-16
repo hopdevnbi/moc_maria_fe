@@ -42,6 +42,8 @@ describe("P05 event admin eligibility", () => {
     expect(screen.getByRole("button", { name: /VIP2/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /VIP1 ×/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /VIP3 ×/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /Yêu cầu đã từng sử dụng dịch vụ/ })).not.toBeChecked();
+    expect(
+      screen.getByRole("checkbox", { name: /Yêu cầu đã từng sử dụng dịch vụ/ }),
+    ).not.toBeChecked();
   });
 });

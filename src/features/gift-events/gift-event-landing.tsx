@@ -542,8 +542,11 @@ export function GiftEventLanding() {
                     onChange={(e) => setAgreed(e.target.checked)}
                   />
                   <span>
-                    Tôi đã đọc và đồng ý <a href="#the-le" onClick={(e) => e.stopPropagation()}>thể lệ sự kiện</a>
-                    {" "}(phiên bản {event?.termsVersion}) trước khi mở hộp.
+                    Tôi đã đọc và đồng ý{" "}
+                    <a href="#the-le" onClick={(e) => e.stopPropagation()}>
+                      thể lệ sự kiện
+                    </a>{" "}
+                    (phiên bản {event?.termsVersion}) trước khi mở hộp.
                   </span>
                 </label>
               )}
@@ -664,8 +667,8 @@ export function GiftEventLanding() {
             )}
             {event && (
               <p className="mm-ev-terms-confirmation">
-                Xác nhận đồng ý thể lệ được đặt ngay cạnh nút mở hộp. Lượt chỉ được dùng khi bạn
-                chủ động bấm Mở hộp.
+                Xác nhận đồng ý thể lệ được đặt ngay cạnh nút mở hộp. Lượt chỉ được dùng khi bạn chủ
+                động bấm Mở hộp.
               </p>
             )}
           </div>

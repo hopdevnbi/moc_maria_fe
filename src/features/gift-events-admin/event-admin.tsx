@@ -225,7 +225,11 @@ export function GiftEventAdmin() {
       const res = await mutation.mutateAsync({
         path: `/admin/gift-events/${current.id}/service-requirement`,
         method: "PATCH",
-        body: { required: serviceChoice, expectedVersion: current.version, reason: serviceReason.trim() },
+        body: {
+          required: serviceChoice,
+          expectedVersion: current.version,
+          reason: serviceReason.trim(),
+        },
       });
       setForm(fromEvent(res));
       setServiceChoice(null);
@@ -523,7 +527,8 @@ export function GiftEventAdmin() {
                     disabled={!editable}
                     onChange={(e) => set("requiresCompletedService", e.target.checked)}
                   />
-                  <span>Yêu cầu đã từng sử dụng dịch vụ
+                  <span>
+                    Yêu cầu đã từng sử dụng dịch vụ
                     <small>Mặc định TẮT: mọi khách có tài khoản hợp lệ đều được mở quà.</small>
                   </span>
                 </label>
@@ -598,10 +603,13 @@ export function GiftEventAdmin() {
           {current && !editable && !["ENDED", "ARCHIVED"].includes(current.status) && (
             <div className="mm-ge-actions">
               <strong>Điều kiện khách đã từng sử dụng dịch vụ</strong>
-              <p>Mặc định TẮT. Chỉ khi bật, khách phải có dịch vụ hoàn thành trước đó.
-                Điều chỉnh này không ảnh hưởng các quà đã cấp.</p>
+              <p>
+                Mặc định TẮT. Chỉ khi bật, khách phải có dịch vụ hoàn thành trước đó. Điều chỉnh này
+                không ảnh hưởng các quà đã cấp.
+              </p>
               <label className="mm-ge-tier-row">
-                <input type="checkbox"
+                <input
+                  type="checkbox"
                   checked={serviceChoice ?? current.requiresCompletedService ?? false}
                   onChange={(e) => setServiceChoice(e.target.checked)}
                   disabled={disabled}
@@ -615,10 +623,16 @@ export function GiftEventAdmin() {
                 onChange={(e) => setServiceReason(e.target.value)}
                 maxLength={500}
               />
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => void saveServiceChoice()}
-                disabled={disabled || serviceChoice === null ||
-                  serviceChoice === current.requiresCompletedService || serviceReason.trim().length < 10}>
+                disabled={
+                  disabled ||
+                  serviceChoice === null ||
+                  serviceChoice === current.requiresCompletedService ||
+                  serviceReason.trim().length < 10
+                }
+              >
                 Lưu điều kiện tham gia
               </button>
               {mutation.isError && <p role="alert">{mutationMessage(mutation.error)}</p>}
