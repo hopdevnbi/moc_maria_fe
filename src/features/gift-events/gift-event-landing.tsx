@@ -17,7 +17,9 @@ import {
   Gift,
   Heart,
   Leaf,
+  LogOut,
   LockKeyhole,
+  UserRound,
   ShieldCheck,
   Sparkles,
   Ticket,
@@ -205,7 +207,7 @@ function Faq() {
 }
 
 export function GiftEventLanding() {
-  const { user, status, authFetch } = useAuth();
+  const { user, status, authFetch, logout } = useAuth();
   const termsId = useId();
   const [boxId, setBoxId] = useState<number | null>(null);
   const [agreed, setAgreed] = useState(false);
@@ -216,6 +218,8 @@ export function GiftEventLanding() {
   const [openError, setOpenError] = useState("");
   const [openedGift, setOpenedGift] = useState<GiftOpenResult | null>(null);
   const [skipEffect, setSkipEffect] = useState(false);
+  const [logoutPending, setLogoutPending] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
   const current = useQuery({
     queryKey: ["gift-event", "current"],
     queryFn: publicCurrent,
@@ -261,6 +265,23 @@ export function GiftEventLanding() {
     ? "Tất cả khách hàng đều có thể tham gia"
     : event?.eligibleTiers.map((tier) => (tier === "STANDARD" ? "THƯỜNG" : tier)).join(" · ") ||
       "Đang cập nhật";
+
+  async function signOut() {
+    if (logoutPending) return;
+    setLogoutPending(true);
+    setLogoutError("");
+    try {
+      await logout();
+      setOpenedGift(null);
+      setBoxId(null);
+      setAgreed(false);
+      setShowWallet(false);
+    } catch {
+      setLogoutError("Không thể đăng xuất lúc này. Vui lòng thử lại.");
+    } finally {
+      setLogoutPending(false);
+    }
+  }
 
   async function openSelectedBox() {
     if (!event || !user || !eligibleBox || !boxId || !agreed || opening || openedGift) return;
@@ -315,35 +336,57 @@ export function GiftEventLanding() {
       </a>
       <div className="mm-ev-top-line" aria-hidden="true" />
       <header className="mm-ev-topbar">
-        <Link href="/" className="mm-ev-logo" aria-label="Trở về trang chủ Mộc Maria">
+        <a href="https://mocmaria.com/" className="mm-ev-logo" aria-label="Trở về trang chủ Mộc Maria">
           <span className="mm-ev-logo-symbol">✥</span>
           <span>
             <strong>Mộc Maria</strong>
             <small>WELLNESS LOUNGE</small>
           </span>
-        </Link>
+        </a>
         <nav aria-label="Điều hướng sự kiện">
           <a href="#the-le">Thể lệ</a>
           <a href="#cau-hoi">Giải đáp</a>
           {status === "authenticated" ? (
-            <button
-              type="button"
-              className="mm-ev-wallet-shortcut"
-              onClick={() => {
-                setShowWallet(true);
-                document
-                  .getElementById("mm-ev-wallet-area")
-                  ?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              <WalletCards size={16} /> Ví quà
-            </button>
+            <>
+              <button
+                type="button"
+                className="mm-ev-wallet-shortcut"
+                onClick={() => {
+                  setShowWallet(true);
+                  document
+                    .getElementById("mm-ev-wallet-area")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                <WalletCards size={16} /> Ví quà
+              </button>
+              <Link className="mm-ev-account-link" href="/tai-khoan" title="Quản lý tài khoản">
+                <UserRound size={16} /> <span>{user?.displayName || "Tài khoản"}</span>
+              </Link>
+              <button
+                className="mm-ev-logout"
+                type="button"
+                disabled={logoutPending}
+                onClick={() => void signOut()}
+                aria-label="Đăng xuất khỏi tài khoản Mộc Maria"
+              >
+                <LogOut size={16} /> <span>{logoutPending ? "Đang thoát..." : "Đăng xuất"}</span>
+              </button>
+            </>
+          ) : status === "anonymous" ? (
+            <>
+              <Link className="mm-ev-account-link" href="/dang-ky?returnTo=%2Fevent">
+                Đăng ký
+              </Link>
+              <Link className="mm-ev-wallet-shortcut" href="/dang-nhap?returnTo=%2Fevent">
+                <UserRound size={16} /> Đăng nhập
+              </Link>
+            </>
           ) : (
-            <Link className="mm-ev-wallet-shortcut" href="/dang-nhap?returnTo=%2Fevent">
-              Đăng nhập <ArrowRight size={15} />
-            </Link>
+            <span className="mm-ev-auth-loading" role="status">Đang kiểm tra tài khoản…</span>
           )}
         </nav>
+        {logoutError && <span className="mm-ev-auth-error" role="alert">{logoutError}</span>}
       </header>
       <main id="mm-ev-main">
         <section className="mm-ev-hero">
@@ -481,9 +524,14 @@ export function GiftEventLanding() {
             </div>
             <div className="mm-ev-play-cta">
               {status === "anonymous" && event?.effectiveStatus === "LIVE" ? (
-                <Link className="mm-ev-primary" href="/dang-nhap?returnTo=%2Fevent">
-                  Đăng nhập để tham gia <ArrowRight size={16} />
-                </Link>
+                <>
+                  <Link className="mm-ev-primary" href="/dang-nhap?returnTo=%2Fevent">
+                    Đăng nhập để tham gia <ArrowRight size={16} />
+                  </Link>
+                  <Link className="mm-ev-register-link" href="/dang-ky?returnTo=%2Fevent">
+                    Chưa có tài khoản? Đăng ký ngay
+                  </Link>
+                </>
               ) : (
                 <button
                   type="button"
@@ -636,9 +684,9 @@ export function GiftEventLanding() {
       <footer className="mm-ev-footer">
         <span>© 2026 Mộc Maria · Khu vườn quà An Nhiên</span>
         <nav aria-label="Liên kết cuối trang">
-          <Link href="/">
+          <a href="https://mocmaria.com/">
             <ArrowLeft size={14} /> Trang chủ
-          </Link>
+          </a>
           <Link href="/hoi-vien">
             <Heart size={14} /> Hội viên
           </Link>
