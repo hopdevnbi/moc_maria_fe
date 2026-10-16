@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -112,31 +112,27 @@ export function GiftEventAdmin() {
   const isSuper = !!user?.roles.includes("SUPER_ADMIN");
   const events = usePrivateData<GiftEvent[]>("/admin/gift-events", isSuper);
   const mutation = usePrivateMutation<GiftEvent>();
+  // null: show the live campaign by default; "new": explicitly create a draft.
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [initializedSelection, setInitializedSelection] = useState(false);
   const [form, setForm] = useState<FormValue>(fresh);
   const [tierInput, setTierInput] = useState("VIP1");
   const [step, setStep] = useState(1);
   const [reason, setReason] = useState("");
   const [notice, setNotice] = useState("");
-  useEffect(() => {
-    if (initializedSelection || !events.data?.length) return;
-    const selected = events.data.find((item) => item.effectiveStatus === "LIVE") ?? events.data[0];
-    setSelectedId(selected.id);
-    setForm(fromEvent(selected));
-    setInitializedSelection(true);
-  }, [events.data, initializedSelection]);
-  const current = events.data?.find((event) => event.id === selectedId) || null;
+  const current =
+    selectedId === "new"
+      ? null
+      : events.data?.find((event) => event.id === selectedId) ||
+        events.data?.find((event) => event.effectiveStatus === "LIVE") ||
+        events.data?.[0] ||
+        null;
+  const editorForm = selectedId === null && current ? fromEvent(current) : form;
   const editable = !current || ["DRAFT", "SCHEDULED"].includes(current.status);
-  const isDirty = useMemo(
-    () => JSON.stringify(form) !== JSON.stringify(current ? fromEvent(current) : fresh),
-    [form, current],
-  );
+  const isDirty = JSON.stringify(editorForm) !== JSON.stringify(current ? fromEvent(current) : fresh);
   const disabled = mutation.isPending || !isSuper;
   const set = (key: keyof FormValue, value: string | string[]) =>
     setForm((f) => ({ ...f, [key]: value }));
   const choose = (event: GiftEvent) => {
-    setInitializedSelection(true);
     setSelectedId(event.id);
     setForm(fromEvent(event));
     setNotice("");
@@ -144,31 +140,30 @@ export function GiftEventAdmin() {
     setStep(1);
   };
   const reset = () => {
-    setInitializedSelection(true);
-    setSelectedId(null);
+    setSelectedId("new");
     setForm(fresh);
     setNotice("");
     setReason("");
     setStep(1);
   };
   const payload = () => ({
-    title: form.title.trim(),
-    description: form.description.trim(),
-    heroUrl: form.heroUrl.trim() || undefined,
-    termsText: form.termsText.trim(),
-    startAt: toUtc(form.startAt),
-    endAt: toUtc(form.endAt),
-    budgetCapVnd: Math.floor(Number(form.budgetCapVnd)),
-    eligibleTiers: form.eligibleTiers,
+    title: editorForm.title.trim(),
+    description: editorForm.description.trim(),
+    heroUrl: editorForm.heroUrl.trim() || undefined,
+    termsText: editorForm.termsText.trim(),
+    startAt: toUtc(editorForm.startAt),
+    endAt: toUtc(editorForm.endAt),
+    budgetCapVnd: Math.floor(Number(editorForm.budgetCapVnd)),
+    eligibleTiers: editorForm.eligibleTiers,
   });
 
   async function save(event: FormEvent) {
     event.preventDefault();
     if (
       disabled ||
-      !form.title.trim() ||
-      !form.eligibleTiers.length ||
-      Number(form.budgetCapVnd) < 0
+      !editorForm.title.trim() ||
+      !editorForm.eligibleTiers.length ||
+      Number(editorForm.budgetCapVnd) < 0
     )
       return;
     try {
@@ -177,7 +172,7 @@ export function GiftEventAdmin() {
         method: current ? "PATCH" : "POST",
         body: current
           ? { ...payload(), expectedVersion: current.version, reason: reason.trim() }
-          : { ...payload(), code: form.code.trim(), slug: form.slug.trim() },
+          : { ...payload(), code: editorForm.code.trim(), slug: editorForm.slug.trim() },
       });
       setSelectedId(res.id);
       setNotice("Đã lưu cấu hình. Hãy kiểm tra kho quà và điều lệ trước khi công bố.");
@@ -325,7 +320,7 @@ export function GiftEventAdmin() {
                     required
                     minLength={4}
                     maxLength={160}
-                    value={form.title}
+                    value={editorForm.title}
                     onChange={(e) => set("title", e.target.value)}
                     placeholder="Mở hộp quà – Nhận yêu thương"
                     disabled={!editable}
@@ -337,7 +332,7 @@ export function GiftEventAdmin() {
                     required={!current}
                     pattern="[a-z0-9][a-z0-9-]{2,59}"
                     disabled={!!current || !editable}
-                    value={form.code}
+                    value={editorForm.code}
                     onChange={(e) => set("code", e.target.value)}
                     placeholder="tri-an-thang-10"
                   />
@@ -348,7 +343,7 @@ export function GiftEventAdmin() {
                     required={!current}
                     pattern="[a-z0-9][a-z0-9-]{2,79}"
                     disabled={!!current || !editable}
-                    value={form.slug}
+                    value={editorForm.slug}
                     onChange={(e) => set("slug", e.target.value)}
                     placeholder="qua-an-nhien"
                   />
@@ -356,7 +351,7 @@ export function GiftEventAdmin() {
                 <label>
                   Ảnh bìa (URL CDN HTTPS)
                   <input
-                    value={form.heroUrl}
+                    value={editorForm.heroUrl}
                     onChange={(e) => set("heroUrl", e.target.value)}
                     placeholder="https://.../event/banner.webp"
                     disabled={!editable}
@@ -367,7 +362,7 @@ export function GiftEventAdmin() {
                   <textarea
                     rows={3}
                     maxLength={4000}
-                    value={form.description}
+                    value={editorForm.description}
                     onChange={(e) => set("description", e.target.value)}
                     disabled={!editable}
                   />
@@ -377,7 +372,7 @@ export function GiftEventAdmin() {
                   <textarea
                     rows={5}
                     maxLength={20000}
-                    value={form.termsText}
+                    value={editorForm.termsText}
                     onChange={(e) => set("termsText", e.target.value)}
                     placeholder="Thời gian, đối tượng, điều kiện nhận quà, địa điểm..."
                     disabled={!editable}
@@ -391,7 +386,7 @@ export function GiftEventAdmin() {
                   <CalendarDays size={15} /> Bắt đầu – giờ Việt Nam{" "}
                   <input
                     type="datetime-local"
-                    value={form.startAt}
+                    value={editorForm.startAt}
                     onChange={(e) => set("startAt", e.target.value)}
                     disabled={!editable}
                   />
@@ -400,8 +395,8 @@ export function GiftEventAdmin() {
                   <CalendarDays size={15} /> Kết thúc – giờ Việt Nam{" "}
                   <input
                     type="datetime-local"
-                    value={form.endAt}
-                    min={form.startAt}
+                    value={editorForm.endAt}
+                    min={editorForm.startAt}
                     onChange={(e) => set("endAt", e.target.value)}
                     disabled={!editable}
                   />
@@ -414,7 +409,7 @@ export function GiftEventAdmin() {
                     min={0}
                     max={100000000000}
                     step={1}
-                    value={form.budgetCapVnd}
+                    value={editorForm.budgetCapVnd}
                     onChange={(e) => set("budgetCapVnd", e.target.value)}
                     disabled={!editable}
                   />
@@ -431,14 +426,14 @@ export function GiftEventAdmin() {
                 <label className="mm-ge-tier-row">
                   <input
                     type="checkbox"
-                    checked={form.eligibleTiers.includes("STANDARD")}
+                    checked={editorForm.eligibleTiers.includes("STANDARD")}
                     disabled={!editable}
                     onChange={(e) =>
                       set(
                         "eligibleTiers",
                         e.target.checked
-                          ? [...form.eligibleTiers, "STANDARD"]
-                          : form.eligibleTiers.filter((x) => x !== "STANDARD"),
+                          ? [...editorForm.eligibleTiers, "STANDARD"]
+                          : editorForm.eligibleTiers.filter((x) => x !== "STANDARD"),
                       )
                     }
                   />
@@ -461,14 +456,14 @@ export function GiftEventAdmin() {
                   </select>
                   <button
                     type="button"
-                    disabled={!editable || form.eligibleTiers.includes(tierInput)}
-                    onClick={() => set("eligibleTiers", [...form.eligibleTiers, tierInput])}
+                    disabled={!editable || editorForm.eligibleTiers.includes(tierInput)}
+                    onClick={() => set("eligibleTiers", [...editorForm.eligibleTiers, tierInput])}
                   >
                     Thêm hạng
                   </button>
                 </div>
                 <div className="mm-ge-tier-chips">
-                  {form.eligibleTiers
+                  {editorForm.eligibleTiers
                     .filter((x) => x !== "STANDARD")
                     .map((tier) => (
                       <button
@@ -478,7 +473,7 @@ export function GiftEventAdmin() {
                         onClick={() =>
                           set(
                             "eligibleTiers",
-                            form.eligibleTiers.filter((x) => x !== tier),
+                            editorForm.eligibleTiers.filter((x) => x !== tier),
                           )
                         }
                       >
@@ -498,13 +493,13 @@ export function GiftEventAdmin() {
                 <h4>Xem lại trước khi công bố</h4>
                 <dl>
                   <dt>Sự kiện</dt>
-                  <dd>{form.title || "Chưa đặt tên"}</dd>
+                  <dd>{editorForm.title || "Chưa đặt tên"}</dd>
                   <dt>Hạng được tham gia</dt>
                   <dd>
-                    {form.eligibleTiers.length ? tierSummary(form.eligibleTiers) : "Chưa chọn"}
+                    {editorForm.eligibleTiers.length ? tierSummary(editorForm.eligibleTiers) : "Chưa chọn"}
                   </dd>
                   <dt>Ngân sách</dt>
-                  <dd>{Number(form.budgetCapVnd || 0).toLocaleString("vi-VN")} ₫</dd>
+                  <dd>{Number(editorForm.budgetCapVnd || 0).toLocaleString("vi-VN")} ₫</dd>
                   <dt>Số lượt</dt>
                   <dd>1 lượt/tài khoản/event</dd>
                   <dt>Đảm bảo có quà</dt>
@@ -540,8 +535,8 @@ export function GiftEventAdmin() {
                 className="mm-ge-save"
                 disabled={
                   disabled ||
-                  !form.eligibleTiers.length ||
-                  !form.title.trim() ||
+                  !editorForm.eligibleTiers.length ||
+                  !editorForm.title.trim() ||
                   (!!current && reason.trim().length < 10)
                 }
               >
