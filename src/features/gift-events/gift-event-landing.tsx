@@ -336,7 +336,11 @@ export function GiftEventLanding() {
       </a>
       <div className="mm-ev-top-line" aria-hidden="true" />
       <header className="mm-ev-topbar">
-        <a href="https://mocmaria.com/" className="mm-ev-logo" aria-label="Trở về trang chủ Mộc Maria">
+        <a
+          href="https://mocmaria.com/"
+          className="mm-ev-logo"
+          aria-label="Trở về trang chủ Mộc Maria"
+        >
           <span className="mm-ev-logo-symbol">✥</span>
           <span>
             <strong>Mộc Maria</strong>
@@ -383,10 +387,16 @@ export function GiftEventLanding() {
               </Link>
             </>
           ) : (
-            <span className="mm-ev-auth-loading" role="status">Đang kiểm tra tài khoản…</span>
+            <span className="mm-ev-auth-loading" role="status">
+              Đang kiểm tra tài khoản…
+            </span>
           )}
         </nav>
-        {logoutError && <span className="mm-ev-auth-error" role="alert">{logoutError}</span>}
+        {logoutError && (
+          <span className="mm-ev-auth-error" role="alert">
+            {logoutError}
+          </span>
+        )}
       </header>
       <main id="mm-ev-main">
         <section className="mm-ev-hero">

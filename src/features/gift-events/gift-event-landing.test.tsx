@@ -117,10 +117,7 @@ describe("P09 Mộc Maria event landing", () => {
     mocks.eligible = true;
     mocks.logout.mockResolvedValue(undefined);
     render(<GiftEventLanding />);
-    expect(screen.getByRole("link", { name: /Tài khoản/ })).toHaveAttribute(
-      "href",
-      "/tai-khoan",
-    );
+    expect(screen.getByRole("link", { name: /Tài khoản/ })).toHaveAttribute("href", "/tai-khoan");
     expect(screen.getByRole("button", { name: /Ví quà/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Đăng xuất khỏi tài khoản Mộc Maria" }));
     await waitFor(() => expect(mocks.logout).toHaveBeenCalledTimes(1));
