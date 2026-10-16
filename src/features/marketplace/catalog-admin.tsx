@@ -510,9 +510,17 @@ function ServiceEditor({
   return (
     <article className="mm-cat-editor-form">
       <div className="market-toolbar mm-cat-edit-header">
-        <div><span className="mm-cat-mini-label">CHI TIẾT & BẢNG GIÁ</span><h2>{service ? service.name : "Tạo dịch vụ mới"}</h2></div>
-        <button type="button" className="mm-cat-close-editor" onClick={onClose} aria-label="Đóng trình chỉnh sửa"><X size={18} /></button>
-          Đóng
+        <div>
+          <span className="mm-cat-mini-label">CHI TIẾT & BẢNG GIÁ</span>
+          <h2>{service ? service.name : "Tạo dịch vụ mới"}</h2>
+        </div>
+        <button
+          type="button"
+          className="mm-cat-close-editor"
+          onClick={onClose}
+          aria-label="Đóng trình chỉnh sửa"
+        >
+          <X size={18} />
         </button>
       </div>
       <form className="market-form" onSubmit={submit}>
