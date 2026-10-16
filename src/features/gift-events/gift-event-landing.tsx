@@ -251,10 +251,11 @@ export function GiftEventLanding() {
   const state = eligibilityCopy(event, status, me.data);
   const eligibleBox =
     event?.effectiveStatus === "LIVE" && !!me.data?.canOpen && status === "authenticated";
+  const eligibleTiers = event?.eligibleTiers ?? [];
   const allCustomersEligible =
-    !!event?.eligibleTiers.includes("STANDARD") &&
+    eligibleTiers.includes("STANDARD") &&
     Array.from({ length: 99 }, (_, i) => `VIP${i + 1}`).every((tier) =>
-      event.eligibleTiers.includes(tier),
+      eligibleTiers.includes(tier),
     );
   const tierLabels = allCustomersEligible
     ? "Tất cả khách hàng đều có thể tham gia"
