@@ -13,10 +13,9 @@ import { GiftVouchersAdmin } from "./gift-vouchers-admin";
 import { GiftReportAdmin } from "./gift-report-admin";
 import { GiftOperationsAdmin } from "./gift-operations-admin";
 import { GiftCounter } from "@/features/gift-events/gift-counter";
+import { parseEventTab, type EventTab } from "./event-tabs";
 import "./event-console.css";
 
-export const eventTabs = ["campaign", "counter", "vouchers", "report", "operations"] as const;
-export type EventTab = (typeof eventTabs)[number];
 const tabs = [
   { id: "campaign", name: "Chiến dịch", caption: "Thiết lập sự kiện và kho quà", Icon: Gift },
   {
@@ -34,7 +33,7 @@ export function EventConsole({ initialTab = "campaign" }: { initialTab?: EventTa
   useEffect(() => {
     const onBack = () => {
       const candidate = new URLSearchParams(window.location.search).get("tab");
-      setActive(eventTabs.includes(candidate as EventTab) ? (candidate as EventTab) : "campaign");
+      setActive(parseEventTab(candidate));
     };
     window.addEventListener("popstate", onBack);
     return () => window.removeEventListener("popstate", onBack);

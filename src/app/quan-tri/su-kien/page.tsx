@@ -1,21 +1,29 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AdminShell } from "@/features/marketplace/admin-shell";
-import { EventConsole, eventTabs, type EventTab } from "@/features/gift-events-admin/event-console";
+import { EventConsole } from "@/features/gift-events-admin/event-console";
+import { parseEventTab } from "@/features/gift-events-admin/event-tabs";
+import { LoadingState } from "@/shared/loading/loading-state";
 
 export const metadata: Metadata = {
   title: "Sự kiện mở hộp quà | Mộc Maria",
   robots: { index: false, follow: false },
 };
-export default async function EventsAdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string }>;
-}) {
+type EventPageProps = {
+  searchParams: Promise<{ tab?: string | string[] }>;
+};
+
+async function EventConsoleEntry({ searchParams }: EventPageProps) {
   const { tab } = await searchParams;
-  const initialTab = eventTabs.includes(tab as EventTab) ? (tab as EventTab) : "campaign";
+  return <EventConsole initialTab={parseEventTab(tab)} />;
+}
+
+export default function EventsAdminPage({ searchParams }: EventPageProps) {
   return (
     <AdminShell title="Sự kiện & quà tặng." permission="admin.portal">
-      <EventConsole initialTab={initialTab} />
+      <Suspense fallback={<LoadingState compact title="Đang mở quản trị sự kiện…" shape="list" />}>
+        <EventConsoleEntry searchParams={searchParams} />
+      </Suspense>
     </AdminShell>
   );
 }
