@@ -51,6 +51,7 @@
   top: 12px;
 }
 .mm-ev-topbar {
+  position: relative;
   height: 88px;
   display: flex;
   justify-content: space-between;
@@ -101,6 +102,54 @@
 }
 .mm-ev-topbar nav > a:hover {
   color: #b18a47;
+}
+.mm-ev-account-link,
+.mm-ev-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 750;
+  color: #26533b;
+}
+.mm-ev-account-link {
+  max-width: 170px;
+}
+.mm-ev-account-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mm-ev-logout {
+  padding: 8px 2px;
+  color: #576b5b;
+  cursor: pointer;
+}
+.mm-ev-logout:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.mm-ev-register-link {
+  font-size: 12px;
+  color: #26533b;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.mm-ev-auth-loading {
+  font-size: 12px;
+  color: #576b5b;
+}
+.mm-ev-auth-error {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% - 6px);
+  right: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fff4f2;
+  color: #9e3025;
+  font-size: 12px;
 }
 .mm-ev-wallet-shortcut {
   border: 1px solid #d6e3d2;
@@ -925,8 +974,18 @@
   .mm-ev-topbar nav {
     gap: 8px;
   }
-  .mm-ev-topbar nav > a:not(.mm-ev-wallet-shortcut) {
+  .mm-ev-topbar nav > a:not(.mm-ev-wallet-shortcut):not(.mm-ev-account-link) {
     display: none;
+  }
+  .mm-ev-topbar nav > a.mm-ev-account-link {
+    display: inline-flex;
+  }
+  .mm-ev-account-link span,
+  .mm-ev-logout span {
+    display: none;
+  }
+  .mm-ev-logout {
+    padding: 10px 3px;
   }
   .mm-ev-wallet-shortcut {
     padding: 10px 12px;
