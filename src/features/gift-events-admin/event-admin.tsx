@@ -279,8 +279,7 @@ export function GiftEventAdmin() {
               <span className="mm-ge-event-title">{item.title}</span>
               <span>{statuses[item.effectiveStatus]}</span>
               <small>
-                Phiên bản {item.version} ·{" "}
-                {tierSummary(item.eligibleTiers)}
+                Phiên bản {item.version} · {tierSummary(item.eligibleTiers)}
               </small>
             </button>
           ))}
