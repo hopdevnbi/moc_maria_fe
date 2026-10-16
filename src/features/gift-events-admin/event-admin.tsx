@@ -42,6 +42,7 @@ export type GiftEvent = {
   budgetReservedVnd: number;
   guaranteePrize: true;
   maxOpensPerUser: 1;
+  requiresCompletedService: boolean;
   version: number;
 };
 const statuses: Record<GiftStatus, string> = {
@@ -69,6 +70,7 @@ type FormValue = {
   endAt: string;
   budgetCapVnd: string;
   eligibleTiers: string[];
+  requiresCompletedService: boolean;
   heroUrl: string;
 };
 const allCustomerTiers = ["STANDARD", ...Array.from({ length: 99 }, (_, i) => `VIP${i + 1}`)];
@@ -86,6 +88,7 @@ const fresh: FormValue = {
   endAt: "",
   budgetCapVnd: "0",
   eligibleTiers: ["STANDARD"],
+  requiresCompletedService: false,
   heroUrl: "",
 };
 const fromVietnam = (s: string | null): string =>
@@ -104,6 +107,7 @@ function fromEvent(event: GiftEvent): FormValue {
     endAt: fromVietnam(event.endAt),
     budgetCapVnd: String(event.budgetCapVnd),
     eligibleTiers: event.eligibleTiers,
+    requiresCompletedService: event.requiresCompletedService ?? false,
   };
 }
 
@@ -119,6 +123,8 @@ export function GiftEventAdmin() {
   const [step, setStep] = useState(1);
   const [reason, setReason] = useState("");
   const [notice, setNotice] = useState("");
+  const [serviceChoice, setServiceChoice] = useState<boolean | null>(null);
+  const [serviceReason, setServiceReason] = useState("");
   const current =
     selectedId === "new"
       ? null
@@ -131,11 +137,13 @@ export function GiftEventAdmin() {
   const isDirty =
     JSON.stringify(editorForm) !== JSON.stringify(current ? fromEvent(current) : fresh);
   const disabled = mutation.isPending || !isSuper;
-  const set = (key: keyof FormValue, value: string | string[]) =>
+  const set = (key: keyof FormValue, value: string | string[] | boolean) =>
     setForm((f) => ({ ...f, [key]: value }));
   const choose = (event: GiftEvent) => {
     setSelectedId(event.id);
     setForm(fromEvent(event));
+    setServiceChoice(null);
+    setServiceReason("");
     setNotice("");
     setReason("");
     setStep(1);
@@ -143,6 +151,8 @@ export function GiftEventAdmin() {
   const reset = () => {
     setSelectedId("new");
     setForm(fresh);
+    setServiceChoice(null);
+    setServiceReason("");
     setNotice("");
     setReason("");
     setStep(1);
@@ -156,6 +166,7 @@ export function GiftEventAdmin() {
     endAt: toUtc(editorForm.endAt),
     budgetCapVnd: Math.floor(Number(editorForm.budgetCapVnd)),
     eligibleTiers: editorForm.eligibleTiers,
+    requiresCompletedService: editorForm.requiresCompletedService,
   });
 
   async function save(event: FormEvent) {
@@ -205,6 +216,24 @@ export function GiftEventAdmin() {
       await events.refetch();
     } catch {
       /* show API error */
+    }
+  }
+
+  async function saveServiceChoice() {
+    if (!current || disabled || serviceChoice === null || serviceReason.trim().length < 10) return;
+    try {
+      const res = await mutation.mutateAsync({
+        path: `/admin/gift-events/${current.id}/service-requirement`,
+        method: "PATCH",
+        body: { required: serviceChoice, expectedVersion: current.version, reason: serviceReason.trim() },
+      });
+      setForm(fromEvent(res));
+      setServiceChoice(null);
+      setServiceReason("");
+      setNotice("Đã lưu điều kiện sử dụng dịch vụ, có nhật ký thay đổi.");
+      await events.refetch();
+    } catch {
+      /* use mutation error */
     }
   }
 
@@ -487,6 +516,17 @@ export function GiftEventAdmin() {
                   Chọn VIP2 không có nghĩa VIP1 hoặc VIP3 được tham gia. Quyền được kiểm tra lại
                   trên máy chủ tại thời điểm mở.
                 </p>
+                <label className="mm-ge-tier-row">
+                  <input
+                    type="checkbox"
+                    checked={editorForm.requiresCompletedService}
+                    disabled={!editable}
+                    onChange={(e) => set("requiresCompletedService", e.target.checked)}
+                  />
+                  <span>Yêu cầu đã từng sử dụng dịch vụ
+                    <small>Mặc định TẮT: mọi khách có tài khoản hợp lệ đều được mở quà.</small>
+                  </span>
+                </label>
               </div>
             )}
             {step === 5 && (
@@ -503,6 +543,8 @@ export function GiftEventAdmin() {
                   </dd>
                   <dt>Ngân sách</dt>
                   <dd>{Number(editorForm.budgetCapVnd || 0).toLocaleString("vi-VN")} ₫</dd>
+                  <dt>Đã hoàn tất dịch vụ trước đó</dt>
+                  <dd>{editorForm.requiresCompletedService ? "Bắt buộc" : "Không bắt buộc"}</dd>
                   <dt>Số lượt</dt>
                   <dd>1 lượt/tài khoản/event</dd>
                   <dt>Đảm bảo có quà</dt>
@@ -553,6 +595,35 @@ export function GiftEventAdmin() {
             )}
           </form>
           {step === 4 && <GiftPrizesAdmin event={current} />}
+          {current && !editable && !["ENDED", "ARCHIVED"].includes(current.status) && (
+            <div className="mm-ge-actions">
+              <strong>Điều kiện khách đã từng sử dụng dịch vụ</strong>
+              <p>Mặc định TẮT. Chỉ khi bật, khách phải có dịch vụ hoàn thành trước đó.
+                Điều chỉnh này không ảnh hưởng các quà đã cấp.</p>
+              <label className="mm-ge-tier-row">
+                <input type="checkbox"
+                  checked={serviceChoice ?? current.requiresCompletedService ?? false}
+                  onChange={(e) => setServiceChoice(e.target.checked)}
+                  disabled={disabled}
+                />
+                <span>Yêu cầu đã từng sử dụng dịch vụ</span>
+              </label>
+              <input
+                aria-label="Lý do đổi điều kiện dịch vụ"
+                placeholder="Lý do thay đổi tối thiểu 10 ký tự"
+                value={serviceReason}
+                onChange={(e) => setServiceReason(e.target.value)}
+                maxLength={500}
+              />
+              <button type="button"
+                onClick={() => void saveServiceChoice()}
+                disabled={disabled || serviceChoice === null ||
+                  serviceChoice === current.requiresCompletedService || serviceReason.trim().length < 10}>
+                Lưu điều kiện tham gia
+              </button>
+              {mutation.isError && <p role="alert">{mutationMessage(mutation.error)}</p>}
+            </div>
+          )}
           {current && (
             <div className="mm-ge-actions">
               <strong>
