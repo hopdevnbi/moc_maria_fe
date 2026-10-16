@@ -146,7 +146,8 @@ describe("P09 Mộc Maria event landing", () => {
     fireEvent.click(gift);
     expect(gift).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /Mở hộp số 2/ })).toBeDisabled();
-    expect(screen.getByText(/Vui lòng đọc và đồng ý thể lệ/)).toBeInTheDocument();
+    expect(screen.getByText(/Hãy tích ô đồng ý thể lệ/)).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /Tôi đã đọc và đồng ý/ })).not.toBeChecked();
   });
   it("requests reward only after explicit terms acceptance and renders server response", async () => {
     mocks.authenticated = true;
