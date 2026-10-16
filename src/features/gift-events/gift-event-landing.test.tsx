@@ -137,7 +137,7 @@ describe("P09 Mộc Maria event landing", () => {
     );
     expect(screen.queryByText("Bạn đã trúng")).not.toBeInTheDocument();
   });
-  it("allows visual selection but requires agreement before sending POST open", () => {
+  it("preselects agreement yet allows customers to opt out before opening", () => {
     mocks.authenticated = true;
     mocks.campaign = true;
     mocks.eligible = true;
@@ -145,9 +145,12 @@ describe("P09 Mộc Maria event landing", () => {
     const gift = screen.getByRole("button", { name: /HỘP 02/ });
     fireEvent.click(gift);
     expect(gift).toHaveAttribute("aria-pressed", "true");
+    const agreement = screen.getByRole("checkbox", { name: /Tôi đã đọc và đồng ý/ });
+    expect(agreement).toBeChecked();
+    expect(screen.getByRole("button", { name: /Mở hộp số 2/ })).toBeEnabled();
+    fireEvent.click(agreement);
     expect(screen.getByRole("button", { name: /Mở hộp số 2/ })).toBeDisabled();
     expect(screen.getByText(/Hãy tích ô đồng ý thể lệ/)).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /Tôi đã đọc và đồng ý/ })).not.toBeChecked();
   });
   it("requests reward only after explicit terms acceptance and renders server response", async () => {
     mocks.authenticated = true;
@@ -173,8 +176,7 @@ describe("P09 Mộc Maria event landing", () => {
     render(<GiftEventLanding />);
     fireEvent.click(screen.getByRole("button", { name: /HỘP 02/ }));
     const open = screen.getByRole("button", { name: /Mở hộp số 2/ });
-    expect(open).toBeDisabled();
-    fireEvent.click(screen.getByRole("checkbox", { name: /Tôi đã đọc và đồng ý/ }));
+    expect(open).toBeEnabled();
     fireEvent.click(open);
     await waitFor(() =>
       expect(mocks.authFetch).toHaveBeenCalledWith(
