@@ -251,9 +251,15 @@ export function GiftEventLanding() {
   const state = eligibilityCopy(event, status, me.data);
   const eligibleBox =
     event?.effectiveStatus === "LIVE" && !!me.data?.canOpen && status === "authenticated";
-  const tierLabels =
-    event?.eligibleTiers.map((tier) => (tier === "STANDARD" ? "THƯỜNG" : tier)).join(" · ") ||
-    "Đang cập nhật";
+  const allCustomersEligible =
+    !!event?.eligibleTiers.includes("STANDARD") &&
+    Array.from({ length: 99 }, (_, i) => `VIP${i + 1}`).every((tier) =>
+      event.eligibleTiers.includes(tier),
+    );
+  const tierLabels = allCustomersEligible
+    ? "Tất cả khách hàng đều có thể tham gia"
+    : event?.eligibleTiers.map((tier) => (tier === "STANDARD" ? "THƯỜNG" : tier)).join(" · ") ||
+      "Đang cập nhật";
 
   async function openSelectedBox() {
     if (!event || !user || !eligibleBox || !boxId || !agreed || opening || openedGift) return;
@@ -558,7 +564,9 @@ export function GiftEventLanding() {
               </div>
               <span>HẠNG THAM GIA</span>
               <h3>{tierLabels}</h3>
-              <p>Hạng khách được đối chiếu chính xác với hồ sơ hội viên.</p>
+              {!allCustomersEligible && (
+                <p>Hạng khách được đối chiếu chính xác với hồ sơ hội viên.</p>
+              )}
             </article>
             <article>
               <div className="mm-ev-info-icon">
