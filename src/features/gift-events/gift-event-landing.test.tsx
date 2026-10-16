@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   authenticated: false,
   campaign: false,
   eligible: false,
+  allTiers: false,
   authFetch: vi.fn(),
   refetch: vi.fn(),
 }));
@@ -45,7 +46,11 @@ vi.mock("@tanstack/react-query", () => ({
       ? {
           data: {
             status: "ACTIVE",
-            campaign: mocks.campaign ? event : null,
+            campaign: mocks.campaign
+              ? { ...event, eligibleTiers: mocks.allTiers
+                  ? ["STANDARD", ...Array.from({ length: 99 }, (_, i) => `VIP${i + 1}`)]
+                  : event.eligibleTiers }
+              : null,
             serverNow: "2026-10-15T04:00:00Z",
           },
           dataUpdatedAt: Date.now(),
@@ -69,6 +74,7 @@ beforeEach(() => {
   mocks.authenticated = false;
   mocks.campaign = false;
   mocks.eligible = false;
+  mocks.allTiers = false;
   mocks.authFetch.mockReset();
   mocks.refetch.mockReset();
 });
@@ -139,6 +145,16 @@ describe("P09 Mộc Maria event landing", () => {
     expect(body.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/i);
     expect(await screen.findByText("Voucher massage 20%")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Đã nhận quà" })).toBeDisabled();
+  });
+  it("summarizes full customer eligibility and keeps partial tiers explicit", () => {
+    mocks.campaign = true;
+    mocks.allTiers = true;
+    const view = render(<GiftEventLanding />);
+    expect(screen.getByText("Tất cả khách hàng đều có thể tham gia")).toBeInTheDocument();
+    expect(screen.queryByText(/VIP1 · VIP2/)).not.toBeInTheDocument();
+    mocks.allTiers = false;
+    view.rerender(<GiftEventLanding />);
+    expect(screen.getByText("THƯỜNG · VIP2")).toBeInTheDocument();
   });
   it("describes exact VIP tiers and already-played state from backend", () => {
     const campaign = { ...event, eligibleTiers: ["STANDARD", "VIP2"] } as unknown as NonNullable<
