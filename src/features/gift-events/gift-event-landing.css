@@ -673,6 +673,28 @@
   line-height: 1.75;
   cursor: pointer;
 }
+.mm-ev-agreement-inline {
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 13px 14px;
+  border: 1px solid #cadbc5;
+  border-radius: 12px;
+  background: #f2f8ef;
+  text-align: left;
+  color: #244d37;
+  font-size: 12px;
+}
+.mm-ev-agreement-inline a {
+  color: #135a3b;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.mm-ev-terms-confirmation {
+  margin-top: 18px;
+  font-size: 12px;
+  color: #53745b;
+}
 .mm-ev-agreement input {
   width: 18px;
   height: 18px;
