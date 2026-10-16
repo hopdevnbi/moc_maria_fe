@@ -147,9 +147,9 @@ export function GiftCounter() {
       const result = await request<Quote>(
         `/staff/gift-redemptions/${inputMode === "CODE" ? "quote-code" : "quote-qr"}`,
         {
-        ...(inputMode === "CODE" ? { code: token } : { token }),
-        branchId: selectedBranch,
-        items: [{ variantId: chosenVariant, quantity: 1 }],
+          ...(inputMode === "CODE" ? { code: token } : { token }),
+          branchId: selectedBranch,
+          items: [{ variantId: chosenVariant, quantity: 1 }],
         },
       );
       if (result.rewardId !== verified.rewardId) throw new Error("VOUCHER_CHANGED");
@@ -301,7 +301,9 @@ export function GiftCounter() {
                 <span>PHIẾU CÒN HIỆU LỰC</span>
                 <h3>{verified.name}</h3>
                 {verified.kind === "VOUCHER_PERCENT" && !!verified.discountPercent && (
-                  <strong className="mm-gc-discount">Giảm {verified.discountPercent}% khi thanh toán</strong>
+                  <strong className="mm-gc-discount">
+                    Giảm {verified.discountPercent}% khi thanh toán
+                  </strong>
                 )}
                 <p>
                   Hạn cuối:{" "}
@@ -317,48 +319,48 @@ export function GiftCounter() {
                       lịch đặt là đã thanh toán.
                     </p>
                     <>
-                        <label>
-                          Sản phẩm hoặc gói dịch vụ đã bán
-                          <select
-                            value={chosenVariant}
-                            onChange={(e) => {
-                              setVariantId(e.target.value);
-                              setQuote(null);
-                            }}
-                          >
-                            {eligibleVariants.map((variant) => (
-                                <option key={variant.id} value={variant.id}>
-                                  {variant.serviceName} - {variant.name}
-                                </option>
-                              ))}
-                          </select>
-                        </label>
-                        {!eligibleVariants.length && (
-                          <p role="alert">Không có sản phẩm phù hợp với voucher tại cơ sở này.</p>
-                        )}
-                        <label>
-                          Mã hóa đơn / phiếu bán hàng đã được xác nhận
-                          <input
-                            value={saleReference}
-                            onChange={(e) => setSaleReference(e.target.value)}
-                            placeholder="Ví dụ: POS-202611-0001"
-                            maxLength={100}
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          disabled={waiting || !chosenVariant}
-                          onClick={() => void calculate()}
+                      <label>
+                        Sản phẩm hoặc gói dịch vụ đã bán
+                        <select
+                          value={chosenVariant}
+                          onChange={(e) => {
+                            setVariantId(e.target.value);
+                            setQuote(null);
+                          }}
                         >
-                          Tính giảm giá từ bảng giá hiện hành
-                        </button>
-                        {quote && (
-                          <p role="status">
-                            Giá gốc: {quote.subtotalVnd.toLocaleString("vi-VN")}đ · Giảm:{" "}
-                            {quote.discountVnd.toLocaleString("vi-VN")}đ · Còn lại:{" "}
-                            {quote.payableVnd.toLocaleString("vi-VN")}đ
-                          </p>
-                        )}
+                          {eligibleVariants.map((variant) => (
+                            <option key={variant.id} value={variant.id}>
+                              {variant.serviceName} - {variant.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {!eligibleVariants.length && (
+                        <p role="alert">Không có sản phẩm phù hợp với voucher tại cơ sở này.</p>
+                      )}
+                      <label>
+                        Mã hóa đơn / phiếu bán hàng đã được xác nhận
+                        <input
+                          value={saleReference}
+                          onChange={(e) => setSaleReference(e.target.value)}
+                          placeholder="Ví dụ: POS-202611-0001"
+                          maxLength={100}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        disabled={waiting || !chosenVariant}
+                        onClick={() => void calculate()}
+                      >
+                        Tính giảm giá từ bảng giá hiện hành
+                      </button>
+                      {quote && (
+                        <p role="status">
+                          Giá gốc: {quote.subtotalVnd.toLocaleString("vi-VN")}đ · Giảm:{" "}
+                          {quote.discountVnd.toLocaleString("vi-VN")}đ · Còn lại:{" "}
+                          {quote.payableVnd.toLocaleString("vi-VN")}đ
+                        </p>
+                      )}
                     </>
                   </div>
                 )}
@@ -374,7 +376,11 @@ export function GiftCounter() {
                   onClick={() => void redeem()}
                 >
                   <CheckCircle2 size={17} />
-                  {waiting ? "Đang xác nhận…" : verified.kind === "VOUCHER_PERCENT" ? "Xác nhận áp dụng voucher" : "Xác nhận đã giao quà"}
+                  {waiting
+                    ? "Đang xác nhận…"
+                    : verified.kind === "VOUCHER_PERCENT"
+                      ? "Xác nhận áp dụng voucher"
+                      : "Xác nhận đã giao quà"}
                 </button>
               </div>
             )}

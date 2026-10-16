@@ -32,7 +32,8 @@ export function GiftQrScanner({
     const videoEl = videoRef.current;
     async function start() {
       try {
-        const Detector = (window as unknown as { BarcodeDetector?: NativeDetector }).BarcodeDetector;
+        const Detector = (window as unknown as { BarcodeDetector?: NativeDetector })
+          .BarcodeDetector;
         if (!Detector) {
           setCameraError(
             "Trình duyệt chưa hỗ trợ nhận diện QR từ camera. Hãy dùng máy quét hoặc nhập mã 6 số.",
@@ -106,7 +107,11 @@ export function GiftQrScanner({
           <small>Giữ mã QR của khách trong khung hình. Máy sẽ tự xác minh khi nhận được mã.</small>
         </div>
       )}
-      {cameraError && <p className="mm-gc-error" role="alert">{cameraError}</p>}
+      {cameraError && (
+        <p className="mm-gc-error" role="alert">
+          {cameraError}
+        </p>
+      )}
     </div>
   );
 }
