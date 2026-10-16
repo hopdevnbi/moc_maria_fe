@@ -210,7 +210,7 @@ export function GiftEventLanding() {
   const { user, status, authFetch, logout } = useAuth();
   const termsId = useId();
   const [boxId, setBoxId] = useState<number | null>(null);
-  const [agreed, setAgreed] = useState(false);
+  const [agreed, setAgreed] = useState(true);
   const [showWallet, setShowWallet] = useState(false);
   const [ticker, setTicker] = useState(0);
   const [opening, setOpening] = useState(false);
@@ -274,7 +274,7 @@ export function GiftEventLanding() {
       await logout();
       setOpenedGift(null);
       setBoxId(null);
-      setAgreed(false);
+      setAgreed(true);
       setShowWallet(false);
     } catch {
       setLogoutError("Không thể đăng xuất lúc này. Vui lòng thử lại.");
