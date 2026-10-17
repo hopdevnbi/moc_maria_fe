@@ -196,6 +196,13 @@ describe("appointment request flow", () => {
     expect(first.requestedAt).toBe(new Date(future + ":00+07:00").toISOString());
     fireEvent.click(screen.getByRole("button", { name: "Gửi yêu cầu đặt lịch" }));
     await screen.findByText("Đã gửi yêu cầu đến Mai Anh");
+    // The consultation must target the same real provider-application ID used
+    // in the saved booking, never the public presentation/demo identifier.
+    const chat = screen.getByRole("link", { name: "Chat với KTV" });
+    expect(chat).toHaveAttribute(
+      "href",
+      expect.stringContaining("provider=" + providers[1].chatProviderId),
+    );
     const retry = JSON.parse(state.fetch.mock.calls[1][1].body);
     expect(retry.idempotencyKey).toBe(first.idempotencyKey);
   });
