@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function AdminPage() {
   return (
-    <AdminShell title="Tổng quan điều hành.">
+    <AdminShell title="Tổng quan điều hành." showHeading={false}>
       <AdminDashboard />
     </AdminShell>
   );
