@@ -89,6 +89,9 @@ vi.mock("next/link", () => ({
 afterEach(() => {
   cleanup();
   fixtures.canView = true;
+  fixtures.overview.providers[0].status = "APPROVED";
+  fixtures.overview.providers[0].inService = 1;
+  fixtures.overview.activeProviders = 1;
   fixtures.invalidate.mockClear();
 });
 
@@ -100,6 +103,17 @@ describe("Admin operations dashboard", () => {
     expect(screen.getAllByText("Đang phục vụ").length).toBeGreaterThan(0);
     expect(screen.getByText(/không phải trạng thái Socket online/)).toBeInTheDocument();
     expect(screen.queryByText(/Doanh thu đã thu/)).not.toBeInTheDocument();
+  });
+
+  it("labels real unapproved applicants as awaiting review, not as suspended", () => {
+    fixtures.overview.providers[0].status = "APPLIED";
+    fixtures.overview.providers[0].inService = 0;
+    fixtures.overview.activeProviders = 0;
+    render(<AdminDashboard />);
+    expect(screen.getByText("Chờ duyệt hồ sơ")).toBeInTheDocument();
+    expect(screen.getByText("Hồ sơ kỹ thuật viên")).toBeInTheDocument();
+    expect(screen.getByText("0 hồ sơ đã duyệt")).toBeInTheDocument();
+    expect(screen.queryByText("Tạm ngưng")).not.toBeInTheDocument();
   });
 
   it("lazily opens a KTV drilldown with completed counts and public feedback", () => {
