@@ -258,10 +258,12 @@ export function AdminShell({
   title,
   children,
   permission = "admin.portal",
+  showHeading = true,
 }: {
   title: string;
   children: ReactNode;
   permission?: string;
+  showHeading?: boolean;
 }) {
   const { user } = useAuth();
   const pathname = usePathname();
@@ -320,15 +322,17 @@ export function AdminShell({
             </div>
           </header>
           <main id="mm-admin-main" className="mm-admin-main">
-            <div className="mm-admin-page-heading">
-              <div>
-                <span className="mm-admin-eyebrow">
-                  <span /> MỘC MARIA · MANAGEMENT
-                </span>
-                <h1>{title}</h1>
+            {showHeading && (
+              <div className="mm-admin-page-heading">
+                <div>
+                  <span className="mm-admin-eyebrow">
+                    <span /> MỘC MARIA · MANAGEMENT
+                  </span>
+                  <h1>{title}</h1>
+                </div>
+                <p>Tổ chức công việc nhẹ nhàng, chăm sóc mỗi trải nghiệm chu đáo hơn.</p>
               </div>
-              <p>Tổ chức công việc nhẹ nhàng, chăm sóc mỗi trải nghiệm chu đáo hơn.</p>
-            </div>
+            )
             {children}
           </main>
           <footer className="mm-admin-footer">
