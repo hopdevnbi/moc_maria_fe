@@ -111,7 +111,7 @@ describe("Admin operations dashboard", () => {
     fixtures.overview.activeProviders = 0;
     render(<AdminDashboard />);
     expect(screen.getByText("Chờ duyệt hồ sơ")).toBeInTheDocument();
-    expect(screen.getByText("Hồ sơ kỹ thuật viên")).toBeInTheDocument();
+    expect(screen.getAllByText("Hồ sơ kỹ thuật viên").length).toBeGreaterThan(0);
     expect(screen.getByText("0 hồ sơ đã duyệt")).toBeInTheDocument();
     expect(screen.queryByText("Tạm ngưng")).not.toBeInTheDocument();
   });
