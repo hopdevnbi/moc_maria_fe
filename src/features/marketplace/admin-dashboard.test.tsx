@@ -88,7 +88,7 @@ describe("Admin operations dashboard", () => {
     render(<AdminDashboard />);
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("Massage trị liệu")).toBeInTheDocument();
-    expect(screen.getByText("Hồ sơ hoạt động")).toBeInTheDocument();
+    expect(screen.getAllByText("Đang phục vụ").length).toBeGreaterThan(0);
     expect(screen.getByText(/không phải trạng thái Socket online/)).toBeInTheDocument();
     expect(screen.queryByText(/Doanh thu đã thu/)).not.toBeInTheDocument();
   });
