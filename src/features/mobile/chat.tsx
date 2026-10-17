@@ -433,13 +433,9 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   });
   useEffect(() => {
     if (!enabled || !customer || !provider) return;
-    if (!receiverId) {
-      // Wait for the directory before resolving public aliases. Never POST a
-      // presentation slug/demo ID to a PostgreSQL UUID field.
-      if (!directory.isPending && !directory.isError)
-        setActionError("Không tìm thấy KTV này trong danh sách chat. Hãy chọn KTV khác.");
-      return;
-    }
+    // Wait for the directory before resolving public aliases. Never POST a
+    // presentation slug/demo ID to a PostgreSQL UUID field.
+    if (!receiverId) return;
     const requested = user?.id + ":" + receiverId;
     if (openedProvider.current === requested) return;
     let disposed = false;
@@ -602,13 +598,17 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     input.style.height = `${Math.max(48, Math.min(input.scrollHeight, 120))}px`;
   }, [draft, selectedId, choosing]);
   // Background refresh errors must not hide a usable cached inbox/history.
+  const unresolvedProvider =
+    enabled && customer && !!provider && !receiverId && !directory.isPending && !directory.isError;
   const error =
     actionError ||
-    (threads.isError && !threads.data
-      ? chatError(threads.error)
-      : history.isError && !history.data
-        ? chatError(history.error)
-        : "");
+    (unresolvedProvider
+      ? "Không tìm thấy KTV này trong danh sách chat. Hãy chọn KTV khác."
+      : threads.isError && !threads.data
+        ? chatError(threads.error)
+        : history.isError && !history.data
+          ? chatError(history.error)
+          : "");
   const select = (thread: Thread) => {
     if (current?.id !== thread.id) leaving();
     setSelectedId(thread.id);
