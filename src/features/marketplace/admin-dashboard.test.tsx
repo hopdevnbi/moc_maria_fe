@@ -24,18 +24,20 @@ const fixtures = vi.hoisted(() => ({
     },
     trend: [{ bucket: "2026-10-17", total: 12, completed: 5 }],
     services: [{ id: "service-1", name: "Massage trị liệu", total: 8, completed: 4 }],
-    providers: [{
-      id: "11111111-1111-4111-8111-111111111111",
-      name: "Mai Anh",
-      status: "APPROVED",
-      accountActive: true,
-      total: 9,
-      completed: 4,
-      inService: 1,
-      pending: 4,
-      rating: 4.8,
-      feedback: 2,
-    }],
+    providers: [
+      {
+        id: "11111111-1111-4111-8111-111111111111",
+        name: "Mai Anh",
+        status: "APPROVED",
+        accountActive: true,
+        total: 9,
+        completed: 4,
+        inService: 1,
+        pending: 4,
+        rating: 4.8,
+        feedback: 2,
+      },
+    ],
     activeProviders: 1,
     serviceCount: 8,
   },
@@ -57,16 +59,23 @@ vi.mock("@/features/auth/hooks/useAuth", () => ({
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: fixtures.invalidate }),
   useQuery: ({ queryKey }: { queryKey: string[] }) => ({
-    data: queryKey[0] === "admin-dashboard"
-      ? fixtures.overview
-      : {
-          provider: fixtures.overview.providers[0],
-          feedback: [{
-            id: "review-1", stars: 5, comment: "Dịch vụ rất tốt",
-            createdAt: "2026-10-17T00:00:00Z",
-          }],
-        },
-    isPending: false, isFetching: false, isError: false,
+    data:
+      queryKey[0] === "admin-dashboard"
+        ? fixtures.overview
+        : {
+            provider: fixtures.overview.providers[0],
+            feedback: [
+              {
+                id: "review-1",
+                stars: 5,
+                comment: "Dịch vụ rất tốt",
+                createdAt: "2026-10-17T00:00:00Z",
+              },
+            ],
+          },
+    isPending: false,
+    isFetching: false,
+    isError: false,
     refetch: vi.fn(),
   }),
 }));
