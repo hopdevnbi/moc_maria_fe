@@ -462,8 +462,16 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       disposed = true;
     };
   }, [
-    enabled, customer, provider, receiverId, directory.isPending, directory.isError,
-    authFetch, client, user?.id, deepLinkAttempt,
+    enabled,
+    customer,
+    provider,
+    receiverId,
+    directory.isPending,
+    directory.isError,
+    authFetch,
+    client,
+    user?.id,
+    deepLinkAttempt,
   ]);
   useEffect(() => {
     const viewport = window.visualViewport;
