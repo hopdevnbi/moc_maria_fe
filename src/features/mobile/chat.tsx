@@ -199,6 +199,13 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     enabled: enabled && customer,
     retry: 1,
   });
+  // Public KTV cards use presentation aliases; the private Chat API requires the
+  // actual provider-application UUID returned by the Chat directory.
+  const receiverId = provider
+    ? /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(provider)
+      ? provider
+      : directory.data?.find((item) => item.id === provider || item.publicAlias === provider)?.id
+    : undefined;
   const current = threads.data?.find((thread) => thread.id === selectedId) ?? null;
   const locked = !!current?.privacy_enabled && (!!current.history_locked || !unlocked[current.id]);
   const conceal = useCallback(
@@ -426,10 +433,17 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   });
   useEffect(() => {
     if (!enabled || !customer || !provider) return;
-    const requested = user?.id + ":" + provider;
+    if (!receiverId) {
+      // Wait for the directory before resolving public aliases. Never POST a
+      // presentation slug/demo ID to a PostgreSQL UUID field.
+      if (!directory.isPending && !directory.isError)
+        setActionError("Không tìm thấy KTV này trong danh sách chat. Hãy chọn KTV khác.");
+      return;
+    }
+    const requested = user?.id + ":" + receiverId;
     if (openedProvider.current === requested) return;
     let disposed = false;
-    void authFetch<Thread>("/ktv-chat/threads", json({ providerApplicationId: provider }))
+    void authFetch<Thread>("/ktv-chat/threads", json({ providerApplicationId: receiverId }))
       .then((thread) => {
         if (disposed) return;
         openedProvider.current = requested;
@@ -447,7 +461,10 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     return () => {
       disposed = true;
     };
-  }, [enabled, customer, provider, authFetch, client, user?.id, deepLinkAttempt]);
+  }, [
+    enabled, customer, provider, receiverId, directory.isPending, directory.isError,
+    authFetch, client, user?.id, deepLinkAttempt,
+  ]);
   useEffect(() => {
     const viewport = window.visualViewport;
     if (!viewport) return;
@@ -576,9 +593,14 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     input.style.height = "48px";
     input.style.height = `${Math.max(48, Math.min(input.scrollHeight, 120))}px`;
   }, [draft, selectedId, choosing]);
+  // Background refresh errors must not hide a usable cached inbox/history.
   const error =
     actionError ||
-    (threads.isError || history.isError ? chatError(threads.error || history.error) : "");
+    (threads.isError && !threads.data
+      ? chatError(threads.error)
+      : history.isError && !history.data
+        ? chatError(history.error)
+        : "");
   const select = (thread: Thread) => {
     if (current?.id !== thread.id) leaving();
     setSelectedId(thread.id);
