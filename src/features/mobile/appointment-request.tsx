@@ -203,7 +203,7 @@ export function AppointmentRequest({
             </Link>
             <Link
               className="mm-outline-cta"
-              href={chatHref(chosen?.id || chosen?.chatProviderId || "")}
+              href={chatHref(chosen?.chatProviderId || chosen?.id || "")}
             >
               Chat với KTV
             </Link>
