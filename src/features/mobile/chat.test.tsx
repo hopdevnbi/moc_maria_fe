@@ -73,6 +73,28 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it("resolves a public presentation alias to the real KTV application before opening", async () => {
+    mount("demo-ktv-01");
+    await waitFor(() =>
+      expect(
+        state.fetch.mock.calls.some(
+          ([path, init]) =>
+            path === "/ktv-chat/threads" &&
+            init?.method === "POST" &&
+            JSON.parse(init.body).providerApplicationId === "p1",
+        ),
+      ).toBe(true),
+    );
+    expect(
+      state.fetch.mock.calls.some(
+        ([path, init]) =>
+          path === "/ktv-chat/threads" &&
+          init?.method === "POST" &&
+          JSON.parse(init.body).providerApplicationId === "demo-ktv-01",
+      ),
+    ).toBe(false);
+    await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
+  });
   it("uses current service names for consultation drafts without changing service IDs", async () => {
     const original = state.fetch.getMockImplementation()!;
     state.fetch.mockImplementation((path: string, init?: RequestInit) =>
