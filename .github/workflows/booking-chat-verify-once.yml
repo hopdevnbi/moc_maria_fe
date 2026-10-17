@@ -1,0 +1,33 @@
+name: Verify booking-to-chat fix once
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/booking-chat-verify-once.yml'
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.1
+          cache: npm
+      - run: npm ci
+      - name: Format only booking and chat changes
+        run: npx prettier --write src/features/mobile/appointment-request.tsx src/features/mobile/chat.tsx src/features/mobile/appointment-request.test.tsx src/features/mobile/chat.test.tsx
+      - name: Validate full frontend
+        run: npm run quality
+      - name: Save formatting and remove temporary workflow
+        if: always()
+        run: |
+          git rm -f .github/workflows/booking-chat-verify-once.yml
+          git add src/features/mobile/appointment-request.tsx src/features/mobile/chat.tsx src/features/mobile/appointment-request.test.tsx src/features/mobile/chat.test.tsx
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test(chat): verify booking-to-conversation deep links and self-clean CI"
+          git push origin HEAD:main
