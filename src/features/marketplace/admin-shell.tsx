@@ -332,7 +332,7 @@ export function AdminShell({
                 </div>
                 <p>Tổ chức công việc nhẹ nhàng, chăm sóc mỗi trải nghiệm chu đáo hơn.</p>
               </div>
-            )
+            )}
             {children}
           </main>
           <footer className="mm-admin-footer">
