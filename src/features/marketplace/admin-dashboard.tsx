@@ -310,9 +310,9 @@ export function AdminDashboard() {
                   tone: "blue",
                 },
                 {
-                  label: "KTV hoạt động",
-                  value: data.activeProviders,
-                  hint: "Hồ sơ đã duyệt",
+                  label: "Hồ sơ kỹ thuật viên",
+                  value: data.providers.length,
+                  hint: number(data.activeProviders) + " hồ sơ đã duyệt",
                   icon: UsersRound,
                   tone: "mint",
                 },
@@ -474,8 +474,10 @@ export function AdminDashboard() {
                         {staff.inService > 0
                           ? "Đang phục vụ"
                           : active(staff)
-                            ? "Hồ sơ hoạt động"
-                            : "Tạm ngưng"}
+                            ? "Đã được duyệt"
+                            : staff.status === "APPLIED" && staff.accountActive
+                              ? "Chờ duyệt hồ sơ"
+                              : "Tạm ngưng"}
                       </small>
                     </span>
                     <span className="mm-ops-staff-metric">
