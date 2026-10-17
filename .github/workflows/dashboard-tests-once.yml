@@ -1,4 +1,5 @@
 name: Verify analytics regression tests once
+# Rerun after truthful staff state assertion
 on:
   push:
     branches: [main]
