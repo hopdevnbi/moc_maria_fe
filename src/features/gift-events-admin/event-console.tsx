@@ -7,11 +7,13 @@ import {
   Gift,
   ShieldCheck,
   TicketPercent,
+  Users,
 } from "lucide-react";
 import { GiftEventAdmin } from "./event-admin";
 import { GiftVouchersAdmin } from "./gift-vouchers-admin";
 import { GiftReportAdmin } from "./gift-report-admin";
 import { GiftOperationsAdmin } from "./gift-operations-admin";
+import { GiftPlayersAdmin } from "./gift-players-admin";
 import { GiftCounter } from "@/features/gift-events/gift-counter";
 import { parseEventTab, type EventTab } from "./event-tabs";
 import "./event-console.css";
@@ -25,6 +27,7 @@ const tabs = [
     Icon: ClipboardCheck,
   },
   { id: "vouchers", name: "Voucher", caption: "Tra cứu và quản lý", Icon: TicketPercent },
+  { id: "players", name: "Người mở quà", caption: "Lượt mở & lịch sử reset", Icon: Users },
   { id: "report", name: "Đối soát", caption: "Số liệu và ngân sách", Icon: ChartNoAxesCombined },
   { id: "operations", name: "Vận hành", caption: "Theo dõi và thông báo", Icon: Activity },
 ] as const;
@@ -85,6 +88,7 @@ export function EventConsole({ initialTab = "campaign" }: { initialTab?: EventTa
         {active === "campaign" && <GiftEventAdmin />}
         {active === "counter" && <GiftCounter />}
         {active === "vouchers" && <GiftVouchersAdmin />}
+        {active === "players" && <GiftPlayersAdmin />}
         {active === "report" && <GiftReportAdmin />}
         {active === "operations" && <GiftOperationsAdmin />}
       </section>

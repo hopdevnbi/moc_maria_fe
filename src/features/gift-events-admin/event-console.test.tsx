@@ -6,6 +6,7 @@ vi.mock("./event-admin", () => ({ GiftEventAdmin: () => <p>Campaign panel</p> })
 vi.mock("./gift-vouchers-admin", () => ({ GiftVouchersAdmin: () => <p>Voucher panel</p> }));
 vi.mock("./gift-report-admin", () => ({ GiftReportAdmin: () => <p>Report panel</p> }));
 vi.mock("./gift-operations-admin", () => ({ GiftOperationsAdmin: () => <p>Operations panel</p> }));
+vi.mock("./gift-players-admin", () => ({ GiftPlayersAdmin: () => <p>Players panel</p> }));
 vi.mock("@/features/gift-events/gift-counter", () => ({ GiftCounter: () => <p>Counter panel</p> }));
 afterEach(() => {
   cleanup();
@@ -13,13 +14,14 @@ afterEach(() => {
 });
 
 describe("Event console tab navigation", () => {
-  it("keeps all five tools in one page and updates the URL", () => {
+  it("keeps all six tools in one page and updates the URL", () => {
     window.history.replaceState(null, "", "/quan-tri/su-kien");
     render(<EventConsole />);
     expect(screen.getByText("Campaign panel")).toBeInTheDocument();
     for (const [name, tab, panel] of [
       ["Đổi quà tại quầy", "counter", "Counter panel"],
       ["Voucher", "vouchers", "Voucher panel"],
+      ["Người mở quà", "players", "Players panel"],
       ["Đối soát", "report", "Report panel"],
       ["Vận hành", "operations", "Operations panel"],
     ]) {
