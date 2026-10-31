@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Be_Vietnam_Pro, Noto_Serif } from "next/font/google";
 import { AppProviders } from "@/app/providers/AppProviders";
+import { ChristmasWelcome } from "@/shared/seasonal/christmas-welcome";
 import "./globals.css";
+import "@/shared/seasonal/christmas.css";
 
 const sans = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -33,7 +35,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi">
-      <body className={`${sans.variable} ${serif.variable}`}>
+      <body className={`${sans.variable} ${serif.variable} christmas-season`}>
+        <ChristmasWelcome />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

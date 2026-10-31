@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { GiftEventLanding } from "@/features/gift-events/gift-event-landing";
 
 export const metadata: Metadata = {
-  title: "Mở hộp quà - Nhận yêu thương | Mộc Maria",
+  title: "Giáng sinh an lành · Mở quà yêu thương",
   description:
-    "Khu vườn quà An Nhiên của Mộc Maria: xem thể lệ, hạng hội viên và các phần quà đã nhận trong ví cá nhân.",
+    "Đón mùa Noel cùng Mộc Maria. Chọn hộp quà Giáng sinh, xem thể lệ và lưu giữ những phần quà trong ví cá nhân.",
   openGraph: {
-    title: "Khu vườn quà An Nhiên | Mộc Maria",
+    title: "Giáng sinh an lành | Mộc Maria",
     description: "Mở hộp quà, nhận yêu thương. Những lời tri ân dành cho khách hàng Mộc Maria.",
     images: [
       {

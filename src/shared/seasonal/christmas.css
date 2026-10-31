@@ -1,0 +1,128 @@
+.christmas-season {
+  --moc-ivory: #fcf8f0;
+  --moc-cream: #f5eddf;
+  --moc-gold: #d5ae63;
+  --moc-green-deep: #173e33;
+}
+
+.christmas-welcome {
+  min-height: 34px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  background: #183f34;
+  color: #faefd9;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.christmas-welcome > svg {
+  color: #dfbd78;
+}
+.christmas-welcome a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffe0a2;
+  text-decoration: none;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.christmas-welcome a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.christmas-welcome a:focus-visible {
+  outline: 2px solid #ffe0a2;
+  outline-offset: 3px;
+}
+/* Keep full-height chat and staff workspaces focused on their existing controls. */
+body:has(.ktv-chat-shell, .mm-admin-app, .ktvw-main) .christmas-welcome {
+  display: none;
+}
+.christmas-season .mobile-experience {
+  --mm-line: #e5e4d8;
+  background: radial-gradient(circle at 95% 12%, #e8efdf80, transparent 30%), #fcf9f2;
+}
+.christmas-season .mm-header {
+  border-bottom-color: #d9c69b;
+}
+.christmas-season .mm-header::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    110deg,
+    #9f3545 0 12px,
+    #e9d8aa 12px 24px,
+    #315b45 24px 36px
+  );
+  opacity: 0.65;
+}
+.christmas-season .ktv-home-top {
+  border-color: #e6d9c3;
+  background:
+    radial-gradient(ellipse at 95% 0, #e1eadb, transparent 55%),
+    linear-gradient(120deg, #fff9ef, #f7f0e5);
+}
+.christmas-season :is(.ktv-home-heading, .mm-page-intro, .mm-members-hero) h1 em {
+  color: #9d3c49;
+}
+.christmas-season
+  :is(
+    .ktv-hero-primary,
+    .ktv-book-btn:not(.ktv-disabled),
+    .mm-primary-cta,
+    .mm-profile-cta-primary
+  ) {
+  background: #96394a;
+  box-shadow: 0 5px 16px #96394a1c;
+}
+.christmas-season
+  :is(
+    .ktv-hero-primary,
+    .ktv-book-btn:not(.ktv-disabled),
+    .mm-primary-cta,
+    .mm-profile-cta-primary
+  ):hover {
+  background: #7d2b3b;
+}
+.christmas-season .ktv-filter-row button.active {
+  background: #96394a;
+  border-color: #96394a;
+}
+.christmas-season .mobile-tab.is-current {
+  color: #96394a;
+}
+.christmas-season :is(.ktv-card, .mm-card, .mm-service-card, .mm-provider-card) {
+  border-color: #e3ddcf;
+}
+.christmas-season .mm-members-hero {
+  border-color: #e3d5bd;
+  background: radial-gradient(ellipse at 90% 5%, #dfe9d9, transparent 55%), #faf0e5;
+}
+@media (max-width: 550px) {
+  .christmas-welcome {
+    min-height: 30px;
+    gap: 7px;
+    padding: 5px 12px;
+    font-size: 9px;
+  }
+  .christmas-welcome > svg {
+    display: none;
+  }
+  .christmas-welcome a {
+    gap: 4px;
+  }
+}
+@media (max-width: 360px) {
+  .christmas-welcome > span {
+    max-width: 145px;
+    line-height: 1.35;
+  }
+}

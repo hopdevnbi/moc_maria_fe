@@ -1,0 +1,213 @@
+.mm-ev-christmas {
+  --ev-dark: #193f34;
+  --ev-deep: #123a30;
+  --ev-cream: #fcf8ef;
+  --ev-paper: #fffdf7;
+  --ev-gold: #bd9551;
+  --ev-border: #e5dcc9;
+  background: radial-gradient(ellipse at 92% 9%, #eee5cc70, transparent 28%), var(--ev-cream);
+}
+.mm-ev-christmas .mm-ev-top-line {
+  background: repeating-linear-gradient(
+    110deg,
+    #96394a 0 24px,
+    #e6d4a6 24px 48px,
+    #264f3e 48px 72px
+  );
+}
+.mm-ev-christmas .mm-ev-logo-symbol {
+  background: #f4e8de;
+  color: #9c3c4c;
+}
+.mm-ev-christmas .mm-ev-hero {
+  min-height: 590px;
+  padding-top: 24px;
+  padding-bottom: 44px;
+}
+.mm-ev-christmas .mm-ev-overline {
+  color: #96703d;
+}
+.mm-ev-christmas .mm-ev-overline-dot {
+  background: #a73d4d;
+}
+.mm-ev-christmas .mm-ev-hero h1 {
+  font-size: clamp(40px, 4.5vw, 63px);
+  line-height: 1.24;
+  letter-spacing: -2px;
+}
+.mm-ev-christmas .mm-ev-hero h1 em {
+  color: #9d3c4b;
+}
+.mm-ev-christmas .mm-ev-hero-description {
+  color: #68796b;
+  font-size: 14px;
+}
+.mm-ev-christmas .mm-ev-hero-art {
+  height: auto;
+  min-height: 470px;
+}
+.mm-ev-christmas .mm-ev-hero-art img {
+  width: min(100%, 570px);
+  filter: none;
+  animation: none;
+}
+.mm-ev-christmas .mm-ev-hero-art::before,
+.mm-ev-christmas .mm-ev-orbit,
+.mm-ev-christmas .mm-ev-art-flower {
+  display: none;
+}
+.mm-ev-christmas .mm-ev-hero-art-caption {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 2.6px;
+  color: #8d6b3d;
+}
+.mm-ev-christmas .mm-ev-primary:not(:disabled) {
+  border-color: #96394a;
+  background: #96394a;
+  box-shadow: 0 8px 24px #96394a20;
+}
+.mm-ev-christmas .mm-ev-primary:not(:disabled):hover {
+  background: #7c2c3c;
+}
+.mm-ev-christmas .mm-ev-garden-wrap {
+  padding-top: 58px;
+  background: linear-gradient(#f0eee3, #fcf8ef);
+}
+.mm-ev-christmas .mm-ev-garden {
+  padding-top: 32px;
+  background:
+    radial-gradient(circle at 8px 8px, #fff2d51a 1px, transparent 2px) 0 0 / 52px 52px,
+    radial-gradient(ellipse at 50% 0, #35634d, #163f34 65%);
+  border: 1px solid #d4b876;
+  box-shadow: 0 24px 60px #203e3220;
+}
+.mm-ev-christmas .mm-ev-garden::before,
+.mm-ev-christmas .mm-ev-garden::after {
+  content: "❄";
+  color: #f1d99c14;
+  font-size: 180px;
+  top: -40px;
+  left: -42px;
+}
+.mm-ev-christmas .mm-ev-garden::after {
+  top: auto;
+  left: auto;
+  bottom: -70px;
+  right: -30px;
+}
+.mm-ev-christmas .mm-ev-box {
+  min-height: 250px;
+  padding: 20px 12px;
+  border-color: #e8d5ac42;
+  background: linear-gradient(145deg, #ffffff12, #ffffff03);
+}
+.mm-ev-christmas .mm-ev-box:nth-child(2n) {
+  background: linear-gradient(145deg, #b9535c35, #b9535c0c);
+}
+.mm-ev-christmas .mm-ev-box.is-picked {
+  border-color: #ffe1a5;
+  background: #f4d39922;
+  box-shadow:
+    0 0 0 2px #edc98466,
+    0 12px 28px #09281e40;
+}
+.mm-ev-box-number {
+  position: absolute;
+  top: 14px;
+  left: 15px;
+  color: #dac58f;
+  letter-spacing: 2px;
+  font-size: 9px;
+}
+.mm-ev-christmas .mm-ev-box-caption {
+  font-family: var(--font-wellness-serif), Georgia, serif;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0;
+  line-height: 1.45;
+  color: #ffedc5;
+}
+.mm-ev-box-wish {
+  margin-top: 7px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #d0dfcd;
+}
+.mm-ev-christmas .mm-ev-info-icon,
+.mm-ev-christmas .mm-ev-play-icon {
+  color: #9d3c4b;
+  background: #f7ebe3;
+}
+.mm-ev-christmas .mm-ev-outro {
+  background: #efece0;
+}
+.mm-ev-christmas .mm-ev-outro > div {
+  color: #a14250;
+}
+@media (max-width: 740px) {
+  .mm-ev-christmas .mm-ev-hero {
+    min-height: 0;
+    padding-top: 26px;
+    padding-bottom: 30px;
+  }
+  .mm-ev-christmas .mm-ev-hero h1 {
+    font-size: clamp(31px, 7.2vw, 48px);
+    letter-spacing: -1.2px;
+    margin: 14px 0;
+  }
+  .mm-ev-christmas .mm-ev-hero-art {
+    min-height: 0;
+    height: auto;
+    max-width: 370px;
+    margin-inline: auto;
+    padding-bottom: 16px;
+  }
+  .mm-ev-christmas .mm-ev-hero-art img {
+    max-height: 330px;
+  }
+  .mm-ev-christmas .mm-ev-garden-wrap {
+    padding-top: 36px;
+  }
+  .mm-ev-christmas .mm-ev-garden {
+    padding: 24px 14px;
+  }
+  .mm-ev-christmas .mm-ev-box {
+    min-height: 220px;
+    justify-content: flex-start;
+    padding: 18px 9px 15px;
+  }
+  .mm-ev-christmas .mm-ev-box-illustration {
+    width: min(100%, 135px);
+    height: 128px;
+  }
+  .mm-ev-christmas .mm-ev-box-caption {
+    font-size: 15px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .mm-ev-box-wish {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+  .mm-ev-box-number {
+    top: 10px;
+    left: 11px;
+    font-size: 8px;
+  }
+}
+@media (max-width: 380px) {
+  .mm-ev-christmas .mm-ev-topbar nav > a[href^="/dang-ky"] {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-ev-christmas .mm-ev-box {
+    transition: none;
+    transform: none;
+  }
+}

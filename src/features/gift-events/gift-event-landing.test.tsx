@@ -124,7 +124,7 @@ describe("P09 Mộc Maria event landing", () => {
   });
   it("renders public six original gift boxes while no event is published", () => {
     render(<GiftEventLanding />);
-    expect(screen.getAllByRole("button", { name: /HỘP 0[1-6]/ })).toHaveLength(6);
+    expect(screen.getAllByRole("button", { name: /Hộp 0[1-6] ·/ })).toHaveLength(6);
     expect(screen.getByText("Khu vườn đang được chuẩn bị")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Đăng nhập để tham gia/ })).not.toBeInTheDocument();
   });
@@ -142,14 +142,14 @@ describe("P09 Mộc Maria event landing", () => {
     mocks.campaign = true;
     mocks.eligible = true;
     render(<GiftEventLanding />);
-    const gift = screen.getByRole("button", { name: /HỘP 02/ });
+    const gift = screen.getByRole("button", { name: /Hộp 02 · Chuông Vàng May Mắn/ });
     fireEvent.click(gift);
     expect(gift).toHaveAttribute("aria-pressed", "true");
     const agreement = screen.getByRole("checkbox", { name: /Tôi đã đọc và đồng ý/ });
     expect(agreement).toBeChecked();
-    expect(screen.getByRole("button", { name: /Mở hộp số 2/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Mở hộp · Chuông Vàng May Mắn/ })).toBeEnabled();
     fireEvent.click(agreement);
-    expect(screen.getByRole("button", { name: /Mở hộp số 2/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Mở hộp · Chuông Vàng May Mắn/ })).toBeDisabled();
     expect(screen.getByText(/Hãy tích ô đồng ý thể lệ/)).toBeInTheDocument();
   });
   it("requests reward only after explicit terms acceptance and renders server response", async () => {
@@ -174,8 +174,8 @@ describe("P09 Mộc Maria event landing", () => {
       },
     });
     render(<GiftEventLanding />);
-    fireEvent.click(screen.getByRole("button", { name: /HỘP 02/ }));
-    const open = screen.getByRole("button", { name: /Mở hộp số 2/ });
+    fireEvent.click(screen.getByRole("button", { name: /Hộp 02 · Chuông Vàng May Mắn/ }));
+    const open = screen.getByRole("button", { name: /Mở hộp · Chuông Vàng May Mắn/ });
     expect(open).toBeEnabled();
     fireEvent.click(open);
     await waitFor(() =>

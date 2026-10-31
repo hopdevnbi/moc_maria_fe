@@ -38,6 +38,16 @@ import {
 } from "./types";
 import type { GiftOpenResult } from "./types";
 import "./gift-event-landing.css";
+import "./gift-event-christmas.css";
+
+const christmasBoxes: Record<(typeof boxImages)[number], { name: string; wish: string }> = {
+  1: { name: "Thông Xanh An Lành", wish: "Gửi bạn một mùa bình yên" },
+  2: { name: "Chuông Vàng May Mắn", wish: "Ngân vang những niềm vui" },
+  3: { name: "Tuyết Trắng Dịu Êm", wish: "Một khoảng lặng ấm áp" },
+  4: { name: "Điều Ước Đêm Đông", wish: "Ấp ôm điều bạn mong chờ" },
+  5: { name: "Túi Quà Ông Noel", wish: "Gói ghém ngàn thương mến" },
+  6: { name: "Ngôi Sao Hy Vọng", wish: "Thắp sáng những ngày mới" },
+};
 
 const publicCurrent = async (): Promise<CurrentEvent> =>
   parseApiResponse<CurrentEvent>(await apiRequest("/gift-events/current", { cache: "no-store" }));
@@ -209,7 +219,7 @@ function Faq() {
 export function GiftEventLanding() {
   const { user, status, authFetch, logout } = useAuth();
   const termsId = useId();
-  const [boxId, setBoxId] = useState<number | null>(null);
+  const [boxId, setBoxId] = useState<(typeof boxImages)[number] | null>(null);
   const [agreed, setAgreed] = useState(true);
   const [showWallet, setShowWallet] = useState(false);
   const [ticker, setTicker] = useState(0);
@@ -330,7 +340,7 @@ export function GiftEventLanding() {
   }
 
   return (
-    <div className="mm-ev">
+    <div className="mm-ev mm-ev-christmas">
       <a className="mm-ev-skip" href="#mm-ev-main">
         Bỏ qua điều hướng
       </a>
@@ -402,19 +412,19 @@ export function GiftEventLanding() {
         <section className="mm-ev-hero">
           <div className="mm-ev-hero-copy">
             <div className="mm-ev-overline">
-              <span className="mm-ev-overline-dot" /> LỜI TRI ÂN · KHU VƯỜN AN NHIÊN
+              <span className="mm-ev-overline-dot" /> MỘC MARIA · MÙA GIÁNG SINH 2026
             </div>
             <span className="mm-ev-mini-stars" aria-hidden="true">
               ✦ &nbsp; ✧ &nbsp; ✦
             </span>
             <h1>
-              Mở hộp quà.
+              Giáng sinh an lành.
               <br />
-              <em>Nhận yêu thương.</em>
+              <em>Mở quà yêu thương.</em>
             </h1>
             <p className="mm-ev-hero-description">
               {event?.description ||
-                "Một chút dịu dàng dành tặng những người đã tin yêu và đồng hành cùng Mộc Maria trên hành trình chăm sóc sức khỏe."}
+                "Ông già Noel ghé Mộc, mang theo những lời chúc ấm áp. Chọn một hộp quà bạn yêu thích và cùng Mộc đón mùa an lành."}
             </p>
             <div className="mm-ev-hero-tags">
               <span>
@@ -426,7 +436,7 @@ export function GiftEventLanding() {
             </div>
             <div className="mm-ev-hero-action">
               <a className="mm-ev-primary" href="#vuon-qua">
-                Khám phá vườn quà <ArrowRight size={18} />
+                Khám phá quà Noel <ArrowRight size={18} />
               </a>
               <a className="mm-ev-secondary" href="#the-le">
                 Xem thể lệ <ArrowRight size={16} />
@@ -438,17 +448,17 @@ export function GiftEventLanding() {
               </p>
             )}
           </div>
-          <div className="mm-ev-hero-art" aria-label="Minh họa hộp quà An Nhiên">
+          <div className="mm-ev-hero-art" aria-label="Ông già Noel và cây thông tại Mộc Maria">
             <div className="mm-ev-orbit orbit-one" />
             <div className="mm-ev-orbit orbit-two" />
-            <span className="mm-ev-hero-art-caption">A GIFT OF SERENITY</span>
+            <span className="mm-ev-hero-art-caption">GÓI AN LÀNH · GỬI YÊU THƯƠNG</span>
             <Image
-              src="/event/gift-boxes/gift-1-640.webp"
-              width={520}
-              height={520}
+              src="/christmas/santa-postcard.svg"
+              width={600}
+              height={560}
               sizes="(max-width: 740px) 90vw, (max-width: 1150px) 45vw, 520px"
               priority
-              alt="Hộp quà xanh rừng và nơ vàng champagne Mộc Maria"
+              alt="Ông già Noel trao quà bên cây thông xanh, dưới những vì sao vàng"
             />
             <div className="mm-ev-art-flower flower-one" aria-hidden="true">
               ✽
@@ -461,9 +471,9 @@ export function GiftEventLanding() {
         <section className="mm-ev-garden-wrap" id="vuon-qua">
           <div className="mm-ev-garden-intro">
             <div>
-              <span className="mm-ev-overline">MỘT KHOẢNH KHẮC DÀNH RIÊNG</span>
-              <h2>Chọn hộp bạn yêu thích</h2>
-              <p>Sáu sắc màu, một lời cảm ơn từ Mộc Maria.</p>
+              <span className="mm-ev-overline">XƯỞNG QUÀ NHỎ CỦA ÔNG NOEL</span>
+              <h2>Một hộp quà, một lời chúc</h2>
+              <p>Sáu lời chúc Giáng sinh. Bạn muốn gửi gắm điều gì?</p>
             </div>
             <span className="mm-ev-status" data-tone={state.tone}>
               <span /> {event ? statusLabels[event.effectiveStatus] : "Sắp công bố"}
@@ -484,7 +494,11 @@ export function GiftEventLanding() {
                   }}
                   disabled={opening || !!openedGift || !!pendingKey}
                   aria-pressed={boxId === id}
+                  aria-label={`Hộp ${String(id).padStart(2, "0")} · ${christmasBoxes[id].name}`}
                 >
+                  <span className="mm-ev-box-number" aria-hidden="true">
+                    NO. {String(id).padStart(2, "0")}
+                  </span>
                   <span className="mm-ev-box-illustration">
                     <Image
                       src={"/event/gift-boxes/gift-" + id + "-320.webp"}
@@ -495,7 +509,8 @@ export function GiftEventLanding() {
                       alt=""
                     />
                   </span>
-                  <span className="mm-ev-box-caption">HỘP {String(id).padStart(2, "0")}</span>
+                  <span className="mm-ev-box-caption">{christmasBoxes[id].name}</span>
+                  <span className="mm-ev-box-wish">{christmasBoxes[id].wish}</span>
                   {boxId === id && (
                     <span className="mm-ev-box-check">
                       <Check size={16} />
@@ -571,7 +586,7 @@ export function GiftEventLanding() {
                     : openedGift
                       ? "Đã nhận quà"
                       : eligibleBox && boxId
-                        ? "Mở hộp số " + boxId
+                        ? "Mở hộp · " + christmasBoxes[boxId].name
                         : me.data?.reason === "ALREADY_PLAYED"
                           ? "Đã dùng lượt"
                           : "Chọn hộp để mở"}
@@ -697,13 +712,13 @@ export function GiftEventLanding() {
         <Faq />
         <section className="mm-ev-outro">
           <div aria-hidden="true">✥</div>
-          <p>Một món quà nho nhỏ, một tình cảm thật lớn.</p>
+          <p>Chúc bạn một Giáng sinh ấm áp, một mùa an lành.</p>
           <strong>Mộc Maria</strong>
           <span>CHĂM SÓC BẰNG SỰ TẬN TÂM</span>
         </section>
       </main>
       <footer className="mm-ev-footer">
-        <span>© 2026 Mộc Maria · Khu vườn quà An Nhiên</span>
+        <span>© 2026 Mộc Maria · Giáng sinh an lành</span>
         <nav aria-label="Liên kết cuối trang">
           <a href="https://mocmaria.com/">
             <ArrowLeft size={14} /> Trang chủ
