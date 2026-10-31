@@ -551,4 +551,89 @@ describe("private KTV chat interactions", () => {
       ).toBe(true),
     );
   });
+  it("uploads an image and sends an image-only message containing its CDN URL", async () => {
+    const url = "https://giangxa-media.b-cdn.net/moc-maria/chat-attachments/a/photo.webp";
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn(() => "blob:chat-preview"),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (path === "/ktv-chat/threads/a/images") return { url };
+      if (path === "/ktv-chat/threads/a/messages" && init?.method === "POST")
+        return {
+          id: "photo",
+          thread_id: "a",
+          sender_user_id: "customer",
+          body: "",
+          image_url: url,
+          created_at: first.updated_at,
+        };
+      return original(path, init);
+    });
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    const picker = await screen.findByLabelText("Tệp ảnh đính kèm");
+    const file = new File(["png"], "photo.png", { type: "image/png" });
+    fireEvent.change(picker, { target: { files: [file] } });
+    expect(screen.getByAltText("Ảnh chuẩn bị gửi")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
+    await waitFor(() =>
+      expect(
+        state.fetch.mock.calls.some(
+          ([path, init]) =>
+            path === "/ktv-chat/threads/a/messages" &&
+            init?.method === "POST" &&
+            JSON.parse(init.body as string).imageUrl === url,
+        ),
+      ).toBe(true),
+    );
+    const upload = state.fetch.mock.calls.find(([path]) => path === "/ktv-chat/threads/a/images");
+    expect(upload?.[1]?.body).toBeInstanceOf(FormData);
+    expect((upload?.[1]?.body as FormData).get("file")).toBe(file);
+    expect(upload?.[1]?.headers).not.toHaveProperty("Content-Type");
+    fireEvent.click(await screen.findByRole("button", { name: "Xem ảnh đính kèm lớn" }));
+    expect(screen.getByRole("dialog", { name: "Ảnh đính kèm phóng to" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Đóng ảnh lớn" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+  it("lets KTV remove an image preview and rejects non-images or over-5MB photos", async () => {
+    state.user = { id: "provider", permissions: ["provider.portal"] };
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation(async (path: string, init?: RequestInit) =>
+      path === "/ktv-chat/threads"
+        ? [{ ...first, provider_user_id: "provider", customer_name: "Khách A" }]
+        : original(path, init),
+    );
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn(() => "blob:chat-preview"),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+    mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Khách A/ }));
+    const picker = await screen.findByLabelText("Tệp ảnh đính kèm");
+    fireEvent.change(picker, {
+      target: { files: [new File(["x"], "note.pdf", { type: "application/pdf" })] },
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent("Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.");
+    fireEvent.change(picker, {
+      target: {
+        files: [new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.jpg", { type: "image/jpeg" })],
+      },
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent("Dung lượng ảnh tối đa là 5 MB.");
+    fireEvent.change(picker, {
+      target: { files: [new File(["webp"], "portrait.webp", { type: "image/webp" })] },
+    });
+    expect(screen.getByAltText("Ảnh chuẩn bị gửi")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Xóa ảnh đính kèm" }));
+    expect(screen.queryByAltText("Ảnh chuẩn bị gửi")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Gửi tin nhắn" })).toBeDisabled();
+    await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:chat-preview"));
+    expect(state.fetch.mock.calls.some(([path]) => path === "/ktv-chat/threads/a/images")).toBe(
+      false,
+    );
+  });
 });

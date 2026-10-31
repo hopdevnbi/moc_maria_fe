@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronRight,
+  ImagePlus,
   LoaderCircle,
   MessageCircle,
   Plus,
@@ -25,6 +26,7 @@ import {
   Volume2,
   VolumeX,
   LockKeyhole,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { LoadingState, PendingLabel } from "@/shared/loading/loading-state";
@@ -54,9 +56,15 @@ type ChatMessage = {
   thread_id: string;
   sender_user_id: string;
   body: string;
+  image_url?: string | null;
   created_at: string;
   delivery?: "sending" | "failed" | "sent";
 };
+type ImageAttachment = { threadId: string; file: File; previewUrl: string };
+type SendInput = { id: string; body: string; imageUrl?: string };
+const MAX_CHAT_IMAGE_BYTES = 5 * 1024 * 1024;
+const CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const sendKey = ({ id, body, imageUrl }: SendInput) => JSON.stringify([id, body, imageUrl ?? ""]);
 const json = (body: unknown): RequestInit => ({
   method: "POST",
   cache: "no-store",
@@ -120,11 +128,36 @@ const ChatMessageRow = memo(function ChatMessageRow({
   retryDisabled: boolean;
   retry: (item: ChatMessage) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    if (!expanded) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [expanded]);
   return (
     <div className="ktv-chat-message-row">
       {showDate && <p className="ktv-chat-date">{day(item.created_at)}</p>}
       <div className={`ktv-chat-bubble${own ? " own" : ""}`}>
-        <p>{item.body}</p>
+        {item.body && <p>{item.body}</p>}
+        {item.image_url && (
+          <button
+            type="button"
+            className="ktv-chat-image-open"
+            aria-label="Xem ảnh đính kèm lớn"
+            onClick={() => setExpanded(true)}
+          >
+            <Image
+              src={item.image_url}
+              alt="Ảnh đính kèm trong tin nhắn"
+              unoptimized
+              width={320}
+              height={320}
+            />
+          </button>
+        )}
         <time dateTime={item.created_at}>{time(item.created_at)}</time>
         {item.delivery && (
           <small className="ktv-chat-delivery">
@@ -141,6 +174,28 @@ const ChatMessageRow = memo(function ChatMessageRow({
           </small>
         )}
       </div>
+      {expanded && item.image_url && (
+        <div
+          className="ktv-chat-image-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Ảnh đính kèm phóng to"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setExpanded(false);
+          }}
+        >
+          <button type="button" aria-label="Đóng ảnh lớn" onClick={() => setExpanded(false)}>
+            <X size={24} />
+          </button>
+          <Image
+            src={item.image_url}
+            alt="Ảnh đính kèm phóng to"
+            unoptimized
+            width={1600}
+            height={1200}
+          />
+        </div>
+      )}
     </div>
   );
 });
@@ -162,6 +217,10 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const [choosing, setChoosing] = useState(false);
   const [search, setSearch] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [attachment, setAttachment] = useState<ImageAttachment | null>(null);
+  const [attachmentError, setAttachmentError] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [outbox, setOutbox] = useState<ChatMessage[]>([]);
   const [unlocked, setUnlocked] = useState<Record<string, boolean>>({});
   const unlockTokens = useRef<Record<string, string>>({});
@@ -177,7 +236,9 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const openedProvider = useRef("");
   const nearBottom = useRef(true);
   const olderScroll = useRef<{ id: string; height: number; top: number } | null>(null);
-  const pendingSend = useRef<Record<string, { body: string; clientMessageId: string }>>({});
+  const pendingSend = useRef<
+    Record<string, { body: string; imageUrl?: string; clientMessageId: string }>
+  >({});
   const enabled = status === "authenticated" && !!user;
   const customer = !!user?.permissions.includes("customer.portal");
   const key = ["ktv-chat", user?.id];
@@ -207,12 +268,18 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       : directory.data?.find((item) => item.id === provider || item.publicAlias === provider)?.id
     : undefined;
   const current = threads.data?.find((thread) => thread.id === selectedId) ?? null;
+  useEffect(() => {
+    if (!attachment) return;
+    return () => URL.revokeObjectURL(attachment.previewUrl);
+  }, [attachment]);
   const locked = !!current?.privacy_enabled && (!!current.history_locked || !unlocked[current.id]);
   const conceal = useCallback(
     (id: string) => {
       delete unlockTokens.current[id];
       setUnlocked((old) => ({ ...old, [id]: false }));
       setOutbox((old) => old.filter((m) => m.thread_id !== id));
+      setAttachment((old) => (old?.threadId === id ? null : old));
+      setAttachmentError("");
       setDrafts((old) => ({ ...old, [id]: "" }));
       client.setQueryData<Thread[]>(["ktv-chat", user?.id, "threads"], (old) =>
         old?.map((t) =>
@@ -520,11 +587,12 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
   }, [messages, selectedId, choosing]);
   const send = useMutation({
-    onMutate: ({ id, body }: { id: string; body: string }) => {
-      const pending = pendingSend.current[`${id}:${body}`];
+    onMutate: ({ id, body, imageUrl }: SendInput) => {
+      const index = sendKey({ id, body, imageUrl });
+      const pending = pendingSend.current[index];
       const input =
-        pending?.body === body ? pending : { body, clientMessageId: crypto.randomUUID() };
-      pendingSend.current[`${id}:${body}`] = input;
+        pending?.body === body ? pending : { body, imageUrl, clientMessageId: crypto.randomUUID() };
+      pendingSend.current[index] = input;
       nearBottom.current = true;
       setActionError("");
       setDrafts((old) => (old[id]?.trim() === body ? { ...old, [id]: "" } : old));
@@ -535,24 +603,29 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
           thread_id: id,
           sender_user_id: user!.id,
           body,
+          image_url: imageUrl ?? null,
           created_at: new Date().toISOString(),
           delivery: "sending",
         },
       ]);
       return input;
     },
-    mutationFn: ({ id, body }: { id: string; body: string }) =>
+    mutationFn: ({ id, body, imageUrl }: SendInput) =>
       authFetch<ChatMessage>(`/ktv-chat/threads/${id}/messages`, {
-        ...json(pendingSend.current[`${id}:${body}`]),
+        ...json(pendingSend.current[sendKey({ id, body, imageUrl })]),
         headers: {
           "Content-Type": "application/json",
           ...(unlockTokens.current[id] ? { "X-Chat-Unlock": unlockTokens.current[id] } : {}),
         },
       }),
-    onSuccess: (message, { id, body }, input) => {
-      delete pendingSend.current[`${id}:${body}`];
+    onSuccess: (message, { id, body, imageUrl }, input) => {
+      delete pendingSend.current[sendKey({ id, body, imageUrl })];
       setOutbox((old) =>
-        old.map((m) => (m.id === input?.clientMessageId ? { ...message, delivery: "sent" } : m)),
+        old.map((m) =>
+          m.id === input?.clientMessageId
+            ? { ...message, image_url: message.image_url ?? imageUrl, delivery: "sent" }
+            : m,
+        ),
       );
       if (selectedId === id) setActionError("");
       void client.invalidateQueries({ queryKey: ["ktv-chat", user?.id, "threads"] });
@@ -571,9 +644,50 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   });
   const { mutate: sendMessage } = send;
   const resend = useCallback(
-    (item: ChatMessage) => sendMessage({ id: item.thread_id, body: item.body }),
+    (item: ChatMessage) =>
+      sendMessage({ id: item.thread_id, body: item.body, imageUrl: item.image_url ?? undefined }),
     [sendMessage],
   );
+  const chooseImage = (file?: File) => {
+    if (!file || !selectedId) return;
+    if (!CHAT_IMAGE_TYPES.has(file.type)) {
+      setAttachmentError("Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.");
+      return;
+    }
+    if (file.size > MAX_CHAT_IMAGE_BYTES) {
+      setAttachmentError("Dung lượng ảnh tối đa là 5 MB.");
+      return;
+    }
+    setAttachment({ threadId: selectedId, file, previewUrl: URL.createObjectURL(file) });
+    setAttachmentError("");
+  };
+  const submitMessage = async (id: string, body: string) => {
+    if (uploadingImage || send.isPending || (!body && attachment?.threadId !== id)) return;
+    const selectedImage = attachment?.threadId === id ? attachment : null;
+    if (!selectedImage) {
+      sendMessage({ id, body });
+      return;
+    }
+    setUploadingImage(true);
+    setAttachmentError("");
+    try {
+      const data = new FormData();
+      data.append("file", selectedImage.file);
+      const uploaded = await authFetch<{ url: string }>(`/ktv-chat/threads/${id}/images`, {
+        method: "POST",
+        body: data,
+        headers: unlockTokens.current[id] ? { "X-Chat-Unlock": unlockTokens.current[id] } : {},
+      });
+      if (!uploaded?.url) throw new Error("UPLOAD_MISSING_URL");
+      setAttachment((old) => (old === selectedImage ? null : old));
+      sendMessage({ id, body, imageUrl: uploaded.url });
+    } catch (error) {
+      if (isChatLockedError(error)) conceal(id);
+      else setAttachmentError("Chưa tải được ảnh. Vui lòng thử lại.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
   const showDirectory = choosing || !threads.data?.length;
   const query = normalize(search);
   const filteredThreads = (threads.data ?? []).filter((thread) =>
@@ -611,6 +725,10 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
           : "");
   const select = (thread: Thread) => {
     if (current?.id !== thread.id) leaving();
+    if (current?.id !== thread.id) {
+      setAttachment(null);
+      setAttachmentError("");
+    }
     setSelectedId(thread.id);
     setChoosing(false);
     setActionError("");
@@ -618,6 +736,8 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   };
   const pick = () => {
     leaving();
+    setAttachment(null);
+    setAttachmentError("");
     setChoosing(true);
     setSearch("");
     setActionError("");
@@ -1065,14 +1185,62 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           event.preventDefault();
                           if (
                             !paused &&
-                            draft.trim() &&
+                            (draft.trim() || attachment?.threadId === current.id) &&
                             !send.isPending &&
+                            !uploadingImage &&
                             !history.isPending &&
                             !history.isError
                           )
-                            send.mutate({ id: current.id, body: draft.trim() });
+                            void submitMessage(current.id, draft.trim());
                         }}
                       >
+                        {attachment?.threadId === current.id && (
+                          <div className="ktv-chat-attachment-preview">
+                            <Image
+                              src={attachment.previewUrl}
+                              alt="Ảnh chuẩn bị gửi"
+                              width={80}
+                              height={80}
+                              unoptimized
+                            />
+                            <span>{attachment.file.name}</span>
+                            <button
+                              type="button"
+                              aria-label="Xóa ảnh đính kèm"
+                              disabled={uploadingImage}
+                              onClick={() => setAttachment(null)}
+                            >
+                              <X size={18} />
+                            </button>
+                          </div>
+                        )}
+                        {attachmentError && (
+                          <p className="ktv-chat-attachment-error" role="alert">
+                            {attachmentError}
+                          </p>
+                        )}
+                        <input
+                          ref={imageInputRef}
+                          className="ktv-chat-file-input"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          aria-label="Tệp ảnh đính kèm"
+                          disabled={paused || uploadingImage || send.isPending}
+                          onChange={(event) => {
+                            chooseImage(event.currentTarget.files?.[0]);
+                            event.currentTarget.value = "";
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="ktv-chat-attach-toggle"
+                          aria-label="Chọn ảnh đính kèm"
+                          title="Đính kèm ảnh JPG, PNG hoặc WebP (tối đa 5 MB)"
+                          disabled={paused || uploadingImage || send.isPending}
+                          onClick={() => imageInputRef.current?.click()}
+                        >
+                          <ImagePlus size={22} />
+                        </button>
                         {emojiFor === current.id && !paused && (
                           <div
                             className="ktv-chat-emoji-picker"
@@ -1166,20 +1334,25 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           type="submit"
                           disabled={
                             paused ||
-                            !draft.trim() ||
+                            (!draft.trim() && attachment?.threadId !== current.id) ||
                             send.isPending ||
+                            uploadingImage ||
                             history.isPending ||
                             history.isError
                           }
                           aria-label="Gửi tin nhắn"
                         >
-                          {send.isPending ? (
+                          {send.isPending || uploadingImage ? (
                             <LoaderCircle size={21} className="ktv-chat-spinner" />
                           ) : (
                             <Send size={21} />
                           )}
                         </button>
-                        <small>Không chia sẻ mật khẩu hoặc thông tin thanh toán qua chat.</small>
+                        <small>
+                          {uploadingImage
+                            ? "Đang tải ảnh lên…"
+                            : "Ảnh JPG, PNG, WebP tối đa 5 MB. Không chia sẻ mật khẩu hoặc thông tin thanh toán."}
+                        </small>
                       </form>
                     </>
                   )}

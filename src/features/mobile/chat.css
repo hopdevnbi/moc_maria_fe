@@ -393,6 +393,60 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+.ktv-chat-image-open {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  cursor: zoom-in;
+}
+.ktv-chat-bubble p + .ktv-chat-image-open {
+  margin-top: 9px;
+}
+.ktv-chat-image-open img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: inherit;
+}
+.ktv-chat-image-open:focus-visible {
+  outline: 3px solid #9fbc87;
+  outline-offset: 3px;
+}
+.ktv-chat-image-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  padding: 55px 20px 20px;
+  background: #101c16ed;
+  cursor: zoom-out;
+}
+.ktv-chat-image-modal > img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100dvh - 90px);
+  object-fit: contain;
+  cursor: default;
+}
+.ktv-chat-image-modal > button {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff22;
+  color: white;
+  cursor: pointer;
+}
 .ktv-chat-bubble time {
   display: block;
   text-align: right;
@@ -449,6 +503,62 @@
   background: #fffefb;
   border-top: 1px solid #e3e8dd;
   padding: 16px 20px 12px;
+}
+.ktv-chat-file-input {
+  display: none;
+}
+.ktv-chat-composer > .ktv-chat-attach-toggle {
+  background: #eef3e9;
+  color: #4e7152;
+  border: 1px solid #dce7d6;
+  flex-shrink: 0;
+}
+.ktv-chat-attachment-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  background: #f3f7ee;
+  border: 1px solid #dce6d5;
+  border-radius: 14px;
+  padding: 8px;
+}
+.ktv-chat-attachment-preview img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.ktv-chat-attachment-preview span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: #47644b;
+}
+.ktv-chat-attachment-preview button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: #e2eadc;
+  color: #36543a;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.ktv-chat-attachment-preview button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ktv-chat-attachment-error {
+  width: 100%;
+  color: #a14032;
+  font-size: 12px;
 }
 .ktv-chat-composer > .ktv-chat-emoji-toggle {
   background: #eef3e9;
