@@ -4,6 +4,7 @@ import type { Branch, Provider, ServiceItem, ChatProvider } from "@/features/mar
 import demoProviders from "@/features/mobile/demo-ktvs.json";
 import { approvedDescriptions } from "./presentation-data";
 import { persistedDirectory } from "./provider-directory";
+import { officialKtvProfiles } from "./official-ktv-roster";
 
 // Only the public service/branch catalog is cached. Provider approvals and booking slots stay live.
 export async function catalogSnapshot() {
@@ -40,7 +41,7 @@ export async function publicProviderDirectory() {
     ...data,
     providersUnavailable: data.providersUnavailable || !chat.ok,
     providers: await approvedDescriptions(
-      persistedDirectory(data.providers, demoProviders as Provider[], chat.ok ? chat.data : []),
+      persistedDirectory(data.providers, officialKtvProfiles(demoProviders as Provider[]), chat.ok ? chat.data : []),
     ),
   };
 }

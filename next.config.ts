@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "giangxa-media-cdn.b-cdn.net", pathname: "/moc-maria/ktv/**" },
+    ],
+  },
   cacheComponents: true,
   partialPrefetching: true,
   async rewrites() {

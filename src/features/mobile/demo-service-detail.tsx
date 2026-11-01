@@ -1,13 +1,14 @@
 import { providerProfileHref } from "./provider-slugs";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Clock3, MapPin, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock3, MapPin, ShieldAlert, Sparkles, UserRound } from "lucide-react";
 import type { ServiceItem } from "@/features/marketplace/types";
 import type { ChatProvider } from "@/features/marketplace/types";
 import { publicRead } from "@/features/marketplace/public-api";
 import { chatHref } from "./links";
 import { formatPrice } from "@/features/marketplace/format";
 import demoProviders from "./demo-ktvs.json";
+import { officialKtvProfiles } from "./official-ktv-roster";
 import { MobileHeader, MobileNavigation } from "./experience";
 import "./mobile.css";
 import { officialLegacyCareItem } from "./official-ktv-offers";
@@ -16,12 +17,13 @@ export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
   const menuItem = officialLegacyCareItem(item.service.id);
   const name = menuItem?.name || item.service.name;
   const chat = await publicRead<ChatProvider[]>("/ktv-chat/providers");
-  const matching = demoProviders
+  const matching = officialKtvProfiles(demoProviders)
     .filter((provider) => provider.demoServices.some((offer) => offer.id === item.service.id))
     .map((p) => ({
       ...p,
       receiver: chat.ok ? chat.data.find((c) => c.publicAlias === p.id) : undefined,
-    }));
+    }))
+    .filter((provider) => Boolean(provider.receiver));
   return (
     <div className="mobile-experience">
       <MobileHeader />
@@ -119,19 +121,25 @@ export async function DemoServiceDetail({ item }: { item: ServiceItem }) {
                 }
                 key={provider.id}
               >
-                <Image
-                  src={provider.avatarUrl}
-                  width={72}
-                  height={86}
-                  alt={provider.avatarAlt || "Ảnh đại diện " + provider.publicName}
-                  unoptimized
-                />
+                {provider.receiver?.avatarUrl || provider.avatarUrl ? (
+                  <Image
+                    src={provider.receiver?.avatarUrl || provider.avatarUrl!}
+                    width={72}
+                    height={86}
+                    alt={provider.avatarAlt || "Ảnh đại diện " + provider.publicName}
+                    unoptimized
+                  />
+                ) : (
+                  <UserRound size={48} aria-label={"Chưa có ảnh của " + provider.publicName} />
+                )}
                 <div>
                   <span className="mm-overline">KỸ THUẬT VIÊN</span>
                   <strong>{provider.publicName}</strong>
-                  <small>
-                    <Sparkles size={13} /> {provider.yearsExperience} năm kinh nghiệm
-                  </small>
+                  {provider.yearsExperience != null && (
+                    <small>
+                      <Sparkles size={13} /> {provider.yearsExperience} năm kinh nghiệm
+                    </small>
+                  )}
                   <small>
                     <MapPin size={13} /> {provider.serviceArea}
                   </small>

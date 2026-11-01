@@ -166,7 +166,11 @@ export function MobileHeader() {
 
 export function ProviderTile({ provider }: { provider: Provider }) {
   const safeAvatar =
-    provider.avatarUrl?.startsWith("/media/") && !provider.avatarUrl.includes("..")
+    provider.avatarUrl &&
+    ((provider.avatarUrl.startsWith("/media/") && !provider.avatarUrl.includes("..")) ||
+      /^https:\/\/giangxa-media-cdn\.b-cdn\.net\/moc-maria\/ktv\/[a-zA-Z0-9/_-]+\.(?:webp|jpg)$/.test(
+        provider.avatarUrl,
+      ))
       ? provider.avatarUrl
       : null;
   return (

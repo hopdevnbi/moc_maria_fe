@@ -20,17 +20,18 @@ describe("Public URLs retain identity without demo text", () => {
     const clean = cleanPublicQuery(q)!;
     expect(clean).not.toContain("demo");
     const parsed = new URLSearchParams(clean);
-    expect(parsed.get("provider")).toBe("linh-anh");
+    expect(parsed.get("provider")).toBe("nguyet-nguyen");
     expect(parsed.getAll("extra")).toEqual(["a", "b"]);
     expect(internalProviderParam(parsed.get("provider")!)).toBe(q.provider);
     expect(internalServiceParam(parsed.get("service")!)).toBe(q.service);
     expect(internalVariantParam(parsed.get("variant")!)).toBe(q.variant);
-    expect(cleanPublicQuery({ provider: "linh-anh", service: "massage-co-vai-gay" })).toBeNull();
+    expect(cleanPublicQuery({ provider: "nguyet-nguyen", service: "massage-co-vai-gay" })).toBeNull();
+    expect(internalProviderParam("linh-anh")).toBe("demo-ktv-01");
   });
   it("builds clean booking/chat links for seeded providers and services", () => {
-    expect(bookingHref({ provider: "demo-ktv-01" })).toBe("/dat-lich?provider=linh-anh");
+    expect(bookingHref({ provider: "demo-ktv-01" })).toBe("/dat-lich?provider=nguyet-nguyen");
     expect(chatHref("demo-ktv-04", "demo-neck")).toBe(
-      "/tin-nhan?provider=bao-ngoc&service=massage-co-vai-gay",
+      "/tin-nhan?provider=son-tung-thao-y&service=massage-co-vai-gay",
     );
     for (const s of services) {
       const href = bookingHref({

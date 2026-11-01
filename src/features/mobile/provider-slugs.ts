@@ -1,4 +1,5 @@
 import profiles from "./demo-ktvs.json";
+import { officialKtvProfiles } from "./official-ktv-roster";
 
 function slugify(value: string): string {
   return value
@@ -11,7 +12,8 @@ function slugify(value: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export const namedProfiles = profiles.map((profile) => ({
+const historicSlugs = new Map(profiles.map((profile) => [profile.id, slugify(profile.publicName)]));
+export const namedProfiles = officialKtvProfiles(profiles).map((profile) => ({
   ...profile,
   urlSlug: slugify(profile.publicName),
 }));
@@ -28,5 +30,8 @@ export function providerProfileHref(provider: {
 }
 
 export function findNamedProfile(segment: string) {
-  return namedProfiles.find((item) => item.urlSlug === segment || item.id === segment);
+  return namedProfiles.find(
+    (item) => item.urlSlug === segment || item.id === segment ||
+      historicSlugs.get(item.id) === segment,
+  );
 }
