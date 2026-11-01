@@ -31,6 +31,7 @@ import { ProviderRating } from "@/features/provider-reviews/reviews";
 import { officialDemoKtvOffers } from "./official-ktv-offers";
 import { careMenu } from "./official-menu";
 import { BrandLogo } from "./brand-logo";
+import { ktvAvatarUrl } from "./ktv-avatar";
 
 type HomeProps = {
   providers: Provider[];
@@ -90,16 +91,7 @@ function initials(name: string) {
 }
 
 function MassageKtvCard({ provider, offers }: { provider: Provider; offers: ServiceOffer[] }) {
-  const avatar =
-    (provider.avatarUrl?.startsWith("/media/") ||
-      (provider.isDemo &&
-        (provider.avatarUrl?.startsWith("/demo/ktv/") ||
-          provider.avatarUrl?.startsWith(
-            "https://giangxa-media-cdn.b-cdn.net/moc-maria/demo-ktv/",
-          )))) &&
-    !provider.avatarUrl.includes("..")
-      ? provider.avatarUrl
-      : null;
+  const avatar = ktvAvatarUrl(provider.avatarUrl, provider.isDemo);
   const canBook = !provider.isDemo && provider.bookable !== false && offers.length > 0;
   return (
     <article className="ktv-card">

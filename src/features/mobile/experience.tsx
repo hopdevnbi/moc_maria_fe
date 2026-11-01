@@ -37,6 +37,7 @@ import "./mobile.css";
 import { BrandLogo } from "./brand-logo";
 import { SiteReleaseUpdate } from "@/shared/release/site-release-update";
 import { useCatalogRealtime } from "./useCatalogRealtime";
+import { ktvAvatarUrl } from "./ktv-avatar";
 
 type Focus = "providers" | "services";
 type Props = {
@@ -165,14 +166,7 @@ export function MobileHeader() {
 }
 
 export function ProviderTile({ provider }: { provider: Provider }) {
-  const safeAvatar =
-    provider.avatarUrl &&
-    ((provider.avatarUrl.startsWith("/media/") && !provider.avatarUrl.includes("..")) ||
-      /^https:\/\/giangxa-media-cdn\.b-cdn\.net\/moc-maria\/ktv\/[a-zA-Z0-9/_-]+\.(?:webp|jpg)$/.test(
-        provider.avatarUrl,
-      ))
-      ? provider.avatarUrl
-      : null;
+  const safeAvatar = ktvAvatarUrl(provider.avatarUrl, provider.isDemo);
   return (
     <article className="mm-provider-card">
       <Link href={providerProfileHref(provider)} className="mm-provider-main">
