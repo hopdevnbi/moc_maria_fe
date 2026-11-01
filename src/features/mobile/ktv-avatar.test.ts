@@ -4,14 +4,11 @@ import { officialKtvProfiles } from "./official-ktv-roster";
 import demoProfiles from "./demo-ktvs.json";
 
 describe("KTV avatar sources", () => {
-  it("accepts the five uploaded CDN portraits on the homepage", () => {
+  it("accepts all seven uploaded CDN portraits on the homepage", () => {
     const staff = officialKtvProfiles(demoProfiles);
     expect(staff).toHaveLength(7);
-    staff.slice(0, 5).forEach((profile) => {
+    staff.forEach((profile) => {
       expect(ktvAvatarUrl(profile.avatarUrl, true)).toBe(profile.avatarUrl);
-    });
-    staff.slice(5).forEach((profile) => {
-      expect(ktvAvatarUrl(profile.avatarUrl, true)).toBeNull();
     });
   });
 

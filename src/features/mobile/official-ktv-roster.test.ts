@@ -21,4 +21,18 @@ describe("official seven KTV roster", () => {
       expect(r.scheduleOpen).toBe(false);
     }
   });
+  it("gives all seven KTVs their own Bunny CDN portrait", () => {
+    const expected = [
+      "nguyet-nguyen-a39108e3dbf4.jpg",
+      "huyen-lanh-7b769c516db5.jpg",
+      "hoang-anh-d5c54c85aed5.jpg",
+      "son-tung-thao-y-7e43bee9234f.jpg",
+      "bac-si-tien-manh-8122113ebff0.jpg",
+      "nguyen-hoan-bdb912dad08b.jpg",
+      "linh-dan-fb68af38e35e.jpg",
+    ];
+    expect(rows.map((r) => r.avatarUrl)).toEqual(
+      expected.map((file) => "https://giangxa-media-cdn.b-cdn.net/moc-maria/ktv/roster-20261101/" + file),
+    );
+  });
 });

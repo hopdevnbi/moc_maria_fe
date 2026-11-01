@@ -41,13 +41,13 @@ const roster: Record<
     publicName: "Nguyễn Hoàn", birthYear: 1992,
     title: "Quản lý · Kỹ thuật viên phục hồi chức năng",
     introduction: "Quản lý nữ, chuyên ngành kỹ thuật viên phục hồi chức năng. Kỹ năng nổi bật: diện chẩn, chăm sóc vùng đầu và giải cơ chuyên sâu.",
-    avatarUrl: null,
+    avatarUrl: cdn + "nguyen-hoan-bdb912dad08b.jpg",
   },
   "demo-ktv-07": {
     publicName: "Linh Đan", birthYear: 1995,
     title: "Quản lý · Chăm sóc thư giãn",
     introduction: "Quản lý nữ nhiệt tình, chu đáo; có thế mạnh chăm sóc nhẹ nhàng, phù hợp khách hàng cần thư giãn.",
-    avatarUrl: null,
+    avatarUrl: cdn + "linh-dan-fb68af38e35e.jpg",
   },
 };
 
