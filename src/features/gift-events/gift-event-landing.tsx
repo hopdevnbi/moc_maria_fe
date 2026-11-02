@@ -33,7 +33,6 @@ import type { AuthResponse } from "@/features/auth/auth.types";
 import { BookingAccountDialog } from "@/features/mobile/booking-account-dialog";
 import { GiftBookingNextStep, giftBookingDirectoryOptions } from "./gift-booking-next-step";
 import { WalletQr } from "./wallet-qr";
-import { EventSupport } from "./event-support";
 import {
   boxImages,
   eligibilityCopy,
@@ -899,7 +898,6 @@ export function GiftEventLanding() {
             <a href="#the-le">Thể lệ</a>
           </nav>
         </footer>
-        <EventSupport status={status} user={user} authFetch={authFetch} />
       </div>
       {guestIntent && !openedGift && (
         <BookingAccountDialog

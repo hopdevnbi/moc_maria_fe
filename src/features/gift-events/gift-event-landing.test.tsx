@@ -119,7 +119,6 @@ describe("P09 Mộc Maria event landing", () => {
     expect(
       screen.getByText(/Hạn dùng và dịch vụ áp dụng ghi rõ trên từng voucher/),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Mở hỗ trợ online" })).toBeInTheDocument();
     expect(
       screen.queryByText(/QR và xác nhận quà tại quầy được triển khai/),
     ).not.toBeInTheDocument();

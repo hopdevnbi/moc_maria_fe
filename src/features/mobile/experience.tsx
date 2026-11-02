@@ -95,21 +95,6 @@ export function MobileNavigation({
           </Link>
         ))}
       </nav>
-      {active !== "chat" && (
-        <a
-          className="mm-social-floating"
-          href="https://www.facebook.com/mocmariads"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Fanpage Facebook Mộc Maria (mở trong tab mới)"
-          title="Kết nối với Mộc Maria trên Facebook"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M14 22v-9h3l.5-4H14V7c0-1.2.3-2 2-2h2V1.4C17.4 1.2 16.2 1 15 1c-3 0-5 1.8-5 5v3H7v4h3v9h4Z" />
-          </svg>
-          <span>Facebook</span>
-        </a>
-      )}
     </>
   );
 }

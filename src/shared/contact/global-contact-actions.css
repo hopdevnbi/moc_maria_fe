@@ -1,0 +1,101 @@
+.mm-global-contact {
+  position: fixed;
+  z-index: 120;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+  max-width: calc(100vw - 24px);
+  font-family: var(--font-wellness-sans), system-ui, sans-serif;
+}
+
+.mm-global-contact > *,
+.mm-global-contact .mm-ev-support > * {
+  pointer-events: auto;
+}
+
+/* Keep the existing support panel, but let the shared container position it. */
+.mm-global-contact .mm-ev-support {
+  position: static;
+  z-index: auto;
+  bottom: auto;
+  right: auto;
+  width: auto;
+  max-width: 100%;
+}
+
+.mm-global-contact-facebook {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 50px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #1877f2;
+  color: #fff;
+  box-shadow: 0 8px 23px #1877f23d;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform 0.2s,
+    background 0.2s;
+}
+.mm-global-contact-facebook:hover {
+  background: #1465d1;
+  transform: translateY(-2px);
+}
+.mm-global-contact-facebook:focus-visible,
+.mm-global-contact button:focus-visible,
+.mm-global-contact a:focus-visible {
+  outline: 3px solid #d4ae67;
+  outline-offset: 3px;
+}
+
+@media (max-width: 800px) {
+  .mm-global-contact {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+  /* Lift contact controls above the persistent mobile navigation bar. */
+  body:has(.mobile-tabbar) .mm-global-contact {
+    bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+  /* On booking, the sticky appointment CTA also needs clear space. */
+  body:has(.mm-quick-booking-main) .mm-global-contact {
+    bottom: calc(180px + env(safe-area-inset-bottom));
+  }
+  .mm-global-contact-facebook {
+    min-width: 46px;
+    min-height: 46px;
+    padding: 11px;
+    font-size: 0;
+  }
+  .mm-global-contact-facebook span {
+    display: none;
+  }
+  .mm-global-contact .mm-ev-support-launcher {
+    min-height: 46px;
+    padding: 11px 14px;
+  }
+  .mm-global-contact .mm-ev-support-panel {
+    max-height: min(550px, calc(100dvh - 230px));
+  }
+}
+
+@media (max-width: 400px) {
+  .mm-global-contact .mm-ev-support-launcher span {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-global-contact-facebook {
+    transition: none;
+  }
+}

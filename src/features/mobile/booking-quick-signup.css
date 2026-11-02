@@ -329,9 +329,6 @@
     margin: 0;
     font-size: 14px;
   }
-  .mobile-experience:has(.mm-quick-booking-main) .mm-social-floating {
-    bottom: calc(180px + env(safe-area-inset-bottom));
-  }
 }
 @media (max-width: 540px) {
   .mm-booking-account {
