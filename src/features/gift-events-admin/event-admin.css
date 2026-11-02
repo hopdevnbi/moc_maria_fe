@@ -455,3 +455,41 @@
     font-size: 16px;
   }
 }
+
+/* Time/terms amendment for the already-live Noel event (admin only). */
+.mm-ge-christmas-period {
+  border: 1px solid #d7c9a6;
+  background: #fffcf3;
+  border-radius: 16px;
+  padding: 18px;
+}
+.mm-ge-christmas-period > strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mm-ge-christmas-period p {
+  font-size: 13px;
+  line-height: 1.65;
+}
+.mm-ge-christmas-confirm {
+  display: grid;
+  max-width: 610px;
+  gap: 10px;
+  margin-top: 15px;
+}
+.mm-ge-christmas-confirm label {
+  font-size: 13px;
+  font-weight: 700;
+}
+.mm-ge-christmas-confirm input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d7c9a6;
+  border-radius: 9px;
+}
+.mm-ge-christmas-confirm > div {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
