@@ -1,0 +1,20 @@
+# Event quick signup and booking
+
+Anonymous visitors choosing a box in a live event get the existing inline account dialog, adapted to show the selected gift, campaign and current terms. Registration supports phone or email. Existing customers can switch to login without losing the chosen box or contact. Neither choosing a box nor dismissing the dialog consumes a turn.
+
+After authentication, the continuation uses the freshly returned access token rather than waiting for React context to settle. It fetches the public campaign and authenticated eligibility in parallel, then checks the campaign identity, live status, terms version and `canOpen`. Changed terms require renewed consent. Account creation alone never grants event eligibility. The backend retains authority over tiers, stock, reward allocation and one turn per customer.
+
+Only the server's successful open response reveals a reward and mounts the booking follow-up. The synchronous in-flight guard prevents duplicate submission. A request keeps its user/campaign scope, box, terms version and idempotency UUID in memory; its UUID also survives in session storage, as before. An ambiguous response keeps the same payload available for retry even if the next eligibility response says `ALREADY_PLAYED`. Successful confirmation clears that pending request. Logout cannot race an active open.
+
+The follow-up prefetches the public KTV directory alongside gift confirmation. Its horizontal mobile cards use the existing published provider records, photos, service areas and service names. The visitor explicitly chooses a provider and follows an official `https://mocmaria.com/dat-lich?provider=...` link. Directory failures have retry and official booking fallback controls. No account tokens, gift QR codes or private reward identifiers enter the booking URL. The regular API refresh cookie restores the account on the main site. Service/time selection and the existing KTV confirmation flow remain on the booking page; the interface does not promise automatic voucher application.
+
+The shared booking dialog receives an optional gift context. Existing booking labels, validation and automatic inquiry continuation remain unchanged. Both contexts retain native dialog focus handling, scroll lock, password clearing, double-submit prevention and VisualViewport sizing. Gift terms remain readable in the dialog and consent controls disable submission when unchecked.
+
+## Verification
+
+- Guest continuation tests exercise the real QueryClient and mocked network, including auth cache reset, fresh-token authorization, selected-box preservation, double submission, duplicate-account/login recovery, declined terms, ineligible accounts, campaign pause, terms changes and lost-response replay.
+- Picker tests cover persisted photos, explicit provider selection, failed-directory fallback and restriction of booking links to the official booking path. Directory route tests assert additive photo/link fields without exposing account IDs. Existing booking continuation tests remain part of full quality validation.
+- Browser layout checks used actual public campaign and KTV records through a temporary local visual harness. Checked 320px and 390px mobile, 1440px desktop and a 390x420 reduced viewport. No horizontal page overflow; the dialog action remained within the reduced viewport (bottom 358.5px). The harness is removed from the release.
+- Localhost is not an allowed production API browser origin, so guest submission edge cases use mocked transports. Production verification is read-only: deployed revision, public directory, anonymous box-to-popup interaction and mobile layout. No QA account, real gift opening, booking, voucher redemption or campaign configuration write is required.
+
+Full local quality, production build, dependency audit, GitHub CI and deployment evidence are recorded separately in the scoped Plan release entry. The change is frontend-only and preserves the existing gift backend contracts and admin changes from main.

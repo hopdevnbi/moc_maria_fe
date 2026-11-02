@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, Check, Eye, EyeOff, Leaf, LockKeyhole, X } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -11,12 +12,20 @@ export function BookingAccountDialog({
   providerName,
   serviceName,
   when,
+  gift,
   onAuthenticated,
   onDismiss,
 }: {
   providerName: string;
   serviceName: string;
   when: string;
+  gift?: {
+    boxId: number;
+    termsVersion: number;
+    termsText: string;
+    accepted: boolean;
+    onAcceptedChange: (accepted: boolean) => void;
+  };
   onAuthenticated: (auth: AuthResponse) => Promise<void>;
   onDismiss: () => void;
 }) {
@@ -77,7 +86,7 @@ export function BookingAccountDialog({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (inFlight.current) return;
+    if (inFlight.current || (gift && !gift.accepted)) return;
     setError("");
     setErrors({});
     const contact = values.contact.trim();
@@ -131,7 +140,7 @@ export function BookingAccountDialog({
   return (
     <dialog
       ref={dialog}
-      className="mm-booking-account"
+      className={"mm-booking-account" + (gift ? " mm-booking-account-gift" : "")}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       aria-busy={busy}
@@ -159,7 +168,7 @@ export function BookingAccountDialog({
           <button
             type="button"
             className="mm-booking-account-close"
-            aria-label="Đóng đăng ký nhanh"
+            aria-label={gift ? "Đóng đăng ký mở quà" : "Đóng đăng ký nhanh"}
             disabled={busy}
             onClick={onDismiss}
           >
@@ -172,25 +181,43 @@ export function BookingAccountDialog({
           </span>
           <span className="mm-booking-account-eyebrow">MỘT CHÚT THẢNH THƠI ĐANG CHỜ BẠN</span>
           <h2 ref={heading} id={titleId} tabIndex={-1}>
-            {mode === "register" ? "Chỉ còn một bước nhỏ" : "Mừng bạn trở lại"}
+            {gift
+              ? mode === "register"
+                ? "Mở quà, đón an lành"
+                : "Quà đang chờ bạn"
+              : mode === "register"
+                ? "Chỉ còn một bước nhỏ"
+                : "Mừng bạn trở lại"}
           </h2>
           <p id={descriptionId}>
-            {mode === "register"
-              ? "Tạo tài khoản nhanh để gửi yêu cầu và nhận phản hồi từ KTV. Lựa chọn của bạn đã được giữ nguyên."
-              : "Đăng nhập ngay tại đây. Chúng mình sẽ tự gửi yêu cầu bạn vừa chọn."}
+            {gift
+              ? "Đăng ký hoặc đăng nhập ngay tại đây. Mộc sẽ kiểm tra lượt tham gia rồi mở hộp bạn đã chọn khi đủ điều kiện."
+              : mode === "register"
+                ? "Tạo tài khoản nhanh để gửi yêu cầu và nhận phản hồi từ KTV. Lựa chọn của bạn đã được giữ nguyên."
+                : "Đăng nhập ngay tại đây. Chúng mình sẽ tự gửi yêu cầu bạn vừa chọn."}
           </p>
         </header>
         <div className="mm-booking-account-selection">
-          <span className="mm-booking-account-avatar" aria-hidden="true">
-            {providerName
-              .split(/\s+/)
-              .slice(-2)
-              .map((word) => word[0])
-              .join("")}
-          </span>
+          {gift ? (
+            <Image
+              className="mm-booking-account-avatar"
+              src={`/event/gift-boxes/gift-${gift.boxId}-320.webp`}
+              width={48}
+              height={48}
+              alt=""
+            />
+          ) : (
+            <span className="mm-booking-account-avatar" aria-hidden="true">
+              {providerName
+                .split(/\s+/)
+                .slice(-2)
+                .map((word) => word[0])
+                .join("")}
+            </span>
+          )}
           <div>
-            <strong>{providerName}</strong>
-            <span>{serviceName}</span>
+            <strong>{gift ? serviceName : providerName}</strong>
+            <span>{gift ? providerName : serviceName}</span>
             <small>{when}</small>
           </div>
           <Check size={18} aria-hidden="true" />
@@ -209,7 +236,7 @@ export function BookingAccountDialog({
                   required
                   minLength={2}
                   maxLength={160}
-                  placeholder="Tên để KTV xưng hô với bạn"
+                  placeholder={gift ? "Tên để Mộc gửi lời chúc" : "Tên để KTV xưng hô với bạn"}
                   value={values.displayName}
                   onChange={(event) =>
                     setValues((old) => ({ ...old, displayName: event.target.value }))
@@ -303,6 +330,22 @@ export function BookingAccountDialog({
                   ? "Từ 10 ký tự, có chữ hoa, chữ thường và số."
                   : "Dùng mật khẩu tài khoản Mộc Maria của bạn.")}
             </small>
+            {gift && (
+              <div className="mm-booking-account-terms">
+                <details>
+                  <summary>Xem thể lệ · phiên bản {gift.termsVersion}</summary>
+                  <p>{gift.termsText}</p>
+                </details>
+                <label className="mm-booking-account-agreement">
+                  <input
+                    type="checkbox"
+                    checked={gift.accepted}
+                    onChange={(event) => gift.onAcceptedChange(event.target.checked)}
+                  />
+                  <span>Tôi đã đọc và đồng ý thể lệ sự kiện trước khi mở quà.</span>
+                </label>
+              </div>
+            )}
           </fieldset>
           {error && (
             <p role="alert" className="mm-booking-account-error">
@@ -310,24 +353,39 @@ export function BookingAccountDialog({
             </p>
           )}
           <div className="mm-booking-account-footer">
-            <button className="mm-booking-account-submit" type="submit" disabled={busy}>
+            <button
+              className="mm-booking-account-submit"
+              type="submit"
+              disabled={busy || (!!gift && !gift.accepted)}
+            >
               {busy ? (
                 <PendingLabel>
                   {sending
-                    ? "Đang gửi yêu cầu…"
+                    ? gift
+                      ? "Đang kiểm tra và mở quà…"
+                      : "Đang gửi yêu cầu…"
                     : mode === "register"
                       ? "Đang tạo tài khoản…"
                       : "Đang đăng nhập…"}
                 </PendingLabel>
               ) : (
                 <>
-                  {mode === "register" ? "Đăng ký nhanh & gửi yêu cầu" : "Đăng nhập & gửi yêu cầu"}
+                  {gift
+                    ? mode === "register"
+                      ? "Đăng ký & mở hộp quà"
+                      : "Đăng nhập & mở hộp quà"
+                    : mode === "register"
+                      ? "Đăng ký nhanh & gửi yêu cầu"
+                      : "Đăng nhập & gửi yêu cầu"}
                   <ArrowRight size={18} />
                 </>
               )}
             </button>
             <small>
-              <LockKeyhole size={12} /> Gửi yêu cầu tự động · Chờ KTV xác nhận
+              <LockKeyhole size={12} />{" "}
+              {gift
+                ? "Quà lưu trong ví · Một lượt mỗi sự kiện"
+                : "Gửi yêu cầu tự động · Chờ KTV xác nhận"}
             </small>
             <p>
               {mode === "register" ? "Bạn đã có tài khoản?" : "Bạn chưa có tài khoản?"}{" "}

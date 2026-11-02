@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useId, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -27,18 +27,23 @@ import {
 } from "lucide-react";
 import { apiRequest, parseApiResponse } from "@/features/auth/auth-api";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import type { AuthResponse } from "@/features/auth/auth.types";
+import { BookingAccountDialog } from "@/features/mobile/booking-account-dialog";
+import { GiftBookingNextStep, giftBookingDirectoryOptions } from "./gift-booking-next-step";
 import { WalletQr } from "./wallet-qr";
 import {
   boxImages,
   eligibilityCopy,
   statusLabels,
   type CurrentEvent,
+  type EventCampaign,
   type EventMe,
   type WalletGift,
 } from "./types";
 import type { GiftOpenResult } from "./types";
 import "./gift-event-landing.css";
 import "./gift-event-christmas.css";
+import "@/features/mobile/booking-quick-signup.css";
 
 const christmasBoxes: Record<(typeof boxImages)[number], { name: string; wish: string }> = {
   1: { name: "Thông Xanh An Lành", wish: "Gửi bạn một mùa bình yên" },
@@ -218,13 +223,31 @@ function Faq() {
 
 export function GiftEventLanding() {
   const { user, status, authFetch, logout } = useAuth();
+  const client = useQueryClient();
   const termsId = useId();
+  const [guestIntent, setGuestIntent] = useState<{
+    campaign: EventCampaign;
+    boxId: (typeof boxImages)[number];
+  } | null>(null);
+  const openingRef = useRef(false);
+  const pending = useRef<{
+    userId: string;
+    eventId: string;
+    boxId: number;
+    termsVersion: number;
+    key: string;
+  } | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
   const [boxId, setBoxId] = useState<(typeof boxImages)[number] | null>(null);
   const [agreed, setAgreed] = useState(true);
   const [showWallet, setShowWallet] = useState(false);
   const [ticker, setTicker] = useState(0);
   const [opening, setOpening] = useState(false);
-  const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const [pendingRequest, setPendingRequest] = useState<{
+    key: string;
+    userId: string;
+    eventId: string;
+  } | null>(null);
   const [openError, setOpenError] = useState("");
   const [openedGift, setOpenedGift] = useState<GiftOpenResult | null>(null);
   const [skipEffect, setSkipEffect] = useState(false);
@@ -276,13 +299,25 @@ export function GiftEventLanding() {
     : event?.eligibleTiers.map((tier) => (tier === "STANDARD" ? "THƯỜNG" : tier)).join(" · ") ||
       "Đang cập nhật";
 
+  const canRetry =
+    !!pendingRequest && pendingRequest.userId === user?.id && pendingRequest.eventId === event?.id;
+  useEffect(() => {
+    if (openedGift) {
+      resultRef.current?.focus({ preventScroll: true });
+      resultRef.current?.scrollIntoView?.({ block: "center" });
+    }
+  }, [openedGift]);
+
   async function signOut() {
-    if (logoutPending) return;
+    if (logoutPending || openingRef.current) return;
     setLogoutPending(true);
     setLogoutError("");
     try {
       await logout();
       setOpenedGift(null);
+      pending.current = null;
+      setPendingRequest(null);
+      setGuestIntent(null);
       setBoxId(null);
       setAgreed(true);
       setShowWallet(false);
@@ -293,30 +328,91 @@ export function GiftEventLanding() {
     }
   }
 
-  async function openSelectedBox() {
-    if (!event || !user || !eligibleBox || !boxId || !agreed || opening || openedGift) return;
+  async function openSelectedBox(auth?: AuthResponse, intent = guestIntent) {
+    const actor = auth?.user ?? user;
+    let campaign = intent?.campaign ?? event;
+    const selectedBox = intent?.boxId ?? boxId;
+    if (!actor || !campaign || !selectedBox || !agreed || openingRef.current || openedGift) return;
+    const retry =
+      pending.current?.userId === actor.id && pending.current?.eventId === campaign.id
+        ? pending.current
+        : null;
+    if (!auth && !eligibleBox && !retry) return;
+    openingRef.current = true;
     setOpening(true);
     setOpenError("");
-    // Preserve this key after an ambiguous network failure; server-side retry
-    // must return the same committed prize, never consume another attempt.
-    const storageKey = `moc-gift-open:${user.id}:${event.id}`;
-    let key: string;
+    let started = false;
+    const request = async <T,>(path: string, init: RequestInit = {}): Promise<T> =>
+      auth
+        ? parseApiResponse<T>(await apiRequest(path, init, auth.accessToken))
+        : authFetch<T>(path, init);
     try {
-      key = window.sessionStorage.getItem(storageKey) || crypto.randomUUID();
-      window.sessionStorage.setItem(storageKey, key);
-    } catch {
-      // No storage access: still keep one key for this component session.
-      key = pendingKey || crypto.randomUUID();
-    }
-    setPendingKey(key);
-    try {
-      const result = await authFetch<GiftOpenResult>(`/gift-events/${event.id}/open`, {
+      if (auth && !retry) {
+        // Never infer eligibility from signup. Recheck both the campaign and the
+        // authenticated customer using the freshly returned session token.
+        const [latest, eligibility] = await Promise.all([
+          publicCurrent(),
+          request<EventMe>("/gift-events/me", { cache: "no-store" }),
+        ]);
+        client.setQueryData(["gift-event", "current"], latest);
+        client.setQueryData(["gift-event", "me", actor.id, latest.campaign?.id], eligibility);
+        if (
+          !latest.campaign ||
+          latest.campaign.id !== campaign.id ||
+          latest.campaign.effectiveStatus !== "LIVE"
+        ) {
+          setOpenError(
+            "Sự kiện đã thay đổi hoặc tạm dừng. Bạn xem lại thông tin trước khi mở quà nhé.",
+          );
+          return;
+        }
+        if (latest.campaign.termsVersion !== campaign.termsVersion) {
+          setAgreed(false);
+          setOpenError(
+            "Thể lệ vừa được cập nhật. Vui lòng đọc và đồng ý phiên bản mới trước khi mở quà.",
+          );
+          return;
+        }
+        if (eligibility.eventId !== campaign.id || !eligibility.canOpen) {
+          setOpenError(eligibilityCopy(latest.campaign, "authenticated", eligibility).detail);
+          if (eligibility.reason === "ALREADY_PLAYED") setShowWallet(true);
+          return;
+        }
+        campaign = latest.campaign;
+      }
+      const storageKey = `moc-gift-open:${actor.id}:${campaign.id}`;
+      let key = retry?.key;
+      if (!key) {
+        try {
+          key = window.sessionStorage.getItem(storageKey) || crypto.randomUUID();
+        } catch {
+          key = crypto.randomUUID();
+        }
+      }
+      const input = retry ?? {
+        userId: actor.id,
+        eventId: campaign.id,
+        boxId: selectedBox,
+        termsVersion: campaign.termsVersion,
+        key,
+      };
+      pending.current = input;
+      setPendingRequest({ key: input.key, userId: actor.id, eventId: campaign.id });
+      try {
+        window.sessionStorage.setItem(storageKey, input.key);
+      } catch {
+        /* Memory retry remains available. */
+      }
+      started = true;
+      // Public roster loads alongside gift confirmation, so the next step is ready.
+      void client.prefetchQuery(giftBookingDirectoryOptions);
+      const result = await request<GiftOpenResult>(`/gift-events/${input.eventId}/open`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          boxId,
-          idempotencyKey: key,
-          termsVersion: event.termsVersion,
+          boxId: input.boxId,
+          idempotencyKey: input.key,
+          termsVersion: input.termsVersion,
           termsAccepted: true,
         }),
       });
@@ -326,409 +422,460 @@ export function GiftEventLanding() {
       } catch {
         /* blocked storage */
       }
-      setPendingKey(null);
+      pending.current = null;
+      setPendingRequest(null);
       void me.refetch();
       if (showWallet) void wallet.refetch();
     } catch {
       setOpenError(
-        "Chưa xác nhận được kết quả. Bấm thử lại để tra cứu cùng yêu cầu, không dùng thêm lượt.",
+        started
+          ? "Chưa xác nhận được kết quả. Bấm thử lại để tra cứu cùng yêu cầu, không dùng thêm lượt."
+          : "Chưa kiểm tra được lượt quà. Tài khoản của bạn đã sẵn sàng; vui lòng thử lại.",
       );
       void me.refetch();
     } finally {
+      openingRef.current = false;
       setOpening(false);
     }
   }
 
   return (
-    <div className="mm-ev mm-ev-christmas">
-      <a className="mm-ev-skip" href="#mm-ev-main">
-        Bỏ qua điều hướng
-      </a>
-      <div className="mm-ev-top-line" aria-hidden="true" />
-      <header className="mm-ev-topbar">
-        <a
-          href="https://mocmaria.com/"
-          className="mm-ev-logo"
-          aria-label="Trở về trang chủ Mộc Maria"
-        >
-          <span className="mm-ev-logo-symbol">✥</span>
-          <span>
-            <strong>Mộc Maria</strong>
-            <small>WELLNESS LOUNGE</small>
-          </span>
+    <>
+      <div className="mm-ev mm-ev-christmas">
+        <a className="mm-ev-skip" href="#mm-ev-main">
+          Bỏ qua điều hướng
         </a>
-        <nav aria-label="Điều hướng sự kiện">
-          <a href="#the-le">Thể lệ</a>
-          <a href="#cau-hoi">Giải đáp</a>
-          {status === "authenticated" ? (
-            <>
-              <button
-                type="button"
-                className="mm-ev-wallet-shortcut"
-                onClick={() => {
-                  setShowWallet(true);
-                  document
-                    .getElementById("mm-ev-wallet-area")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                <WalletCards size={16} /> Ví quà
-              </button>
-              <Link className="mm-ev-account-link" href="/tai-khoan" title="Quản lý tài khoản">
-                <UserRound size={16} /> <span>{user?.displayName || "Tài khoản"}</span>
-              </Link>
-              <button
-                className="mm-ev-logout"
-                type="button"
-                disabled={logoutPending}
-                onClick={() => void signOut()}
-                aria-label="Đăng xuất khỏi tài khoản Mộc Maria"
-              >
-                <LogOut size={16} /> <span>{logoutPending ? "Đang thoát..." : "Đăng xuất"}</span>
-              </button>
-            </>
-          ) : status === "anonymous" ? (
-            <>
-              <Link className="mm-ev-account-link" href="/dang-ky?returnTo=%2Fevent">
-                Đăng ký
-              </Link>
-              <Link className="mm-ev-wallet-shortcut" href="/dang-nhap?returnTo=%2Fevent">
-                <UserRound size={16} /> Đăng nhập
-              </Link>
-            </>
-          ) : (
-            <span className="mm-ev-auth-loading" role="status">
-              Đang kiểm tra tài khoản…
+        <div className="mm-ev-top-line" aria-hidden="true" />
+        <header className="mm-ev-topbar">
+          <a
+            href="https://mocmaria.com/"
+            className="mm-ev-logo"
+            aria-label="Trở về trang chủ Mộc Maria"
+          >
+            <span className="mm-ev-logo-symbol">✥</span>
+            <span>
+              <strong>Mộc Maria</strong>
+              <small>WELLNESS LOUNGE</small>
+            </span>
+          </a>
+          <nav aria-label="Điều hướng sự kiện">
+            <a href="#the-le">Thể lệ</a>
+            <a href="#cau-hoi">Giải đáp</a>
+            {status === "authenticated" ? (
+              <>
+                <button
+                  type="button"
+                  className="mm-ev-wallet-shortcut"
+                  onClick={() => {
+                    setShowWallet(true);
+                    document
+                      .getElementById("mm-ev-wallet-area")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  <WalletCards size={16} /> Ví quà
+                </button>
+                <Link className="mm-ev-account-link" href="/tai-khoan" title="Quản lý tài khoản">
+                  <UserRound size={16} /> <span>{user?.displayName || "Tài khoản"}</span>
+                </Link>
+                <button
+                  className="mm-ev-logout"
+                  type="button"
+                  disabled={logoutPending || opening}
+                  onClick={() => void signOut()}
+                  aria-label="Đăng xuất khỏi tài khoản Mộc Maria"
+                >
+                  <LogOut size={16} /> <span>{logoutPending ? "Đang thoát..." : "Đăng xuất"}</span>
+                </button>
+              </>
+            ) : status === "anonymous" ? (
+              <>
+                <Link className="mm-ev-account-link" href="/dang-ky?returnTo=%2Fevent">
+                  Đăng ký
+                </Link>
+                <Link className="mm-ev-wallet-shortcut" href="/dang-nhap?returnTo=%2Fevent">
+                  <UserRound size={16} /> Đăng nhập
+                </Link>
+              </>
+            ) : (
+              <span className="mm-ev-auth-loading" role="status">
+                Đang kiểm tra tài khoản…
+              </span>
+            )}
+          </nav>
+          {logoutError && (
+            <span className="mm-ev-auth-error" role="alert">
+              {logoutError}
             </span>
           )}
-        </nav>
-        {logoutError && (
-          <span className="mm-ev-auth-error" role="alert">
-            {logoutError}
-          </span>
-        )}
-      </header>
-      <main id="mm-ev-main">
-        <section className="mm-ev-hero">
-          <div className="mm-ev-hero-copy">
-            <div className="mm-ev-overline">
-              <span className="mm-ev-overline-dot" /> MỘC MARIA · MÙA GIÁNG SINH 2026
-            </div>
-            <span className="mm-ev-mini-stars" aria-hidden="true">
-              ✦ &nbsp; ✧ &nbsp; ✦
-            </span>
-            <h1>
-              Giáng sinh an lành.
-              <br />
-              <em>Mở quà yêu thương.</em>
-            </h1>
-            <p className="mm-ev-hero-description">
-              {event?.description ||
-                "Ông già Noel ghé Mộc, mang theo những lời chúc ấm áp. Chọn một hộp quà bạn yêu thích và cùng Mộc đón mùa an lành."}
-            </p>
-            <div className="mm-ev-hero-tags">
-              <span>
-                <Leaf size={16} /> Quà tặng được chăm chút
+        </header>
+        <main id="mm-ev-main">
+          <section className="mm-ev-hero">
+            <div className="mm-ev-hero-copy">
+              <div className="mm-ev-overline">
+                <span className="mm-ev-overline-dot" /> MỘC MARIA · MÙA GIÁNG SINH 2026
+              </div>
+              <span className="mm-ev-mini-stars" aria-hidden="true">
+                ✦ &nbsp; ✧ &nbsp; ✦
               </span>
-              <span>
-                <ShieldCheck size={16} /> Quyền lợi minh bạch
+              <h1>
+                Giáng sinh an lành.
+                <br />
+                <em>Mở quà yêu thương.</em>
+              </h1>
+              <p className="mm-ev-hero-description">
+                {event?.description ||
+                  "Ông già Noel ghé Mộc, mang theo những lời chúc ấm áp. Chọn một hộp quà bạn yêu thích và cùng Mộc đón mùa an lành."}
+              </p>
+              <div className="mm-ev-hero-tags">
+                <span>
+                  <Leaf size={16} /> Quà tặng được chăm chút
+                </span>
+                <span>
+                  <ShieldCheck size={16} /> Quyền lợi minh bạch
+                </span>
+              </div>
+              <div className="mm-ev-hero-action">
+                <a className="mm-ev-primary" href="#vuon-qua">
+                  Khám phá quà Noel <ArrowRight size={18} />
+                </a>
+                <a className="mm-ev-secondary" href="#the-le">
+                  Xem thể lệ <ArrowRight size={16} />
+                </a>
+              </div>
+              {isScheduled && (
+                <p className="mm-ev-countdown">
+                  <Clock3 size={17} /> Còn <strong>{formatCountdown(countdownMs)}</strong> để bắt
+                  đầu
+                </p>
+              )}
+            </div>
+            <div className="mm-ev-hero-art" aria-label="Ông già Noel và cây thông tại Mộc Maria">
+              <div className="mm-ev-orbit orbit-one" />
+              <div className="mm-ev-orbit orbit-two" />
+              <span className="mm-ev-hero-art-caption">GÓI AN LÀNH · GỬI YÊU THƯƠNG</span>
+              <Image
+                src="/christmas/santa-postcard.svg"
+                width={600}
+                height={560}
+                sizes="(max-width: 740px) 90vw, (max-width: 1150px) 45vw, 520px"
+                priority
+                alt="Ông già Noel trao quà bên cây thông xanh, dưới những vì sao vàng"
+              />
+              <div className="mm-ev-art-flower flower-one" aria-hidden="true">
+                ✽
+              </div>
+              <div className="mm-ev-art-flower flower-two" aria-hidden="true">
+                ✧
+              </div>
+            </div>
+          </section>
+          <section className="mm-ev-garden-wrap" id="vuon-qua">
+            <div className="mm-ev-garden-intro">
+              <div>
+                <span className="mm-ev-overline">XƯỞNG QUÀ NHỎ CỦA ÔNG NOEL</span>
+                <h2>Một hộp quà, một lời chúc</h2>
+                <p>Sáu lời chúc Giáng sinh. Bạn muốn gửi gắm điều gì?</p>
+              </div>
+              <span className="mm-ev-status" data-tone={state.tone}>
+                <span /> {event ? statusLabels[event.effectiveStatus] : "Sắp công bố"}
               </span>
             </div>
-            <div className="mm-ev-hero-action">
-              <a className="mm-ev-primary" href="#vuon-qua">
-                Khám phá quà Noel <ArrowRight size={18} />
-              </a>
-              <a className="mm-ev-secondary" href="#the-le">
-                Xem thể lệ <ArrowRight size={16} />
-              </a>
-            </div>
-            {isScheduled && (
-              <p className="mm-ev-countdown">
-                <Clock3 size={17} /> Còn <strong>{formatCountdown(countdownMs)}</strong> để bắt đầu
-              </p>
-            )}
-          </div>
-          <div className="mm-ev-hero-art" aria-label="Ông già Noel và cây thông tại Mộc Maria">
-            <div className="mm-ev-orbit orbit-one" />
-            <div className="mm-ev-orbit orbit-two" />
-            <span className="mm-ev-hero-art-caption">GÓI AN LÀNH · GỬI YÊU THƯƠNG</span>
-            <Image
-              src="/christmas/santa-postcard.svg"
-              width={600}
-              height={560}
-              sizes="(max-width: 740px) 90vw, (max-width: 1150px) 45vw, 520px"
-              priority
-              alt="Ông già Noel trao quà bên cây thông xanh, dưới những vì sao vàng"
-            />
-            <div className="mm-ev-art-flower flower-one" aria-hidden="true">
-              ✽
-            </div>
-            <div className="mm-ev-art-flower flower-two" aria-hidden="true">
-              ✧
-            </div>
-          </div>
-        </section>
-        <section className="mm-ev-garden-wrap" id="vuon-qua">
-          <div className="mm-ev-garden-intro">
-            <div>
-              <span className="mm-ev-overline">XƯỞNG QUÀ NHỎ CỦA ÔNG NOEL</span>
-              <h2>Một hộp quà, một lời chúc</h2>
-              <p>Sáu lời chúc Giáng sinh. Bạn muốn gửi gắm điều gì?</p>
-            </div>
-            <span className="mm-ev-status" data-tone={state.tone}>
-              <span /> {event ? statusLabels[event.effectiveStatus] : "Sắp công bố"}
-            </span>
-          </div>
-          <div className="mm-ev-garden">
-            <span className="mm-ev-garden-stars" aria-hidden="true">
-              ✧ &nbsp; ✦ &nbsp; ✧
-            </span>
-            <div className="mm-ev-box-grid" role="group" aria-label="Sáu hộp quà Mộc Maria">
-              {boxImages.map((id) => (
-                <button
-                  className={"mm-ev-box" + (boxId === id ? " is-picked" : "")}
-                  type="button"
-                  key={id}
-                  onClick={() => {
-                    if (!opening && !openedGift && !pendingKey) setBoxId(id);
-                  }}
-                  disabled={opening || !!openedGift || !!pendingKey}
-                  aria-pressed={boxId === id}
-                  aria-label={`Hộp ${String(id).padStart(2, "0")} · ${christmasBoxes[id].name}`}
-                >
-                  <span className="mm-ev-box-number" aria-hidden="true">
-                    NO. {String(id).padStart(2, "0")}
-                  </span>
-                  <span className="mm-ev-box-illustration">
-                    <Image
-                      src={"/event/gift-boxes/gift-" + id + "-320.webp"}
-                      width={174}
-                      height={174}
-                      loading="lazy"
-                      sizes="(max-width: 740px) 42vw, 160px"
-                      alt=""
-                    />
-                  </span>
-                  <span className="mm-ev-box-caption">{christmasBoxes[id].name}</span>
-                  <span className="mm-ev-box-wish">{christmasBoxes[id].wish}</span>
-                  {boxId === id && (
-                    <span className="mm-ev-box-check">
-                      <Check size={16} />
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <p className="mm-ev-garden-foot">
-              <Sparkles size={15} /> Không hộp nào có cơ cấu giải riêng. Quà chỉ được quyết định khi
-              máy chủ xác nhận lượt mở.
-            </p>
-          </div>
-          <div className="mm-ev-play-panel">
-            <div className="mm-ev-play-icon">
-              <Gift size={26} />
-            </div>
-            <div className="mm-ev-play-message" aria-live="polite">
-              <strong>
-                {current.isPending
-                  ? "Đang xem chương trình..."
-                  : current.isError
-                    ? "Chưa thể kết nối sự kiện"
-                    : state.heading}
-              </strong>
-              <p>
-                {current.isError
-                  ? "Đường truyền tới hệ thống chưa ổn định. Vui lòng tải lại sau."
-                  : state.detail}
-              </p>
-              {me.isError && (
-                <small role="alert">
-                  Chưa xác thực được lượt từ máy chủ. Bạn không bị trừ lượt.
-                </small>
-              )}
-            </div>
-            <div className="mm-ev-play-cta">
-              {eligibleBox && !openedGift && (
-                <label className="mm-ev-agreement mm-ev-agreement-inline" htmlFor={termsId}>
-                  <input
-                    type="checkbox"
-                    id={termsId}
-                    checked={agreed}
-                    onChange={(e) => setAgreed(e.target.checked)}
-                  />
-                  <span>
-                    Tôi đã đọc và đồng ý{" "}
-                    <a href="#the-le" onClick={(e) => e.stopPropagation()}>
-                      thể lệ sự kiện
-                    </a>{" "}
-                    (phiên bản {event?.termsVersion}) trước khi mở hộp.
-                  </span>
-                </label>
-              )}
-              {status === "anonymous" && event?.effectiveStatus === "LIVE" ? (
-                <>
-                  <Link className="mm-ev-primary" href="/dang-nhap?returnTo=%2Fevent">
-                    Đăng nhập để tham gia <ArrowRight size={16} />
-                  </Link>
-                  <Link className="mm-ev-register-link" href="/dang-ky?returnTo=%2Fevent">
-                    Chưa có tài khoản? Đăng ký ngay
-                  </Link>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  disabled={!eligibleBox || !boxId || !agreed || opening || !!openedGift}
-                  className="mm-ev-primary"
-                  onClick={() => void openSelectedBox()}
-                >
-                  {opening
-                    ? "Đang xác nhận quà..."
-                    : openedGift
-                      ? "Đã nhận quà"
-                      : eligibleBox && boxId
-                        ? "Mở hộp · " + christmasBoxes[boxId].name
-                        : me.data?.reason === "ALREADY_PLAYED"
-                          ? "Đã dùng lượt"
-                          : "Chọn hộp để mở"}
-                </button>
-              )}
-              {eligibleBox && !agreed && (
-                <small>Hãy tích ô đồng ý thể lệ ngay phía trên để mở hộp.</small>
-              )}
-              {opening && (
-                <small role="status">
-                  Máy chủ đang xác nhận kết quả; không đóng trang hoặc mở lần nữa.
-                </small>
-              )}
-              {openError && <small role="alert">{openError}</small>}
-              {openedGift && (
-                <div
-                  className={"mm-ev-gift-details" + (skipEffect ? "" : " mm-ev-prize-reveal")}
-                  role="status"
-                  aria-live="polite"
-                >
-                  <strong>{skipEffect ? "Quà của bạn" : "Xin chúc mừng! Quà của bạn"}</strong>
-                  <h3>{openedGift.reward.name}</h3>
-                  <p>{openedGift.reward.description}</p>
-                  <p>Hạn dùng: {formatLocal(openedGift.reward.expiresAt)}</p>
+            <div className="mm-ev-garden">
+              <span className="mm-ev-garden-stars" aria-hidden="true">
+                ✧ &nbsp; ✦ &nbsp; ✧
+              </span>
+              <div className="mm-ev-box-grid" role="group" aria-label="Sáu hộp quà Mộc Maria">
+                {boxImages.map((id) => (
                   <button
+                    className={"mm-ev-box" + (boxId === id ? " is-picked" : "")}
                     type="button"
+                    key={id}
                     onClick={() => {
-                      setShowWallet(true);
-                      document
-                        .getElementById("mm-ev-wallet-area")
-                        ?.scrollIntoView({ behavior: "smooth" });
+                      if (!openingRef.current && !openedGift && !pendingRequest) {
+                        setBoxId(id);
+                        if (status === "anonymous" && event?.effectiveStatus === "LIVE")
+                          setGuestIntent({ campaign: event, boxId: id });
+                      }
+                    }}
+                    disabled={opening || !!openedGift || !!pendingRequest}
+                    aria-pressed={boxId === id}
+                    aria-label={`Hộp ${String(id).padStart(2, "0")} · ${christmasBoxes[id].name}`}
+                  >
+                    <span className="mm-ev-box-number" aria-hidden="true">
+                      NO. {String(id).padStart(2, "0")}
+                    </span>
+                    <span className="mm-ev-box-illustration">
+                      <Image
+                        src={"/event/gift-boxes/gift-" + id + "-320.webp"}
+                        width={174}
+                        height={174}
+                        loading="lazy"
+                        sizes="(max-width: 740px) 42vw, 160px"
+                        alt=""
+                      />
+                    </span>
+                    <span className="mm-ev-box-caption">{christmasBoxes[id].name}</span>
+                    <span className="mm-ev-box-wish">{christmasBoxes[id].wish}</span>
+                    {boxId === id && (
+                      <span className="mm-ev-box-check">
+                        <Check size={16} />
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="mm-ev-garden-foot">
+                <Sparkles size={15} /> Không hộp nào có cơ cấu giải riêng. Quà chỉ được quyết định
+                khi máy chủ xác nhận lượt mở.
+              </p>
+            </div>
+            <div className="mm-ev-play-panel">
+              <div className="mm-ev-play-icon">
+                <Gift size={26} />
+              </div>
+              <div className="mm-ev-play-message" aria-live="polite">
+                <strong>
+                  {current.isPending
+                    ? "Đang xem chương trình..."
+                    : current.isError
+                      ? "Chưa thể kết nối sự kiện"
+                      : state.heading}
+                </strong>
+                <p>
+                  {current.isError
+                    ? "Đường truyền tới hệ thống chưa ổn định. Vui lòng tải lại sau."
+                    : state.detail}
+                </p>
+                {me.isError && (
+                  <small role="alert">
+                    Chưa xác thực được lượt từ máy chủ. Bạn không bị trừ lượt.
+                  </small>
+                )}
+              </div>
+              <div className="mm-ev-play-cta">
+                {eligibleBox && !openedGift && (
+                  <label className="mm-ev-agreement mm-ev-agreement-inline" htmlFor={termsId}>
+                    <input
+                      type="checkbox"
+                      id={termsId}
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                    />
+                    <span>
+                      Tôi đã đọc và đồng ý{" "}
+                      <a href="#the-le" onClick={(e) => e.stopPropagation()}>
+                        thể lệ sự kiện
+                      </a>{" "}
+                      (phiên bản {event?.termsVersion}) trước khi mở hộp.
+                    </span>
+                  </label>
+                )}
+                {status === "anonymous" && event?.effectiveStatus === "LIVE" ? (
+                  <button
+                    className="mm-ev-primary"
+                    type="button"
+                    disabled={!boxId || opening}
+                    onClick={() => {
+                      if (boxId) setGuestIntent({ campaign: event, boxId });
                     }}
                   >
-                    Xem quà trong ví
+                    {boxId ? "Đăng ký nhanh & mở quà" : "Chọn hộp quà bạn yêu thích"}{" "}
+                    <ArrowRight size={16} />
                   </button>
-                  {!skipEffect && (
-                    <button type="button" onClick={() => setSkipEffect(true)}>
-                      Bỏ qua hiệu ứng
+                ) : (
+                  <button
+                    type="button"
+                    disabled={
+                      (!eligibleBox && !canRetry) || !boxId || !agreed || opening || !!openedGift
+                    }
+                    className="mm-ev-primary"
+                    onClick={() => void openSelectedBox()}
+                  >
+                    {opening
+                      ? "Đang xác nhận quà..."
+                      : openedGift
+                        ? "Đã nhận quà"
+                        : canRetry
+                          ? "Tra cứu lại quà"
+                          : eligibleBox && boxId
+                            ? "Mở hộp · " + christmasBoxes[boxId].name
+                            : me.data?.reason === "ALREADY_PLAYED"
+                              ? "Đã dùng lượt"
+                              : "Chọn hộp để mở"}
+                  </button>
+                )}
+                {eligibleBox && !agreed && (
+                  <small>Hãy tích ô đồng ý thể lệ ngay phía trên để mở hộp.</small>
+                )}
+                {opening && (
+                  <small role="status">
+                    Máy chủ đang xác nhận kết quả; không đóng trang hoặc mở lần nữa.
+                  </small>
+                )}
+                {openError && <small role="alert">{openError}</small>}
+                {openedGift && (
+                  <div
+                    className={"mm-ev-gift-details" + (skipEffect ? "" : " mm-ev-prize-reveal")}
+                    ref={resultRef}
+                    tabIndex={-1}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <strong>{skipEffect ? "Quà của bạn" : "Xin chúc mừng! Quà của bạn"}</strong>
+                    <h3>{openedGift.reward.name}</h3>
+                    <p>{openedGift.reward.description}</p>
+                    <p>Hạn dùng: {formatLocal(openedGift.reward.expiresAt)}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowWallet(true);
+                        document
+                          .getElementById("mm-ev-wallet-area")
+                          ?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                    >
+                      Xem quà trong ví
                     </button>
-                  )}
-                </div>
-              )}
+                    <button
+                      className="mm-ev-primary mm-ev-reward-booking"
+                      type="button"
+                      onClick={() =>
+                        document
+                          .getElementById("mm-ev-booking-next")
+                          ?.scrollIntoView({ block: "start" })
+                      }
+                    >
+                      <CalendarDays size={17} /> Đặt lịch chăm sóc <ArrowRight size={16} />
+                    </button>
+                    {!skipEffect && (
+                      <button type="button" onClick={() => setSkipEffect(true)}>
+                        Bỏ qua hiệu ứng
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </section>
-        <section className="mm-ev-terms" id="the-le">
-          <div className="mm-ev-section-heading">
-            <span className="mm-ev-overline">MINH BẠCH TRONG TỪNG MÓN QUÀ</span>
-            <h2>Thể lệ & thời gian</h2>
-            <p>
-              Tất cả điều kiện do ban tổ chức cấu hình và máy chủ kiểm tra tại thời điểm mở quà.
-            </p>
-          </div>
-          <div className="mm-ev-info-grid">
-            <article>
-              <div className="mm-ev-info-icon">
-                <CalendarDays size={22} />
-              </div>
-              <span>THỜI GIAN</span>
-              <h3>{event?.startAt ? formatLocal(event.startAt) : "Đang cập nhật"}</h3>
-              <p>Kết thúc: {formatLocal(event?.endAt)}</p>
-            </article>
-            <article>
-              <div className="mm-ev-info-icon">
-                <Crown size={22} />
-              </div>
-              <span>HẠNG THAM GIA</span>
-              <h3>{tierLabels}</h3>
-              {!allCustomersEligible && (
-                <p>Hạng khách được đối chiếu chính xác với hồ sơ hội viên.</p>
-              )}
-            </article>
-            <article>
-              <div className="mm-ev-info-icon">
-                <BadgeCheck size={22} />
-              </div>
-              <span>LƯỢT MỞ</span>
-              <h3>Một lượt mỗi sự kiện</h3>
-              <p>Quà đã cấp lưu trong ví. Không có lượt mở thử.</p>
-            </article>
-          </div>
-          <div className="mm-ev-terms-text">
-            <h3>
-              <ShieldCheck size={18} /> Điều lệ chính thức
-            </h3>
-            {event?.termsText ? (
-              <p>{event.termsText}</p>
-            ) : (
-              <p>
-                Thể lệ chi tiết sẽ được công bố trước khi sự kiện bắt đầu. Khi chưa công bố, không
-                có lượt quà nào được cấp.
-              </p>
-            )}
-            {event && (
-              <p className="mm-ev-terms-confirmation">
-                Xác nhận đồng ý thể lệ được đặt ngay cạnh nút mở hộp. Lượt chỉ được dùng khi bạn chủ
-                động bấm Mở hộp.
-              </p>
-            )}
-          </div>
-        </section>
-        {status === "authenticated" && (
-          <section className="mm-ev-wallet-section" id="mm-ev-wallet-area">
-            <div className="mm-ev-wallet-prompt">
-              <div>
-                <WalletCards size={25} />
-                <span>Quà của bạn luôn được lưu riêng tư trong tài khoản.</span>
-              </div>
-              <button type="button" onClick={() => setShowWallet((value) => !value)}>
-                {showWallet ? "Thu gọn ví" : "Xem ví quà"} <ArrowRight size={17} />
-              </button>
-            </div>
-            {showWallet && (
-              <WalletPanel
-                gifts={wallet.data}
-                loading={wallet.isPending}
-                failed={wallet.isError}
-                authFetch={authFetch}
-              />
-            )}
           </section>
-        )}
-        <Faq />
-        <section className="mm-ev-outro">
-          <div aria-hidden="true">✥</div>
-          <p>Chúc bạn một Giáng sinh ấm áp, một mùa an lành.</p>
-          <strong>Mộc Maria</strong>
-          <span>CHĂM SÓC BẰNG SỰ TẬN TÂM</span>
-        </section>
-      </main>
-      <footer className="mm-ev-footer">
-        <span>© 2026 Mộc Maria · Giáng sinh an lành</span>
-        <nav aria-label="Liên kết cuối trang">
-          <a href="https://mocmaria.com/">
-            <ArrowLeft size={14} /> Trang chủ
-          </a>
-          <Link href="/hoi-vien">
-            <Heart size={14} /> Hội viên
-          </Link>
-          <a href="#the-le">Thể lệ</a>
-        </nav>
-      </footer>
-    </div>
+          {openedGift && <GiftBookingNextStep rewardName={openedGift.reward.name} />}
+          <section className="mm-ev-terms" id="the-le">
+            <div className="mm-ev-section-heading">
+              <span className="mm-ev-overline">MINH BẠCH TRONG TỪNG MÓN QUÀ</span>
+              <h2>Thể lệ & thời gian</h2>
+              <p>
+                Tất cả điều kiện do ban tổ chức cấu hình và máy chủ kiểm tra tại thời điểm mở quà.
+              </p>
+            </div>
+            <div className="mm-ev-info-grid">
+              <article>
+                <div className="mm-ev-info-icon">
+                  <CalendarDays size={22} />
+                </div>
+                <span>THỜI GIAN</span>
+                <h3>{event?.startAt ? formatLocal(event.startAt) : "Đang cập nhật"}</h3>
+                <p>Kết thúc: {formatLocal(event?.endAt)}</p>
+              </article>
+              <article>
+                <div className="mm-ev-info-icon">
+                  <Crown size={22} />
+                </div>
+                <span>HẠNG THAM GIA</span>
+                <h3>{tierLabels}</h3>
+                {!allCustomersEligible && (
+                  <p>Hạng khách được đối chiếu chính xác với hồ sơ hội viên.</p>
+                )}
+              </article>
+              <article>
+                <div className="mm-ev-info-icon">
+                  <BadgeCheck size={22} />
+                </div>
+                <span>LƯỢT MỞ</span>
+                <h3>Một lượt mỗi sự kiện</h3>
+                <p>Quà đã cấp lưu trong ví. Không có lượt mở thử.</p>
+              </article>
+            </div>
+            <div className="mm-ev-terms-text">
+              <h3>
+                <ShieldCheck size={18} /> Điều lệ chính thức
+              </h3>
+              {event?.termsText ? (
+                <p>{event.termsText}</p>
+              ) : (
+                <p>
+                  Thể lệ chi tiết sẽ được công bố trước khi sự kiện bắt đầu. Khi chưa công bố, không
+                  có lượt quà nào được cấp.
+                </p>
+              )}
+              {event && (
+                <p className="mm-ev-terms-confirmation">
+                  Xác nhận đồng ý thể lệ được đặt ngay cạnh nút mở hộp. Lượt chỉ được dùng khi bạn
+                  chủ động bấm Mở hộp.
+                </p>
+              )}
+            </div>
+          </section>
+          {status === "authenticated" && (
+            <section className="mm-ev-wallet-section" id="mm-ev-wallet-area">
+              <div className="mm-ev-wallet-prompt">
+                <div>
+                  <WalletCards size={25} />
+                  <span>Quà của bạn luôn được lưu riêng tư trong tài khoản.</span>
+                </div>
+                <button type="button" onClick={() => setShowWallet((value) => !value)}>
+                  {showWallet ? "Thu gọn ví" : "Xem ví quà"} <ArrowRight size={17} />
+                </button>
+              </div>
+              {showWallet && (
+                <WalletPanel
+                  gifts={wallet.data}
+                  loading={wallet.isPending}
+                  failed={wallet.isError}
+                  authFetch={authFetch}
+                />
+              )}
+            </section>
+          )}
+          <Faq />
+          <section className="mm-ev-outro">
+            <div aria-hidden="true">✥</div>
+            <p>Chúc bạn một Giáng sinh ấm áp, một mùa an lành.</p>
+            <strong>Mộc Maria</strong>
+            <span>CHĂM SÓC BẰNG SỰ TẬN TÂM</span>
+          </section>
+        </main>
+        <footer className="mm-ev-footer">
+          <span>© 2026 Mộc Maria · Giáng sinh an lành</span>
+          <nav aria-label="Liên kết cuối trang">
+            <a href="https://mocmaria.com/">
+              <ArrowLeft size={14} /> Trang chủ
+            </a>
+            <Link href="/hoi-vien">
+              <Heart size={14} /> Hội viên
+            </Link>
+            <a href="#the-le">Thể lệ</a>
+          </nav>
+        </footer>
+      </div>
+      {guestIntent && !openedGift && (
+        <BookingAccountDialog
+          providerName={guestIntent.campaign.title}
+          serviceName={christmasBoxes[guestIntent.boxId].name}
+          when={`Một lượt mỗi sự kiện · Thể lệ v${guestIntent.campaign.termsVersion}`}
+          gift={{
+            boxId: guestIntent.boxId,
+            termsVersion: guestIntent.campaign.termsVersion,
+            termsText: guestIntent.campaign.termsText,
+            accepted: agreed,
+            onAcceptedChange: setAgreed,
+          }}
+          onDismiss={() => setGuestIntent(null)}
+          onAuthenticated={async (auth) => {
+            await openSelectedBox(auth, guestIntent);
+            setGuestIntent(null);
+          }}
+        />
+      )}
+    </>
   );
 }

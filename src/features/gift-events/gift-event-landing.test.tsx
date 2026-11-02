@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   authFetch: vi.fn(),
   refetch: vi.fn(),
   logout: vi.fn(),
+  setQueryData: vi.fn(),
 }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
@@ -43,6 +44,10 @@ const event = {
 } as const;
 
 vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({
+    setQueryData: mocks.setQueryData,
+    prefetchQuery: vi.fn().mockResolvedValue(undefined),
+  }),
   useQuery: ({ queryKey }: { queryKey: string[] }) =>
     queryKey[1] === "current"
       ? {
@@ -83,6 +88,19 @@ beforeEach(() => {
   mocks.authFetch.mockReset();
   mocks.refetch.mockReset();
   mocks.logout.mockReset();
+  sessionStorage.clear();
+  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.open = true;
+    },
+  });
+  Object.defineProperty(HTMLDialogElement.prototype, "close", {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.open = false;
+    },
+  });
 });
 afterEach(() => cleanup());
 
@@ -109,7 +127,7 @@ describe("P09 Mộc Maria event landing", () => {
       "href",
       "/dang-ky?returnTo=%2Fevent",
     );
-    expect(screen.getByRole("link", { name: /Chưa có tài khoản/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Chọn hộp quà bạn yêu thích" })).toBeDisabled();
   });
   it("offers authenticated users wallet, account management and sign-out", async () => {
     mocks.authenticated = true;
@@ -131,10 +149,9 @@ describe("P09 Mộc Maria event landing", () => {
   it("provides real auth entry and does not invent an opening result", () => {
     mocks.campaign = true;
     render(<GiftEventLanding />);
-    expect(screen.getByRole("link", { name: /Đăng nhập để tham gia/ })).toHaveAttribute(
-      "href",
-      "/dang-nhap?returnTo=%2Fevent",
-    );
+    fireEvent.click(screen.getByRole("button", { name: /Hộp 02 · Chuông Vàng May Mắn/ }));
+    expect(screen.getByRole("dialog", { name: "Mở quà, đón an lành" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Đăng ký & mở hộp quà" })).toBeInTheDocument();
     expect(screen.queryByText("Bạn đã trúng")).not.toBeInTheDocument();
   });
   it("preselects agreement yet allows customers to opt out before opening", () => {
@@ -187,7 +204,7 @@ describe("P09 Mộc Maria event landing", () => {
     const body = JSON.parse(mocks.authFetch.mock.calls[0][1].body);
     expect(body).toMatchObject({ boxId: 2, termsVersion: 1, termsAccepted: true });
     expect(body.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/i);
-    expect(await screen.findByText("Voucher massage 20%")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Voucher massage 20%" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Đã nhận quà" })).toBeDisabled();
   });
   it("summarizes full customer eligibility and keeps partial tiers explicit", () => {

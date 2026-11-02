@@ -13,6 +13,9 @@ describe("public service search directory", () => {
     const data = await (await GET()).json();
     expect(data.services.map((s: { name: string }) => s.name)).toEqual(careMenu.map((s) => s.name));
     expect(data.providers).toHaveLength(providers.length);
+    expect(data.providers[0].avatarUrl).toBe(providers[0].avatarUrl);
+    expect(data.providers[0].bookingHref).toMatch(/^\/dat-lich\?provider=/);
+    expect(data.providers[0]).not.toHaveProperty("userId");
     expect(
       data.providers
         .filter((p: { services: string[] }) => p.services.includes("Gội đầu sạch"))

@@ -395,3 +395,58 @@
     animation: none;
   }
 }
+
+.mm-booking-account-terms {
+  margin-top: 7px;
+  padding: 10px 12px;
+  border: 1px solid #dce6d4;
+  border-radius: 12px;
+  background: #f5f7ef;
+}
+.mm-booking-account-gift .mm-booking-account-flower,
+.mm-booking-account-gift .mm-booking-account-eyebrow {
+  display: none;
+}
+.mm-booking-account-gift .mm-booking-account-heading {
+  padding-top: 6px;
+}
+.mm-booking-account-gift .mm-booking-account-selection > div > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mm-booking-account-terms summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: #456c4b;
+  cursor: pointer;
+  font-size: 11px;
+}
+.mm-booking-account-terms details p {
+  max-height: 110px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #6b7f63;
+  margin-bottom: 10px;
+}
+.mm-booking-account-form .mm-booking-account-agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-height: 44px;
+  font-size: 11px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.mm-booking-account-form .mm-booking-account-agreement input {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  margin-top: 1px;
+  accent-color: #315e46;
+}

@@ -1,3 +1,4 @@
+import { bookingHref } from "@/features/mobile/links";
 import { publicProviderDirectory } from "@/features/mobile/data";
 import demoServices from "@/features/mobile/demo-services.json";
 import { officialDemoKtvOffers, officialServiceLabel } from "@/features/mobile/official-ktv-offers";
@@ -9,6 +10,8 @@ export async function GET() {
         id: p.id,
         publicName: p.publicName,
         serviceArea: p.serviceArea,
+        avatarUrl: p.avatarUrl ?? null,
+        bookingHref: bookingHref({ provider: p.id }),
         services: p.isDemo
           ? officialDemoKtvOffers(p).map((s) => s.name)
           : p.eligibleServices?.map((s) => s.serviceName) || [],
