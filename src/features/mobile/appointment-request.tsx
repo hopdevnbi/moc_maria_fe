@@ -4,11 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CalendarDays, CheckCircle2, MapPin, Search, ArrowRight, UserRound } from "lucide-react";
+import { apiRequest, parseApiResponse } from "@/features/auth/auth-api";
+import type { AuthResponse } from "@/features/auth/auth.types";
+import { BookingAccountDialog } from "./booking-account-dialog";
+import "./booking-quick-signup.css";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { Provider, ServiceItem } from "@/features/marketplace/types";
 import { MobileHeader, MobileNavigation } from "./experience";
 import { BookingReassurance } from "./booking-reassurance";
-import { bookingHref, chatHref } from "./links";
+import { chatHref } from "./links";
 import { MOC_MARIA_PRIMARY_ADDRESS } from "./booking-location";
 import { formatPrice } from "@/features/marketplace/format";
 import { officialLegacyCareItem, officialServiceLabel } from "./official-ktv-offers";
@@ -72,6 +76,15 @@ export function AppointmentRequest({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const sending = useRef(false);
+  const successRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (submitted) {
+      successRef.current?.focus({ preventScroll: true });
+      successRef.current?.scrollIntoView?.({ block: "center" });
+    }
+  }, [submitted]);
   const identity = useRef<{ signature: string; key: string } | null>(null);
   useEffect(() => {
     try {
@@ -141,9 +154,20 @@ export function AppointmentRequest({
     requestedAt >= dateLimits.min &&
     requestedAt <= dateLimits.max &&
     (location === "AT_BRANCH" || address.trim().length >= 12);
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (busy || !canSend || !user || !chosen || !chosenService) return;
+  async function sendInquiry(auth?: AuthResponse) {
+    const actor = auth?.user ?? user;
+    if (sending.current || !actor) return;
+    if (!actor.permissions.includes("customer.portal")) {
+      setError("Hãy dùng tài khoản khách hàng để gửi yêu cầu đặt lịch.");
+      return;
+    }
+    const requestedTime = new Date(requestedAt + ":00+07:00").getTime();
+    // eslint-disable-next-line react-hooks/purity -- Submit handler: recheck time after async signup.
+    if (!canSend || !chosen || !chosenService || requestedTime <= Date.now()) {
+      setError("Bạn kiểm tra lại dịch vụ, địa chỉ và thời gian mong muốn trước khi gửi nhé.");
+      return;
+    }
+    sending.current = true;
     setBusy(true);
     setError("");
     try {
@@ -158,22 +182,37 @@ export function AppointmentRequest({
       const signature = JSON.stringify(body);
       if (identity.current?.signature !== signature)
         identity.current = { signature, key: crypto.randomUUID() };
-      await authFetch("/appointment-inquiries", {
+      const request = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...body, idempotencyKey: identity.current.key }),
-      });
+      };
+      // Registration updates React context asynchronously. Use its returned token
+      // for this first request so we never race a stale authFetch closure.
+      if (auth)
+        await parseApiResponse(
+          await apiRequest("/appointment-inquiries", request, auth.accessToken),
+        );
+      else await authFetch("/appointment-inquiries", request);
       setSubmitted(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Chưa gửi được yêu cầu. Hãy thử lại.");
     } finally {
+      sending.current = false;
       setBusy(false);
     }
+  }
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (sending.current || !canSend || status === "loading") return;
+    setError("");
+    if (!user) setAccountOpen(true);
+    else await sendInquiry();
   }
   return (
     <div className="mobile-experience">
       <MobileHeader />
-      <main className="mm-container mm-booking-main">
+      <main className="mm-container mm-booking-main mm-quick-booking-main">
         <header className="mm-booking-heading">
           <span className="mm-overline">MỘC MARIA · HÀ NỘI</span>
           <h1>
@@ -191,7 +230,7 @@ export function AppointmentRequest({
         </header>
         <BookingReassurance />
         {submitted ? (
-          <section className="mm-booking-success" role="status">
+          <section ref={successRef} tabIndex={-1} className="mm-booking-success" role="status">
             <CheckCircle2 size={40} />
             <h2>Đã gửi yêu cầu đến {chosen?.publicName}</h2>
             <p>
@@ -417,47 +456,31 @@ export function AppointmentRequest({
                 Yêu cầu sẽ chờ KTV phản hồi và xác nhận. Giá và khả năng phục vụ tại nhà được trao
                 đổi trước khi chốt lịch.
               </p>
-              {status === "loading" ? (
-                <p>Đang kiểm tra tài khoản...</p>
-              ) : !user ? (
-                <Link
+              <div className="mm-booking-action">
+                <span className="mm-booking-action-context">
+                  {chosen?.publicName || "Lựa chọn của bạn"} ·{" "}
+                  {chosenService?.service.name || "Chọn dịch vụ"}
+                </span>
+                <button
+                  type="submit"
                   className="mm-primary-cta mm-full-cta"
-                  onClick={() => {
-                    try {
-                      sessionStorage.setItem(
-                        "mocmaria.booking.signin-draft",
-                        JSON.stringify({
-                          providerId,
-                          serviceId,
-                          location,
-                          address,
-                          requestedAt,
-                          notes,
-                          savedAt: Date.now(),
-                        }),
-                      );
-                    } catch {
-                      /* Navigation still works without storage. */
-                    }
-                  }}
-                  href={
-                    "/dang-nhap?returnTo=" +
-                    encodeURIComponent(
-                      bookingHref({ provider: providerId, service: serviceId || undefined }),
-                    )
+                  disabled={
+                    status === "loading" ||
+                    busy ||
+                    !canSend ||
+                    (!!user && !user.permissions.includes("customer.portal"))
                   }
                 >
-                  Đăng nhập để gửi yêu cầu <ArrowRight size={17} />
-                </Link>
-              ) : (
-                <button
-                  className="mm-primary-cta mm-full-cta"
-                  disabled={busy || !canSend || !user.permissions.includes("customer.portal")}
-                >
-                  {busy ? "Đang gửi..." : "Gửi yêu cầu đặt lịch"}
+                  {status === "loading"
+                    ? "Đang kiểm tra tài khoản…"
+                    : busy
+                      ? "Đang gửi yêu cầu…"
+                      : !user
+                        ? "Tiếp tục đặt lịch"
+                        : "Gửi yêu cầu đặt lịch"}
                   <ArrowRight size={17} />
                 </button>
-              )}
+              </div>
               {user && !user.permissions.includes("customer.portal") && (
                 <p>
                   Tài khoản KTV dùng để nhận yêu cầu. Hãy đăng nhập tài khoản khách hàng để đặt
@@ -473,6 +496,25 @@ export function AppointmentRequest({
           </form>
         )}
       </main>
+      {accountOpen && !submitted && chosen && chosenService && (
+        <BookingAccountDialog
+          providerName={chosen.publicName}
+          serviceName={chosenService.service.name}
+          when={new Intl.DateTimeFormat("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+            hour: "2-digit",
+            minute: "2-digit",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }).format(new Date(requestedAt + ":00+07:00"))}
+          onDismiss={() => setAccountOpen(false)}
+          onAuthenticated={async (auth) => {
+            await sendInquiry(auth);
+            setAccountOpen(false);
+          }}
+        />
+      )}
       <MobileNavigation active="booking" />
     </div>
   );

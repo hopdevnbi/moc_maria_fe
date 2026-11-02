@@ -1,15 +1,26 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { AppointmentRequest } from "./appointment-request";
 import demoProviders from "./demo-ktvs.json";
 import demoServices from "./demo-services.json";
 import { careMenu } from "./official-menu";
-const state = vi.hoisted(() => ({ fetch: vi.fn() }));
+const state = vi.hoisted(() => ({
+  fetch: vi.fn(),
+  register: vi.fn(),
+  login: vi.fn(),
+  guest: false,
+}));
+const customerAuth = {
+  accessToken: "new-customer-access",
+  user: { id: "customer", permissions: ["customer.portal"] },
+};
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
-    user: { id: "customer", permissions: ["customer.portal"] },
-    status: "authenticated",
+    user: state.guest ? null : { id: "customer", permissions: ["customer.portal"] },
+    status: state.guest ? "anonymous" : "authenticated",
     authFetch: state.fetch,
+    register: state.register,
+    login: state.login,
   }),
 }));
 vi.mock("./experience", () => ({ MobileHeader: () => null, MobileNavigation: () => null }));
@@ -22,7 +33,28 @@ vi.mock("next/image", () => ({
   ),
 }));
 beforeEach(() => {
+  state.guest = false;
   state.fetch.mockReset().mockResolvedValue({ id: "inquiry" });
+  state.register.mockReset().mockImplementation(async () => {
+    state.guest = false;
+    return customerAuth;
+  });
+  state.login.mockReset().mockImplementation(async () => {
+    state.guest = false;
+    return customerAuth;
+  });
+  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.open = true;
+    },
+  });
+  Object.defineProperty(HTMLDialogElement.prototype, "close", {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.open = false;
+    },
+  });
   sessionStorage.clear();
 });
 afterEach(() => {
@@ -231,5 +263,170 @@ describe("appointment request flow", () => {
       expect(screen.getByLabelText("Địa chỉ nhận dịch vụ")).toHaveValue("12 Nguyễn Trãi, Hà Nội"),
     );
     expect(sessionStorage.getItem("mocmaria.booking.signin-draft")).toBeNull();
+  });
+});
+
+function guestBooking() {
+  state.guest = true;
+  render(
+    <AppointmentRequest
+      providers={providers}
+      services={demoServices}
+      initial={{ provider: providers[0].id }}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Tiếp tục đặt lịch" }));
+  return screen.getByRole("dialog", { name: "Chỉ còn một bước nhỏ" });
+}
+function fillSignup(dialog: HTMLElement) {
+  const form = within(dialog);
+  fireEvent.change(form.getByLabelText("Họ và tên"), { target: { value: "Khách kiểm thử" } });
+  fireEvent.change(form.getByLabelText("Số điện thoại"), { target: { value: "0900000000" } });
+  fireEvent.change(form.getByLabelText("Mật khẩu", { exact: true }), {
+    target: { value: "PrivatePass123" },
+  });
+}
+const inquiryResponse = () =>
+  new Response(JSON.stringify({ id: "qa-inquiry", status: "PENDING" }), {
+    headers: { "Content-Type": "application/json" },
+  });
+describe("guest quick booking", () => {
+  it("registers inline and sends exactly once with the returned access token, preserving the complete selection", async () => {
+    const network = vi.spyOn(globalThis, "fetch");
+    let complete!: (response: Response) => void;
+    network.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        }),
+    );
+    const dialog = guestBooking();
+    const pageTime = (
+      screen.getByLabelText("Ngày & giờ mong muốn (giờ Hà Nội)") as HTMLInputElement
+    ).value;
+    expect(within(dialog).getByText(providers[0].publicName)).toBeInTheDocument();
+    expect(network).not.toHaveBeenCalled();
+    fillSignup(dialog);
+    const form = dialog.querySelector("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await waitFor(() => expect(network).toHaveBeenCalledTimes(1));
+    expect(state.register).toHaveBeenCalledTimes(1);
+    expect(state.fetch).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Đã gửi yêu cầu đến/)).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Đang gửi yêu cầu…")).toBeInTheDocument();
+    const [url, init] = network.mock.calls[0];
+    expect(String(url)).toMatch(/\/appointment-inquiries$/);
+    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer new-customer-access");
+    const body = JSON.parse(init?.body as string);
+    expect(body).toMatchObject({
+      providerId: providers[0].chatProviderId,
+      location: "AT_BRANCH",
+      requestedAt: new Date(pageTime + ":00+07:00").toISOString(),
+    });
+    expect(body.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
+    expect(JSON.stringify(body)).not.toContain("PrivatePass123");
+    expect(sessionStorage.length).toBe(0);
+    await act(async () => complete(inquiryResponse()));
+    await screen.findByText("Đã gửi yêu cầu đến " + providers[0].publicName);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(document.body.style.overflow).not.toBe("hidden");
+  });
+  it("keeps the modal and selection when signup fails, then lets an existing customer log in without navigation", async () => {
+    const network = vi.spyOn(globalThis, "fetch").mockResolvedValue(inquiryResponse());
+    state.register.mockRejectedValue(new Error("Email hoặc số điện thoại đã được sử dụng."));
+    const dialog = guestBooking();
+    fillSignup(dialog);
+    fireEvent.submit(dialog.querySelector("form")!);
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("đã được sử dụng");
+    expect(network).not.toHaveBeenCalled();
+    expect(within(dialog).getByLabelText("Họ và tên")).toHaveValue("Khách kiểm thử");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Đăng nhập" }));
+    expect(within(dialog).getByLabelText("Số điện thoại hoặc email")).toHaveValue("0900000000");
+    fireEvent.change(within(dialog).getByLabelText("Mật khẩu", { exact: true }), {
+      target: { value: "ExistingPass123" },
+    });
+    fireEvent.submit(dialog.querySelector("form")!);
+    await screen.findByText("Đã gửi yêu cầu đến " + providers[0].publicName);
+    expect(state.login).toHaveBeenCalledWith({
+      identifier: "0900000000",
+      password: "ExistingPass123",
+    });
+    expect(network).toHaveBeenCalledTimes(1);
+  });
+  it("retains a registered customer's booking after a network failure and retries with the original idempotency key", async () => {
+    const network = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("Mạng bị gián đoạn"));
+    const dialog = guestBooking();
+    fillSignup(dialog);
+    fireEvent.submit(dialog.querySelector("form")!);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("alert")).toHaveTextContent("Mạng bị gián đoạn");
+    expect(screen.getByRole("button", { name: "Gửi yêu cầu đặt lịch" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Gửi yêu cầu đặt lịch" }));
+    await screen.findByText("Đã gửi yêu cầu đến " + providers[0].publicName);
+    const firstBody = JSON.parse(network.mock.calls[0][1]?.body as string);
+    const retryBody = JSON.parse(state.fetch.mock.calls[0][1].body);
+    expect(retryBody).toEqual(firstBody);
+    expect(state.register).toHaveBeenCalledTimes(1);
+  });
+  it("closes safely without registering or losing the customer's home-address draft", () => {
+    state.guest = true;
+    render(
+      <AppointmentRequest
+        providers={providers}
+        services={demoServices}
+        initial={{ provider: providers[0].id }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Tại địa chỉ của tôi" }));
+    expect(screen.getByRole("button", { name: "Tiếp tục đặt lịch" })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Địa chỉ nhận dịch vụ"), {
+      target: { value: "12 Nguyễn Trãi, Hà Nội" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Tiếp tục đặt lịch" }));
+    fireEvent.click(screen.getByRole("button", { name: "Đóng đăng ký nhanh" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Địa chỉ nhận dịch vụ")).toHaveValue("12 Nguyễn Trãi, Hà Nội");
+    expect(state.register).not.toHaveBeenCalled();
+    expect(state.fetch).not.toHaveBeenCalled();
+  });
+  it("uses the same password rules as normal registration and supports email instead of phone", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(inquiryResponse());
+    const dialog = guestBooking();
+    fillSignup(dialog);
+    fireEvent.change(within(dialog).getByLabelText("Mật khẩu", { exact: true }), {
+      target: { value: "weakpassword" },
+    });
+    fireEvent.submit(dialog.querySelector("form")!);
+    await within(dialog).findByText("Cần có chữ hoa.");
+    expect(state.register).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Dùng email" }));
+    fireEvent.change(within(dialog).getByLabelText("Email", { exact: true }), {
+      target: { value: "qa@example.test" },
+    });
+    fireEvent.change(within(dialog).getByLabelText("Mật khẩu", { exact: true }), {
+      target: { value: "PrivatePass123" },
+    });
+    fireEvent.submit(dialog.querySelector("form")!);
+    await screen.findByText("Đã gửi yêu cầu đến " + providers[0].publicName);
+    expect(state.register).toHaveBeenCalledWith({
+      displayName: "Khách kiểm thử",
+      email: "qa@example.test",
+      phone: undefined,
+      password: "PrivatePass123",
+    });
+  });
+  it("revalidates the time after signup instead of silently sending an expired request", async () => {
+    const start = Date.parse("2026-11-02T03:00:00Z");
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const network = vi.spyOn(globalThis, "fetch").mockResolvedValue(inquiryResponse());
+    const dialog = guestBooking();
+    fillSignup(dialog);
+    clock.mockReturnValue(start + 2 * 3600000);
+    fireEvent.submit(dialog.querySelector("form")!);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("alert")).toHaveTextContent("kiểm tra lại");
+    expect(network).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Đã gửi yêu cầu đến/)).not.toBeInTheDocument();
   });
 });
