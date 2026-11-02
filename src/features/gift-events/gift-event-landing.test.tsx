@@ -105,6 +105,27 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("P09 Mộc Maria event landing", () => {
+  it("shows a concise Noel guide, full official terms, contact address and floating support", () => {
+    mocks.campaign = true;
+    render(<GiftEventLanding />);
+    expect(
+      screen.getByRole("heading", { name: "Ghé Mộc nhận quà yêu thương" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Ô 12, LK2, KĐT Tân Tây Đô, Tân Lập, Đan Phương/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Xem đường đi/ })).toHaveAttribute(
+      "href",
+      expect.stringContaining("google.com/maps/search"),
+    );
+    expect(
+      screen.getByText(/Hạn dùng và dịch vụ áp dụng ghi rõ trên từng voucher/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mở hỗ trợ online" })).toBeInTheDocument();
+    expect(
+      screen.queryByText(/QR và xác nhận quà tại quầy được triển khai/),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Xem điều lệ đầy đủ/));
+    expect(screen.getByText("Mỗi tài khoản một lượt.")).toBeInTheDocument();
+  });
   it("links the Event logo and footer home link to the main Mộc Maria domain", () => {
     render(<GiftEventLanding />);
     expect(screen.getByRole("link", { name: "Trở về trang chủ Mộc Maria" })).toHaveAttribute(

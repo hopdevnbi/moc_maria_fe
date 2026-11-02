@@ -19,6 +19,8 @@ import {
   Leaf,
   LogOut,
   LockKeyhole,
+  MapPin,
+  Navigation,
   UserRound,
   ShieldCheck,
   Sparkles,
@@ -31,6 +33,7 @@ import type { AuthResponse } from "@/features/auth/auth.types";
 import { BookingAccountDialog } from "@/features/mobile/booking-account-dialog";
 import { GiftBookingNextStep, giftBookingDirectoryOptions } from "./gift-booking-next-step";
 import { WalletQr } from "./wallet-qr";
+import { EventSupport } from "./event-support";
 import {
   boxImages,
   eligibilityCopy,
@@ -181,23 +184,27 @@ function Faq() {
   const faqs = [
     [
       "Ai được tham gia?",
-      "Hạng khách hàng được phép tham gia do Mộc Maria công bố theo từng sự kiện. Hạng VIP được kiểm tra chính xác, không tự mở rộng sang các hạng khác.",
+      "Khách có tài khoản và đủ điều kiện của sự kiện. Hệ thống tự kiểm tra hạng hội viên.",
     ],
     [
       "Mỗi người được mở bao nhiêu lần?",
-      "Mỗi tài khoản đủ điều kiện được tối đa một lượt trong mỗi sự kiện. Nếu kết nối bị gián đoạn, hệ thống lưu kết quả để tra cứu lại, không cấp thêm lần nữa.",
+      "Mỗi tài khoản một lượt. Quà đã nhận luôn được lưu trong Ví quà của bạn.",
     ],
     [
       "Chọn hộp có ảnh hưởng giải thưởng?",
-      "Không. Mỗi hộp là một cách thể hiện lời tri ân. Khi chức năng mở chính thức được kích hoạt, quà sẽ do máy chủ quyết định theo cơ cấu và tồn kho hiện tại.",
+      "Không. Hộp là lời chúc Giáng Sinh; quà được chọn ngẫu nhiên theo quỹ còn lại.",
     ],
     [
       "Nếu hết quà hoặc sự kiện tạm dừng?",
-      "Bạn không mất lượt khi yêu cầu chưa cấp quà thành công. Các món quà đã được cấp vẫn hiển thị trong ví cá nhân.",
+      "Bạn không mất lượt nếu quà chưa được cấp thành công. Quà đã nhận vẫn còn trong Ví quà.",
     ],
     [
-      "Nhận quà ở đâu?",
-      "Điều kiện từng quà, hạn dùng và cơ sở nhận quà sẽ được thể hiện trong ví. Quy trình xuất QR và xác nhận quà tại quầy được triển khai ở bước tiếp theo.",
+      "Dùng voucher như thế nào?",
+      "Đặt lịch, đến Mộc Maria và đưa QR hoặc mã 6 số trong Ví quà cho nhân viên khi thanh toán.",
+    ],
+    [
+      "Cần hỗ trợ thì làm sao?",
+      "Nhấn Hỗ trợ ở góc dưới bên phải, đăng nhập rồi chọn KTV để trao đổi trực tiếp.",
     ],
   ];
   return (
@@ -524,8 +531,8 @@ export function GiftEventLanding() {
                 <em>Mở quà yêu thương.</em>
               </h1>
               <p className="mm-ev-hero-description">
-                {event?.description ||
-                  "Ông già Noel ghé Mộc, mang theo những lời chúc ấm áp. Chọn một hộp quà bạn yêu thích và cùng Mộc đón mùa an lành."}
+                Chọn một hộp quà, nhận lời chúc an lành và khám phá ưu đãi dành riêng cho bạn tại
+                Mộc Maria.
               </p>
               <div className="mm-ev-hero-tags">
                 <span>
@@ -763,9 +770,7 @@ export function GiftEventLanding() {
             <div className="mm-ev-section-heading">
               <span className="mm-ev-overline">MINH BẠCH TRONG TỪNG MÓN QUÀ</span>
               <h2>Thể lệ & thời gian</h2>
-              <p>
-                Tất cả điều kiện do ban tổ chức cấu hình và máy chủ kiểm tra tại thời điểm mở quà.
-              </p>
+              <p>Những thông tin nhỏ giúp bạn an tâm nhận quà và sử dụng ưu đãi.</p>
             </div>
             <div className="mm-ev-info-grid">
               <article>
@@ -800,7 +805,26 @@ export function GiftEventLanding() {
                 <ShieldCheck size={18} /> Điều lệ chính thức
               </h3>
               {event?.termsText ? (
-                <p>{event.termsText}</p>
+                <>
+                  <p className="mm-ev-terms-intro">
+                    {event.startAt && event.endAt
+                      ? `Từ ${formatLocal(event.startAt)} đến ${formatLocal(event.endAt)}.`
+                      : "Thời gian áp dụng theo công bố của chương trình."}
+                  </p>
+                  <ul className="mm-ev-terms-highlights">
+                    <li>Mỗi tài khoản đủ điều kiện được mở hộp một lần.</li>
+                    <li>Quà ngẫu nhiên theo quỹ còn lại, được lưu trong Ví quà.</li>
+                    <li>Hạn dùng và dịch vụ áp dụng ghi rõ trên từng voucher.</li>
+                    <li>Xuất trình QR hoặc mã 6 số tại quầy; không quy đổi thành tiền mặt.</li>
+                  </ul>
+                  <details className="mm-ev-full-terms">
+                    <summary>
+                      Xem điều lệ đầy đủ (phiên bản {event.termsVersion})
+                      <ChevronDown size={17} />
+                    </summary>
+                    <p>{event.termsText}</p>
+                  </details>
+                </>
               ) : (
                 <p>
                   Thể lệ chi tiết sẽ được công bố trước khi sự kiện bắt đầu. Khi chưa công bố, không
@@ -809,8 +833,8 @@ export function GiftEventLanding() {
               )}
               {event && (
                 <p className="mm-ev-terms-confirmation">
-                  Xác nhận đồng ý thể lệ được đặt ngay cạnh nút mở hộp. Lượt chỉ được dùng khi bạn
-                  chủ động bấm Mở hộp.
+                  Bạn xác nhận đồng ý điều lệ ngay cạnh nút Mở hộp. Lượt chỉ được tính khi quà được
+                  cấp thành công.
                 </p>
               )}
             </div>
@@ -837,6 +861,25 @@ export function GiftEventLanding() {
             </section>
           )}
           <Faq />
+          <section className="mm-ev-visit" id="dia-chi" aria-labelledby="mm-ev-visit-title">
+            <div className="mm-ev-visit-icon" aria-hidden="true">
+              <MapPin size={27} />
+            </div>
+            <div className="mm-ev-visit-copy">
+              <span className="mm-ev-overline">MỘC MARIA · WELLNESS LOUNGE</span>
+              <h2 id="mm-ev-visit-title">Ghé Mộc nhận quà yêu thương</h2>
+              <p>Ô 12, LK2, KĐT Tân Tây Đô, Tân Lập, Đan Phương, Hà Nội, Việt Nam, 100000</p>
+              <small>Hẹn gặp bạn tại không gian chăm sóc và thư giãn của Mộc Maria.</small>
+            </div>
+            <a
+              className="mm-ev-visit-map"
+              href="https://www.google.com/maps/search/?api=1&query=%C3%94%2012%2C%20LK2%2C%20K%C4%90T%20T%C3%A2n%20T%C3%A2y%20%C4%90%C3%B4%2C%20T%C3%A2n%20L%E1%BA%ADp%2C%20%C4%90an%20Ph%C6%B0%C6%A1ng%2C%20H%C3%A0%20N%E1%BB%99i"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Navigation size={17} /> Xem đường đi <ArrowRight size={16} />
+            </a>
+          </section>
           <section className="mm-ev-outro">
             <div aria-hidden="true">✥</div>
             <p>Chúc bạn một Giáng sinh ấm áp, một mùa an lành.</p>
@@ -856,6 +899,7 @@ export function GiftEventLanding() {
             <a href="#the-le">Thể lệ</a>
           </nav>
         </footer>
+        <EventSupport status={status} user={user} authFetch={authFetch} />
       </div>
       {guestIntent && !openedGift && (
         <BookingAccountDialog
