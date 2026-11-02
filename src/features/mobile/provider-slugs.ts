@@ -31,7 +31,7 @@ export function providerProfileHref(provider: {
 
 export function findNamedProfile(segment: string) {
   return namedProfiles.find(
-    (item) => item.urlSlug === segment || item.id === segment ||
-      historicSlugs.get(item.id) === segment,
+    (item) =>
+      item.urlSlug === segment || item.id === segment || historicSlugs.get(item.id) === segment,
   );
 }

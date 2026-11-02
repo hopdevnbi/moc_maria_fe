@@ -7,8 +7,13 @@ describe("official seven KTV roster", () => {
   const rows = officialKtvProfiles(seeded as Provider[]);
   it("has correct names and original identities", () => {
     expect(rows.map((r) => r.publicName)).toEqual([
-      "Nguyệt Nguyễn", "Huyền Lành", "Hoàng Anh", "Sơn Tùng Thảo Y",
-      "Bác sĩ Tiến Mạnh", "Nguyễn Hoàn", "Linh Đan",
+      "Nguyệt Nguyễn",
+      "Huyền Lành",
+      "Hoàng Anh",
+      "Sơn Tùng Thảo Y",
+      "Bác sĩ Tiến Mạnh",
+      "Nguyễn Hoàn",
+      "Linh Đan",
     ]);
     expect(rows.map((r) => r.id)).toEqual(
       Array.from({ length: 7 }, (_, i) => "demo-ktv-" + String(i + 1).padStart(2, "0")),
@@ -32,7 +37,9 @@ describe("official seven KTV roster", () => {
       "linh-dan-fb68af38e35e.jpg",
     ];
     expect(rows.map((r) => r.avatarUrl)).toEqual(
-      expected.map((file) => "https://giangxa-media-cdn.b-cdn.net/moc-maria/ktv/roster-20261101/" + file),
+      expected.map(
+        (file) => "https://giangxa-media-cdn.b-cdn.net/moc-maria/ktv/roster-20261101/" + file,
+      ),
     );
   });
 });

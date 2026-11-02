@@ -41,7 +41,11 @@ export async function publicProviderDirectory() {
     ...data,
     providersUnavailable: data.providersUnavailable || !chat.ok,
     providers: await approvedDescriptions(
-      persistedDirectory(data.providers, officialKtvProfiles(demoProviders as Provider[]), chat.ok ? chat.data : []),
+      persistedDirectory(
+        data.providers,
+        officialKtvProfiles(demoProviders as Provider[]),
+        chat.ok ? chat.data : [],
+      ),
     ),
   };
 }

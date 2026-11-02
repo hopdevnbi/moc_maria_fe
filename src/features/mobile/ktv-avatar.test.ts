@@ -15,8 +15,12 @@ describe("KTV avatar sources", () => {
   it("rejects untrusted images and still allows legacy assets", () => {
     expect(ktvAvatarUrl("/media/ktv/demo-ktv-01-care.webp", true)).toBeTruthy();
     expect(ktvAvatarUrl("/demo/ktv/photo.webp", true)).toBeTruthy();
-    expect(ktvAvatarUrl("https://giangxa-media-cdn.b-cdn.net/moc-maria/demo-ktv/abc.webp", true)).toBeTruthy();
+    expect(
+      ktvAvatarUrl("https://giangxa-media-cdn.b-cdn.net/moc-maria/demo-ktv/abc.webp", true),
+    ).toBeTruthy();
     expect(ktvAvatarUrl("https://example.com/photo.jpg", true)).toBeNull();
-    expect(ktvAvatarUrl("https://giangxa-media-cdn.b-cdn.net/moc-maria/ktv/../secret.jpg", true)).toBeNull();
+    expect(
+      ktvAvatarUrl("https://giangxa-media-cdn.b-cdn.net/moc-maria/ktv/../secret.jpg", true),
+    ).toBeNull();
   });
 });

@@ -1,7 +1,15 @@
 import { providerProfileHref } from "./provider-slugs";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Clock3, MapPin, ShieldAlert, Sparkles, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Clock3,
+  MapPin,
+  ShieldAlert,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import type { ServiceItem } from "@/features/marketplace/types";
 import type { ChatProvider } from "@/features/marketplace/types";
 import { publicRead } from "@/features/marketplace/public-api";

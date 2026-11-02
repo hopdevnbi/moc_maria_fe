@@ -25,7 +25,9 @@ describe("Public URLs retain identity without demo text", () => {
     expect(internalProviderParam(parsed.get("provider")!)).toBe(q.provider);
     expect(internalServiceParam(parsed.get("service")!)).toBe(q.service);
     expect(internalVariantParam(parsed.get("variant")!)).toBe(q.variant);
-    expect(cleanPublicQuery({ provider: "nguyet-nguyen", service: "massage-co-vai-gay" })).toBeNull();
+    expect(
+      cleanPublicQuery({ provider: "nguyet-nguyen", service: "massage-co-vai-gay" }),
+    ).toBeNull();
     expect(internalProviderParam("linh-anh")).toBe("demo-ktv-01");
   });
   it("builds clean booking/chat links for seeded providers and services", () => {

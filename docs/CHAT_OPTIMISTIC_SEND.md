@@ -18,4 +18,4 @@ Component regressions hold upload and save promises unresolved for customer and 
 
 Full suite: 229 tests across 59 files passed. The final privacy subscription adjustment was additionally checked with all 25 chat interaction tests. Scoped Prettier/ESLint checks and production build passed; repository lint has three pre-existing warnings outside these files.
 
-Release evidence is recorded separately in the workspace Plan claim. This change does not deploy the frontend, change the backend/schema, or write production conversations.
+Owner authorized main integration, push and production deployment on 2026-11-02. Release evidence is recorded separately in the workspace Plan claim. Release preparation also formats 11 existing files to satisfy the repository-wide Prettier CI gate; these edits have no intended runtime changes. Backend/schema and production conversation data are unchanged.
