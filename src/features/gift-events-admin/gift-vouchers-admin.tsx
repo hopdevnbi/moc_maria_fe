@@ -24,6 +24,16 @@ type VoucherRow = {
   redeemedAt: string | null;
 };
 
+type PrizeStock = {
+  id: string;
+  name: string;
+  kind: string;
+  enabled: boolean;
+  weight: number;
+  stockTotal: number;
+  stockIssued: number;
+  config: { percent?: number; maxDiscountVnd?: number };
+};
 export function GiftVouchersAdmin() {
   const { user } = useAuth();
   const authorized = user?.roles.includes("SUPER_ADMIN") === true;
@@ -46,6 +56,16 @@ export function GiftVouchersAdmin() {
       : "/admin/gift-events/none/vouchers",
     authorized && !!selected,
   );
+  const prizes = usePrivateData<PrizeStock[]>(
+    selected
+      ? "/" + "admin/gift-events/" + selected + "/prizes"
+      : "/" + "admin/gift-events/none/prizes",
+    authorized && !!selected,
+  );
+  const enabledVouchers =
+    prizes.data?.filter((prize) => prize.kind === "VOUCHER_PERCENT" && prize.enabled) ?? [];
+  const configuredTotal = enabledVouchers.reduce((sum, prize) => sum + prize.stockTotal, 0);
+  const issuedTotal = enabledVouchers.reduce((sum, prize) => sum + prize.stockIssued, 0);
   const mutation = usePrivateMutation();
   async function revoke() {
     if (!selected || !pending || reason.trim().length < 10 || mutation.isPending) return;
@@ -120,6 +140,66 @@ export function GiftVouchersAdmin() {
         </div>
         {vouchers.isPending && <p role="status">Đang tải voucher…</p>}
         {vouchers.isError && <p role="alert">Không thể tải danh sách voucher.</p>}
+        {prizes.isError && <p role="alert">Không thể tải số liệu quỹ voucher.</p>}
+        {prizes.data && (
+          <section className="mm-voucher-inventory" aria-label="Tổng quan quỹ voucher">
+            <h2>Quỹ voucher của sự kiện</h2>
+            <p>
+              Quỹ đã cấu hình khác với voucher thực tế đã cấp. Voucher chỉ phát hành khi khách hàng
+              mở quà thành công.
+            </p>
+            <div className="mm-voucher-summary">
+              <article>
+                <small>Tổng quỹ đã bật</small>
+                <strong>{configuredTotal.toLocaleString("vi-VN")}</strong>
+                <span>Suất voucher tối đa</span>
+              </article>
+              <article>
+                <small>Đã phát hành</small>
+                <strong>{issuedTotal.toLocaleString("vi-VN")}</strong>
+                <span>Đã tính cả voucher dùng/thu hồi</span>
+              </article>
+              <article>
+                <small>Còn trong kho</small>
+                <strong>{(configuredTotal - issuedTotal).toLocaleString("vi-VN")}</strong>
+                <span>Chưa cấp cho khách</span>
+              </article>
+            </div>
+            {enabledVouchers.length > 0 && (
+              <div className="mm-gr-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Loại voucher</th>
+                      <th>Quỹ</th>
+                      <th>Đã cấp</th>
+                      <th>Còn lại</th>
+                      <th>Trọng số chọn*</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enabledVouchers
+                      .slice()
+                      .sort((a, b) => (a.config.percent ?? 0) - (b.config.percent ?? 0))
+                      .map((prize) => (
+                        <tr key={prize.id}>
+                          <td>{prize.name}</td>
+                          <td>{prize.stockTotal}</td>
+                          <td>{prize.stockIssued}</td>
+                          <td>{prize.stockTotal - prize.stockIssued}</td>
+                          <td>{prize.weight}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+                <p className="mm-voucher-inventory-note">
+                  *Trọng số chỉ là tỷ lệ lựa chọn tương đối khi quà còn tồn và đủ ngân sách; không
+                  phải tỷ lệ trúng cố định. Voucher đã cấp không được hoàn vào kho khi reset.
+                </p>
+              </div>
+            )}
+          </section>
+        )}{" "}
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>

@@ -217,3 +217,64 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Voucher inventory: prize configuration is separate from issued rewards. */
+.mm-voucher-inventory {
+  margin: 22px 0;
+  padding: 22px;
+  border: 1px solid #d4e2ce;
+  border-radius: 16px;
+  background: #fff;
+}
+.mm-voucher-inventory > p {
+  margin: 0 0 18px;
+  color: #607d68;
+  line-height: 1.65;
+  font-size: 13px;
+}
+.mm-voucher-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.mm-voucher-summary article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e0e8db;
+  border-radius: 14px;
+  padding: 18px;
+  background: #f7faf6;
+}
+.mm-voucher-summary small {
+  color: #517259;
+  font-size: 12px;
+  font-weight: 700;
+}
+.mm-voucher-summary strong {
+  color: #163f2d;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.mm-voucher-summary span {
+  color: #7a907d;
+  font-size: 11px;
+}
+.mm-voucher-inventory .mm-voucher-inventory-note {
+  font-size: 11px;
+  margin: 12px 0 0;
+  color: #647a65;
+}
+@media (max-width: 680px) {
+  .mm-voucher-inventory {
+    padding: 14px;
+  }
+  .mm-voucher-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .mm-voucher-summary article {
+    padding: 12px;
+  }
+}
