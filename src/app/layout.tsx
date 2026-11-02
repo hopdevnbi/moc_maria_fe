@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Be_Vietnam_Pro, Noto_Serif } from "next/font/google";
 import { AppProviders } from "@/app/providers/AppProviders";
 import { ChristmasWelcome } from "@/shared/seasonal/christmas-welcome";
+import { GoogleAnalytics } from "@/shared/analytics/google-analytics";
 import "./globals.css";
 import "@/shared/seasonal/christmas.css";
 
@@ -38,6 +39,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className={`${sans.variable} ${serif.variable} christmas-season`}>
         <ChristmasWelcome />
         <AppProviders>{children}</AppProviders>
+        <Suspense fallback={null}>
+          <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        </Suspense>
       </body>
     </html>
   );

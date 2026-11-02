@@ -1,0 +1,17 @@
+# Mộc Maria Google Analytics
+
+GA4 property and web stream: **Mộc Maria — Website & Event**. Public measurement ID: `G-Y5FZEDNVL4`. Primary stream URL: `https://mocmaria.com`. Reporting time zone: Vietnam (GMT+07:00); currency: VND. The property was created through the owner's existing signed-in Analytics account. The existing Giang Xá property and code were read as a reference and were not modified.
+
+Set `NEXT_PUBLIC_GA_MEASUREMENT_ID` in the Vercel **moc-maria-fe** production environment. This is a public identifier, not an API credential. The same value is preserved in ignored local configuration; the example file intentionally leaves it blank.
+
+The root layout mounts a small client observer under its own Suspense boundary, as required for unknown dynamic path parameters with Next 16 Cache Components. Tracking starts after hydration, loads the Google tag asynchronously once, and counts the initial page and pathname changes without blocking customer flows. It covers public, account, KTV, admin and event pages. The event root reports the visible `/` URL rather than the internal `/event` rewrite. Strict Mode duplicate notifications are ignored; navigating away and revisiting a page counts another view. Query-only filter changes are not additional page views.
+
+Only `mocmaria.com`, `www.mocmaria.com` and `event.mocmaria.com` can initialize the tag. Localhost and Vercel preview hosts do not send traffic. A shared `mocmaria.com` GA cookie (30 days) keeps the browser identity consistent across the main site and event subdomain.
+
+As in the existing Giang Xá integration, analytics storage is enabled automatically; advertising storage, advertising user data and ad personalization are denied. Google signals and ad personalization signals are disabled. Automatic enhanced measurement is disabled on the web stream; the application sends its own `page_view` events with `send_page_view: false` in configuration to prevent duplicate history events.
+
+Page context uses known static routes or dynamic route templates (`/chuyen-vien/:id`, `/dich-vu/:slug`, `/quan-tri/ktv/:id`). Unknown paths become `/other`. Titles use an area and a route template instead of document titles. Query strings, hashes, account IDs, conversation identifiers, names, contacts, gift QR data, booking details and form contents are not sent. Initial referrers use allowlisted origins only; later referrers use the previous sanitized page. No custom business-event payloads or User-ID integration are added. A route-coverage test requires every current app page to have a safe mapping.
+
+Verification includes six analytics tests for complete route coverage, first navigation/revisits and duplicate protection, private URL/title/referrer removal, main/event coverage, production host/ID guards and blocked-tag resilience. Full local quality passed **258 tests across 64 files**, formatting, lint, TypeScript and production build. Production verification checks the deployed revision, tag presence on public and event pages, SPA navigation, and receipt of visits in the new property's Realtime report. Deployment/CI IDs and browser evidence are recorded in the scoped Plan release entry.
+
+Reference: Google's [manual page-view guidance](https://developers.google.com/analytics/devguides/collection/ga4/views) and [single-page application guidance](https://developers.google.com/analytics/devguides/collection/ga4/single-page-applications). Keep enhanced measurement off if manual page views are retained.
