@@ -519,6 +519,17 @@
         "Own docs/Plan"
       ],
       "note": "Reuse current inquiry fulfillment API. Preserve customer profile/VIP and customer account UI. No certifications/reviews/reservations created by reported completion."
+    },
+    {
+      "agent": "Codex event social image 2026-11-02",
+      "status": "ACTIVE",
+      "branch": "codex/event-social-image-fix",
+      "ownedPaths": [
+        "FE src/app/event/page.tsx social metadata only",
+        "FE public/event/social share card and native SVG source",
+        "Own docs/Plan"
+      ],
+      "note": "Fix event share metadata and crawler-compatible image. No ad account edits, ad publishing, identity verification or business-data changes."
     }
   ]
 }
