@@ -125,6 +125,8 @@ export function GiftEventAdmin() {
   const [notice, setNotice] = useState("");
   const [serviceChoice, setServiceChoice] = useState<boolean | null>(null);
   const [serviceReason, setServiceReason] = useState("");
+  const [christmasReason, setChristmasReason] = useState("");
+  const [showChristmasConfirmation, setShowChristmasConfirmation] = useState(false);
   const current =
     selectedId === "new"
       ? null
@@ -134,6 +136,10 @@ export function GiftEventAdmin() {
         null;
   const editorForm = selectedId === null && current ? fromEvent(current) : form;
   const editable = !current || ["DRAFT", "SCHEDULED"].includes(current.status);
+  const canAmendChristmas =
+    current?.code === "moc-maria-tri-an-thang-11-2026" &&
+    (current.status === "LIVE" || current.status === "PAUSED") &&
+    current.endAt !== "2026-12-25T16:59:59.999Z";
   const isDirty =
     JSON.stringify(editorForm) !== JSON.stringify(current ? fromEvent(current) : fresh);
   const disabled = mutation.isPending || !isSuper;
@@ -216,6 +222,40 @@ export function GiftEventAdmin() {
       await events.refetch();
     } catch {
       /* show API error */
+    }
+  }
+
+  async function saveChristmasTerms() {
+    if (
+      !current ||
+      !canAmendChristmas ||
+      disabled ||
+      christmasReason.trim().length < 10 ||
+      !showChristmasConfirmation
+    )
+      return;
+    if (
+      !window.confirm(
+        "Xác nhận đổi tên và thời gian sự kiện thành 01/11–25/12/2026? " +
+          "Điều lệ sẽ tăng phiên bản; voucher đã cấp và kho quà không thay đổi.",
+      )
+    )
+      return;
+    try {
+      const result = await mutation.mutateAsync({
+        path: "/" + "admin/gift-events/" + current.id + "/christmas-2026-terms",
+        body: {
+          expectedVersion: current.version,
+          reason: christmasReason.trim(),
+        },
+      });
+      setForm(fromEvent(result));
+      setChristmasReason("");
+      setShowChristmasConfirmation(false);
+      setNotice("Đã cập nhật Giáng Sinh An Lành 01/11–25/12/2026 và lưu lịch sử điều lệ.");
+      await events.refetch();
+    } catch {
+      /* mutation displays server message; keep confirmation for retry */
     }
   }
 
@@ -600,6 +640,59 @@ export function GiftEventAdmin() {
             )}
           </form>
           {step === 4 && <GiftPrizesAdmin event={current} />}
+          {canAmendChristmas && (
+            <section
+              className="mm-ge-actions mm-ge-christmas-period"
+              aria-label="Cập nhật điều lệ Giáng Sinh"
+            >
+              <strong>
+                <CalendarDays size={16} /> Cập nhật điều lệ Giáng Sinh 2026
+              </strong>
+              <p>
+                Chiến dịch đang chạy vẫn ghi thời gian cũ. Đồng bộ tên sự kiện, điều lệ và khung
+                thời gian thành 00:00 ngày 01/11 đến 23:59 ngày 25/12/2026. Voucher đã cấp, giá trị
+                ưu đãi và lịch sử sử dụng được giữ nguyên.
+              </p>
+              {!showChristmasConfirmation ? (
+                <button
+                  type="button"
+                  onClick={() => setShowChristmasConfirmation(true)}
+                  disabled={disabled}
+                >
+                  Chuẩn bị cập nhật điều lệ Noel
+                </button>
+              ) : (
+                <div className="mm-ge-christmas-confirm">
+                  <label htmlFor="christmas-change-reason">Lý do điều chỉnh (10–500 ký tự)</label>
+                  <input
+                    id="christmas-change-reason"
+                    value={christmasReason}
+                    onChange={(event) => setChristmasReason(event.target.value)}
+                    placeholder="Gia hạn sự kiện Giáng Sinh theo kế hoạch truyền thông"
+                    minLength={10}
+                    maxLength={500}
+                  />
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => void saveChristmasTerms()}
+                      disabled={disabled || christmasReason.trim().length < 10}
+                    >
+                      Xác nhận cập nhật 01/11–25/12
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setShowChristmasConfirmation(false)}
+                    >
+                      Hủy
+                    </button>
+                  </div>
+                </div>
+              )}
+              {mutation.isError && <p role="alert">{mutationMessage(mutation.error)}</p>}
+            </section>
+          )}
           {current && !editable && !["ENDED", "ARCHIVED"].includes(current.status) && (
             <div className="mm-ge-actions">
               <strong>Điều kiện khách đã từng sử dụng dịch vụ</strong>
