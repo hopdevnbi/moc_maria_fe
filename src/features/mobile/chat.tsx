@@ -61,10 +61,15 @@ type ChatMessage = {
   delivery?: "sending" | "failed" | "sent";
 };
 type ImageAttachment = { threadId: string; file: File; previewUrl: string };
-type SendInput = { id: string; body: string; imageUrl?: string };
+type SendInput = {
+  id: string;
+  body: string;
+  clientMessageId: string;
+  imageUrl?: string;
+  attachment?: ImageAttachment;
+};
 const MAX_CHAT_IMAGE_BYTES = 5 * 1024 * 1024;
 const CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const sendKey = ({ id, body, imageUrl }: SendInput) => JSON.stringify([id, body, imageUrl ?? ""]);
 const json = (body: unknown): RequestInit => ({
   method: "POST",
   cache: "no-store",
@@ -219,7 +224,6 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [attachment, setAttachment] = useState<ImageAttachment | null>(null);
   const [attachmentError, setAttachmentError] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [outbox, setOutbox] = useState<ChatMessage[]>([]);
   const [unlocked, setUnlocked] = useState<Record<string, boolean>>({});
@@ -236,9 +240,9 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const openedProvider = useRef("");
   const nearBottom = useRef(true);
   const olderScroll = useRef<{ id: string; height: number; top: number } | null>(null);
-  const pendingSend = useRef<
-    Record<string, { body: string; imageUrl?: string; clientMessageId: string }>
-  >({});
+  const pendingSend = useRef<Record<string, SendInput>>({});
+  const inFlight = useRef(new Set<string>());
+  const previewUrls = useRef(new Set<string>());
   const enabled = status === "authenticated" && !!user;
   const customer = !!user?.permissions.includes("customer.portal");
   const key = ["ktv-chat", user?.id];
@@ -269,14 +273,33 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     : undefined;
   const current = threads.data?.find((thread) => thread.id === selectedId) ?? null;
   useEffect(() => {
-    if (!attachment) return;
-    return () => URL.revokeObjectURL(attachment.previewUrl);
-  }, [attachment]);
+    const used = new Set([
+      attachment?.previewUrl,
+      ...outbox.map((message) => message.image_url),
+      ...Object.values(pendingSend.current).map((input) => input.attachment?.previewUrl),
+    ]);
+    for (const url of previewUrls.current) {
+      if (!used.has(url)) {
+        URL.revokeObjectURL(url);
+        previewUrls.current.delete(url);
+      }
+    }
+  }, [attachment, outbox]);
+  useEffect(() => {
+    const urls = previewUrls.current;
+    return () => {
+      for (const url of urls) URL.revokeObjectURL(url);
+      urls.clear();
+    };
+  }, []);
   const locked = !!current?.privacy_enabled && (!!current.history_locked || !unlocked[current.id]);
   const conceal = useCallback(
     (id: string) => {
       delete unlockTokens.current[id];
       setUnlocked((old) => ({ ...old, [id]: false }));
+      for (const [key, input] of Object.entries(pendingSend.current)) {
+        if (input.id === id) delete pendingSend.current[key];
+      }
       setOutbox((old) => old.filter((m) => m.thread_id !== id));
       setAttachment((old) => (old?.threadId === id ? null : old));
       setAttachmentError("");
@@ -461,10 +484,23 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
         event.type !== "updated" ||
         event.action.type !== "success" ||
         queryKey[0] !== "ktv-chat" ||
-        queryKey[1] !== user?.id ||
-        queryKey[2] !== "messages"
+        queryKey[1] !== user?.id
       )
         return;
+      if (queryKey[2] === "threads") {
+        const data = event.query.state.data as Thread[] | undefined;
+        for (const thread of data ?? []) {
+          if (
+            thread.privacy_enabled &&
+            thread.history_locked &&
+            (unlockTokens.current[thread.id] ||
+              Object.values(pendingSend.current).some((input) => input.id === thread.id))
+          )
+            conceal(thread.id);
+        }
+        return;
+      }
+      if (queryKey[2] !== "messages") return;
       const data = event.query.state.data as { pages: ChatMessage[][] } | undefined;
       const confirmed = new Set(data?.pages.flat().map((m) => m.id) ?? []);
       setOutbox((old) =>
@@ -473,7 +509,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
           : old,
       );
     });
-  }, [client, user?.id]);
+  }, [client, user?.id, conceal]);
   const latestMessageId = history.data?.pages[0]?.at(-1)?.id;
   useEffect(() => {
     if (threads.data && incoming.inbox(threads.data, choosing ? null : selectedId)) playSound();
@@ -587,66 +623,111 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
   }, [messages, selectedId, choosing]);
   const send = useMutation({
-    onMutate: ({ id, body, imageUrl }: SendInput) => {
-      const index = sendKey({ id, body, imageUrl });
-      const pending = pendingSend.current[index];
-      const input =
-        pending?.body === body ? pending : { body, imageUrl, clientMessageId: crypto.randomUUID() };
-      pendingSend.current[index] = input;
+    // Keep server order while every queued message is already visible locally.
+    scope: { id: `ktv-chat-send:${user?.id}` },
+    onMutate: (input: SendInput) => {
+      if (pendingSend.current[input.clientMessageId] !== input) return;
+      const { id, body, clientMessageId, imageUrl, attachment: image } = input;
       nearBottom.current = true;
       setActionError("");
+      setAttachmentError("");
       setDrafts((old) => (old[id]?.trim() === body ? { ...old, [id]: "" } : old));
-      setOutbox((old) => [
-        ...old.filter((m) => m.id !== input.clientMessageId),
-        {
-          id: input.clientMessageId,
+      if (image) setAttachment((old) => (old === image ? null : old));
+      setOutbox((old) => {
+        const existing = old.find((message) => message.id === clientMessageId);
+        const message: ChatMessage = {
+          id: clientMessageId,
           thread_id: id,
           sender_user_id: user!.id,
           body,
-          image_url: imageUrl ?? null,
-          created_at: new Date().toISOString(),
+          image_url: imageUrl ?? image?.previewUrl ?? null,
+          created_at: existing?.created_at ?? new Date().toISOString(),
           delivery: "sending",
-        },
-      ]);
-      return input;
+        };
+        return existing
+          ? old.map((item) => (item.id === clientMessageId ? message : item))
+          : [...old, message];
+      });
     },
-    mutationFn: ({ id, body, imageUrl }: SendInput) =>
-      authFetch<ChatMessage>(`/ktv-chat/threads/${id}/messages`, {
-        ...json(pendingSend.current[sendKey({ id, body, imageUrl })]),
-        headers: {
-          "Content-Type": "application/json",
-          ...(unlockTokens.current[id] ? { "X-Chat-Unlock": unlockTokens.current[id] } : {}),
-        },
-      }),
-    onSuccess: (message, { id, body, imageUrl }, input) => {
-      delete pendingSend.current[sendKey({ id, body, imageUrl })];
+    mutationFn: async (input: SendInput) => {
+      const { id, body, clientMessageId } = input;
+      const headers = (): Record<string, string> =>
+        unlockTokens.current[id] ? { "X-Chat-Unlock": unlockTokens.current[id] } : {};
+      const assertVisible = () => {
+        if (pendingSend.current[clientMessageId] !== input) throw new Error("CHAT_SEND_CANCELLED");
+      };
+      assertVisible();
+      if (input.attachment && !input.imageUrl) {
+        const data = new FormData();
+        data.append("file", input.attachment.file);
+        const uploaded = await authFetch<{ url: string }>(`/ktv-chat/threads/${id}/images`, {
+          method: "POST",
+          body: data,
+          headers: headers(),
+        });
+        if (!uploaded?.url) throw new Error("UPLOAD_MISSING_URL");
+        // Retain the uploaded URL if saving the message fails; retry only the save.
+        input.imageUrl = uploaded.url;
+      }
+      assertVisible();
+      return authFetch<ChatMessage>(`/ktv-chat/threads/${id}/messages`, {
+        ...json({ body, clientMessageId, ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}) }),
+        headers: { "Content-Type": "application/json", ...headers() },
+      });
+    },
+    onSuccess: (message, input) => {
+      if (pendingSend.current[input.clientMessageId] !== input) return;
+      delete pendingSend.current[input.clientMessageId];
       setOutbox((old) =>
-        old.map((m) =>
-          m.id === input?.clientMessageId
-            ? { ...message, image_url: message.image_url ?? imageUrl, delivery: "sent" }
-            : m,
+        old.map((item) =>
+          item.id === input.clientMessageId
+            ? {
+                ...item,
+                ...message,
+                image_url: message.image_url ?? input.imageUrl,
+                delivery: "sent",
+              }
+            : item,
         ),
       );
-      if (selectedId === id) setActionError("");
       void client.invalidateQueries({ queryKey: ["ktv-chat", user?.id, "threads"] });
     },
-    onError: (error, { id, body }, input) => {
+    onError: (error, input) => {
+      if (pendingSend.current[input.clientMessageId] !== input) return;
       if (isChatLockedError(error)) {
-        conceal(id);
+        conceal(input.id);
         return;
       }
-      if (selectedId === id) setActionError(chatError(error));
-      setDrafts((old) => (old[id] ? old : { ...old, [id]: body }));
+      if (selectedId === input.id) setActionError(chatError(error));
+      // The failed bubble owns its image and retry action, independent of the next draft.
+      if (!input.attachment)
+        setDrafts((old) => (old[input.id] ? old : { ...old, [input.id]: input.body }));
       setOutbox((old) =>
-        old.map((m) => (m.id === input?.clientMessageId ? { ...m, delivery: "failed" } : m)),
+        old.map((item) =>
+          item.id === input.clientMessageId ? { ...item, delivery: "failed" } : item,
+        ),
       );
+    },
+    onSettled: (_message, _error, input) => {
+      inFlight.current.delete(input.clientMessageId);
     },
   });
   const { mutate: sendMessage } = send;
-  const resend = useCallback(
-    (item: ChatMessage) =>
-      sendMessage({ id: item.thread_id, body: item.body, imageUrl: item.image_url ?? undefined }),
+  const enqueue = useCallback(
+    (input: SendInput) => {
+      if (inFlight.current.has(input.clientMessageId)) return;
+      pendingSend.current[input.clientMessageId] = input;
+      inFlight.current.add(input.clientMessageId);
+      sendMessage(input);
+    },
     [sendMessage],
+  );
+  const resend = useCallback(
+    (item: ChatMessage) => {
+      const input = pendingSend.current[item.id];
+      if (input) enqueue(input);
+    },
+    [enqueue],
   );
   const chooseImage = (file?: File) => {
     if (!file || !selectedId) return;
@@ -658,35 +739,25 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       setAttachmentError("Dung lượng ảnh tối đa là 5 MB.");
       return;
     }
-    setAttachment({ threadId: selectedId, file, previewUrl: URL.createObjectURL(file) });
+    const previewUrl = URL.createObjectURL(file);
+    previewUrls.current.add(previewUrl);
+    setAttachment({ threadId: selectedId, file, previewUrl });
     setAttachmentError("");
   };
-  const submitMessage = async (id: string, body: string) => {
-    if (uploadingImage || send.isPending || (!body && attachment?.threadId !== id)) return;
-    const selectedImage = attachment?.threadId === id ? attachment : null;
-    if (!selectedImage) {
-      sendMessage({ id, body });
-      return;
-    }
-    setUploadingImage(true);
-    setAttachmentError("");
-    try {
-      const data = new FormData();
-      data.append("file", selectedImage.file);
-      const uploaded = await authFetch<{ url: string }>(`/ktv-chat/threads/${id}/images`, {
-        method: "POST",
-        body: data,
-        headers: unlockTokens.current[id] ? { "X-Chat-Unlock": unlockTokens.current[id] } : {},
-      });
-      if (!uploaded?.url) throw new Error("UPLOAD_MISSING_URL");
-      setAttachment((old) => (old === selectedImage ? null : old));
-      sendMessage({ id, body, imageUrl: uploaded.url });
-    } catch (error) {
-      if (isChatLockedError(error)) conceal(id);
-      else setAttachmentError("Chưa tải được ảnh. Vui lòng thử lại.");
-    } finally {
-      setUploadingImage(false);
-    }
+  const submitMessage = (id: string, body: string) => {
+    const image = attachment?.threadId === id ? attachment : undefined;
+    if (!body && !image) return;
+    const failed = !image
+      ? Object.values(pendingSend.current).find(
+          (input) =>
+            input.id === id &&
+            input.body === body &&
+            !input.attachment &&
+            !inFlight.current.has(input.clientMessageId),
+        )
+      : undefined;
+    enqueue(failed ?? { id, body, clientMessageId: crypto.randomUUID(), attachment: image });
+    inputRef.current?.focus();
   };
   const showDirectory = choosing || !threads.data?.length;
   const query = normalize(search);
@@ -877,7 +948,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                         <button
                           className="ktv-chat-contact"
                           key={item.id}
-                          disabled={open.isPending || send.isPending}
+                          disabled={open.isPending}
                           onClick={() => {
                             const existing = threads.data?.find(
                               (thread) =>
@@ -1140,7 +1211,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                                 !index ||
                                 day(messages[index - 1].created_at) !== day(item.created_at)
                               }
-                              retryDisabled={paused || send.isPending}
+                              retryDisabled={paused}
                               retry={resend}
                             />
                           ))
@@ -1186,8 +1257,6 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           if (
                             !paused &&
                             (draft.trim() || attachment?.threadId === current.id) &&
-                            !send.isPending &&
-                            !uploadingImage &&
                             !history.isPending &&
                             !history.isError
                           )
@@ -1207,7 +1276,6 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                             <button
                               type="button"
                               aria-label="Xóa ảnh đính kèm"
-                              disabled={uploadingImage}
                               onClick={() => setAttachment(null)}
                             >
                               <X size={18} />
@@ -1225,7 +1293,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
                           aria-label="Tệp ảnh đính kèm"
-                          disabled={paused || uploadingImage || send.isPending}
+                          disabled={paused}
                           onChange={(event) => {
                             chooseImage(event.currentTarget.files?.[0]);
                             event.currentTarget.value = "";
@@ -1236,7 +1304,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           className="ktv-chat-attach-toggle"
                           aria-label="Chọn ảnh đính kèm"
                           title="Đính kèm ảnh JPG, PNG hoặc WebP (tối đa 5 MB)"
-                          disabled={paused || uploadingImage || send.isPending}
+                          disabled={paused}
                           onClick={() => imageInputRef.current?.click()}
                         >
                           <ImagePlus size={22} />
@@ -1335,23 +1403,16 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           disabled={
                             paused ||
                             (!draft.trim() && attachment?.threadId !== current.id) ||
-                            send.isPending ||
-                            uploadingImage ||
                             history.isPending ||
                             history.isError
                           }
                           aria-label="Gửi tin nhắn"
                         >
-                          {send.isPending || uploadingImage ? (
-                            <LoaderCircle size={21} className="ktv-chat-spinner" />
-                          ) : (
-                            <Send size={21} />
-                          )}
+                          <Send size={21} />
                         </button>
                         <small>
-                          {uploadingImage
-                            ? "Đang tải ảnh lên…"
-                            : "Ảnh JPG, PNG, WebP tối đa 5 MB. Không chia sẻ mật khẩu hoặc thông tin thanh toán."}
+                          Ảnh JPG, PNG, WebP tối đa 5 MB. Không chia sẻ mật khẩu hoặc thông tin
+                          thanh toán.
                         </small>
                       </form>
                     </>

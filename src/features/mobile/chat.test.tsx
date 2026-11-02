@@ -551,6 +551,195 @@ describe("private KTV chat interactions", () => {
       ).toBe(true),
     );
   });
+  it.each(["customer", "provider"])(
+    "shows image and queued text immediately for %s while upload and save are delayed",
+    async (role) => {
+      if (role === "provider") state.user = { id: "provider", permissions: ["provider.portal"] };
+      let upload!: (value: { url: string }) => void;
+      let save!: (value: unknown) => void;
+      const url = "https://media.example/chat/photo.webp";
+      Object.defineProperty(URL, "createObjectURL", {
+        configurable: true,
+        value: vi.fn(() => "blob:pending-photo"),
+      });
+      Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+      const posts: { body: string; imageUrl?: string; clientMessageId: string }[] = [];
+      const original = state.fetch.getMockImplementation()!;
+      state.fetch.mockImplementation((path: string, init?: RequestInit) => {
+        if (path === "/ktv-chat/threads" && init?.method !== "POST")
+          return Promise.resolve([
+            { ...first, provider_user_id: "provider", customer_name: "Khách A" },
+          ]);
+        if (path.endsWith("/images"))
+          return new Promise((resolve) => {
+            upload = resolve;
+          });
+        if (path.endsWith("/messages") && init?.method === "POST") {
+          const input = JSON.parse(init.body as string);
+          posts.push(input);
+          if (posts.length === 1)
+            return new Promise((resolve) => {
+              save = resolve;
+            });
+          return Promise.resolve({
+            id: input.clientMessageId,
+            thread_id: "a",
+            sender_user_id: role,
+            body: input.body,
+            created_at: new Date().toISOString(),
+          });
+        }
+        return original(path, init);
+      });
+      mount();
+      fireEvent.click(
+        await screen.findByRole("button", { name: role === "customer" ? /Ngọc Mai/ : /Khách A/ }),
+      );
+      const input = await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
+      await waitFor(() => expect(screen.queryByText("Đang tải tin nhắn…")).not.toBeInTheDocument());
+      fireEvent.change(screen.getByLabelText("Tệp ảnh đính kèm"), {
+        target: { files: [new File(["photo"], "photo.png", { type: "image/png" })] },
+      });
+      fireEvent.change(input, { target: { value: "Ảnh tư vấn" } });
+      fireEvent.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
+      const log = within(screen.getByRole("log", { name: "Tin nhắn" }));
+      expect(await log.findByAltText("Ảnh đính kèm trong tin nhắn")).toHaveAttribute(
+        "src",
+        "blob:pending-photo",
+      );
+      expect(log.getByText("Ảnh tư vấn")).toBeInTheDocument();
+      expect(log.getByText("Đang gửi…")).toBeInTheDocument();
+      expect(input).toHaveValue("");
+      expect(screen.queryByAltText("Ảnh chuẩn bị gửi")).not.toBeInTheDocument();
+      expect(URL.revokeObjectURL).not.toHaveBeenCalledWith("blob:pending-photo");
+      expect(posts).toHaveLength(0);
+      fireEvent.change(input, { target: { value: "Tin tiếp theo" } });
+      expect(screen.getByRole("button", { name: "Gửi tin nhắn" })).toBeEnabled();
+      fireEvent.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
+      await log.findByText("Tin tiếp theo");
+      expect(log.getAllByText("Đang gửi…")).toHaveLength(2);
+      expect(screen.getByRole("button", { name: "Chọn ảnh đính kèm" })).toBeEnabled();
+      await act(async () => upload({ url }));
+      await waitFor(() => expect(posts).toHaveLength(1));
+      expect(posts[0].imageUrl).toBe(url);
+      fireEvent.change(input, { target: { value: "Bản nháp mới" } });
+      await act(async () =>
+        save({
+          id: "photo-saved",
+          thread_id: "a",
+          sender_user_id: role,
+          body: posts[0].body,
+          image_url: url,
+          created_at: first.updated_at,
+        }),
+      );
+      await waitFor(() => expect(posts).toHaveLength(2));
+      expect(posts[1].body).toBe("Tin tiếp theo");
+      expect(posts[1].clientMessageId).not.toBe(posts[0].clientMessageId);
+      expect(input).toHaveValue("Bản nháp mới");
+      expect(log.getAllByText("Ảnh tư vấn")).toHaveLength(1);
+      await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:pending-photo"));
+    },
+  );
+  it("cancels an image save when a private thread is locked during upload", async () => {
+    let upload!: (value: { url: string }) => void;
+    const original = state.fetch.getMockImplementation()!;
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn(() => "blob:private"),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+    state.fetch.mockImplementation((path: string, init?: RequestInit) => {
+      if (path.endsWith("/images"))
+        return new Promise((resolve) => {
+          upload = resolve;
+        });
+      return original(path, init);
+    });
+    const { client } = mount();
+    fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+    const input = await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
+    await waitFor(() => expect(screen.queryByText("Đang tải tin nhắn…")).not.toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText("Tệp ảnh đính kèm"), {
+      target: { files: [new File(["photo"], "private.png", { type: "image/png" })] },
+    });
+    fireEvent.change(input, { target: { value: "Ảnh riêng" } });
+    fireEvent.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
+    await screen.findByText("Đang gửi…");
+    await waitFor(() => expect(upload).toBeDefined());
+    await act(async () => {
+      client.setQueryData(
+        ["ktv-chat", "customer", "threads"],
+        [{ ...first, privacy_enabled: true, history_locked: true }, second],
+      );
+    });
+    await waitFor(() => expect(screen.queryByText("Ảnh riêng")).not.toBeInTheDocument());
+    await act(async () => upload({ url: "https://media.example/chat/private.webp" }));
+    expect(
+      state.fetch.mock.calls.some(
+        ([path, init]) => path.endsWith("/messages") && init?.method === "POST",
+      ),
+    ).toBe(false);
+    expect(screen.queryByAltText("Ảnh đính kèm trong tin nhắn")).not.toBeInTheDocument();
+  });
+  it.each(["upload", "save"])(
+    "retries a failed image %s without losing its preview or duplicating the upload",
+    async (failure) => {
+      Object.defineProperty(URL, "createObjectURL", {
+        configurable: true,
+        value: vi.fn(() => "blob:retry-photo"),
+      });
+      Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+      let uploads = 0;
+      const posts: { clientMessageId: string; imageUrl: string }[] = [];
+      const url = "https://media.example/chat/retry.webp";
+      const original = state.fetch.getMockImplementation()!;
+      state.fetch.mockImplementation(async (path: string, init?: RequestInit) => {
+        if (path.endsWith("/images")) {
+          uploads++;
+          if (failure === "upload" && uploads === 1) throw new Error("network");
+          return { url };
+        }
+        if (path.endsWith("/messages") && init?.method === "POST") {
+          posts.push(JSON.parse(init.body as string));
+          if (failure === "save" && posts.length === 1) throw new Error("network");
+          return {
+            id: "saved-photo",
+            thread_id: "a",
+            sender_user_id: "customer",
+            body: "",
+            image_url: url,
+            created_at: first.updated_at,
+          };
+        }
+        return original(path, init);
+      });
+      const { unmount } = mount();
+      fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+      const picker = await screen.findByLabelText("Tệp ảnh đính kèm");
+      await waitFor(() => expect(screen.queryByText("Đang tải tin nhắn…")).not.toBeInTheDocument());
+      fireEvent.change(picker, {
+        target: { files: [new File(["photo"], "photo.webp", { type: "image/webp" })] },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
+      const retry = await screen.findByRole("button", { name: "Gửi lại" });
+      expect(screen.getByAltText("Ảnh đính kèm trong tin nhắn")).toHaveAttribute(
+        "src",
+        "blob:retry-photo",
+      );
+      expect(URL.revokeObjectURL).not.toHaveBeenCalledWith("blob:retry-photo");
+      const input = screen.getByRole("textbox", { name: "Nội dung tin nhắn" });
+      fireEvent.change(input, { target: { value: "Giữ bản nháp này" } });
+      fireEvent.click(retry);
+      await screen.findByText("Đã gửi");
+      expect(uploads).toBe(failure === "upload" ? 2 : 1);
+      if (failure === "save") expect(posts[0].clientMessageId).toBe(posts[1].clientMessageId);
+      expect(input).toHaveValue("Giữ bản nháp này");
+      expect(screen.getAllByAltText("Ảnh đính kèm trong tin nhắn")).toHaveLength(1);
+      unmount();
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:retry-photo");
+    },
+  );
   it("uploads an image and sends an image-only message containing its CDN URL", async () => {
     const url = "https://giangxa-media.b-cdn.net/moc-maria/chat-attachments/a/photo.webp";
     Object.defineProperty(URL, "createObjectURL", {
