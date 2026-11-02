@@ -45,6 +45,8 @@ export function GiftVouchersAdmin() {
   const [reason, setReason] = useState("");
   const [pending, setPending] = useState<VoucherRow | null>(null);
   const [notice, setNotice] = useState("");
+  const [showRareFifty, setShowRareFifty] = useState(false);
+  const [rareReason, setRareReason] = useState("");
   const selected = eventId || events.data?.[0]?.id || "";
   const params = new URLSearchParams({ limit: "100" });
   if (status) params.set("status", status);
@@ -66,7 +68,30 @@ export function GiftVouchersAdmin() {
     prizes.data?.filter((prize) => prize.kind === "VOUCHER_PERCENT" && prize.enabled) ?? [];
   const configuredTotal = enabledVouchers.reduce((sum, prize) => sum + prize.stockTotal, 0);
   const issuedTotal = enabledVouchers.reduce((sum, prize) => sum + prize.stockIssued, 0);
+  const selectedEvent = events.data?.find((event) => event.id === selected);
+  const rareFiftyExists = enabledVouchers.some((prize) => prize.config.percent === 50);
+  const canAddRareFifty =
+    selectedEvent?.code === "moc-maria-tri-an-thang-11-2026" &&
+    (selectedEvent.status === "LIVE" || selectedEvent.status === "PAUSED") &&
+    !rareFiftyExists &&
+    configuredTotal === 100;
   const mutation = usePrivateMutation();
+  async function addRareFifty() {
+    if (!selectedEvent || !canAddRareFifty || rareReason.trim().length < 10 || mutation.isPending)
+      return;
+    setNotice("");
+    try {
+      await mutation.mutateAsync({
+        path: "/" + "admin/gift-events/" + selectedEvent.id + "/prizes/rare-50",
+        body: { expectedVersion: selectedEvent.version, reason: rareReason.trim() },
+      });
+      setShowRareFifty(false);
+      setRareReason("");
+      setNotice("Đã thêm 2 suất voucher 50%, chuyển 2 suất từ quỹ 30% và cập nhật thể lệ.");
+    } catch (error) {
+      setNotice(mutationMessage(error));
+    }
+  }
   async function revoke() {
     if (!selected || !pending || reason.trim().length < 10 || mutation.isPending) return;
     setNotice("");
@@ -165,6 +190,49 @@ export function GiftVouchersAdmin() {
                 <span>Chưa cấp cho khách</span>
               </article>
             </div>
+            {canAddRareFifty && (
+              <section className="mm-voucher-rare" aria-label="Bổ sung voucher hiếm 50%">
+                <strong>Bổ sung ưu đãi đặc biệt 50%</strong>
+                <p>
+                  Chuyển 2 suất voucher 30% chưa cấp sang 2 suất giảm 50% (tối đa 150.000đ/suất),
+                  trọng số chọn 1. Tổng quỹ vẫn 100 suất. Thể lệ và lịch sử thay đổi được cập nhật
+                  cùng giao dịch.
+                </p>
+                {!showRareFifty ? (
+                  <button type="button" onClick={() => setShowRareFifty(true)}>
+                    Thiết lập 2 voucher 50%
+                  </button>
+                ) : (
+                  <div className="mm-voucher-rare-confirm">
+                    <label htmlFor="rare-fifty-reason">Lý do điều chỉnh (tối thiểu 10 ký tự)</label>
+                    <textarea
+                      id="rare-fifty-reason"
+                      value={rareReason}
+                      onChange={(event) => setRareReason(event.target.value)}
+                      rows={2}
+                      placeholder="Bổ sung voucher 50% theo chiến dịch truyền thông"
+                    />
+                    <div>
+                      <button
+                        type="button"
+                        disabled={mutation.isPending || rareReason.trim().length < 10}
+                        onClick={() => void addRareFifty()}
+                      >
+                        {mutation.isPending ? "Đang lưu..." : "Xác nhận điều chỉnh"}
+                      </button>
+                      <button
+                        type="button"
+                        className="mm-voucher-rare-cancel"
+                        onClick={() => setShowRareFifty(false)}
+                        disabled={mutation.isPending}
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
             {enabledVouchers.length > 0 && (
               <div className="mm-gr-scroll">
                 <table>
