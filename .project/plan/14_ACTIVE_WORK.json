@@ -522,14 +522,22 @@
     },
     {
       "agent": "Codex event social image 2026-11-02",
-      "status": "ACTIVE",
+      "status": "RELEASED",
       "branch": "codex/event-social-image-fix",
       "ownedPaths": [
         "FE src/app/event/page.tsx social metadata only",
         "FE public/event/social share card and native SVG source",
         "Own docs/Plan"
       ],
-      "note": "Fix event share metadata and crawler-compatible image. No ad account edits, ad publishing, identity verification or business-data changes."
+      "note": "Fix event share metadata and crawler-compatible image. No ad account edits, ad publishing, identity verification or business-data changes.",
+      "release": {
+        "source": "5ed26899e2f239350b892c53b847b90968b36326",
+        "implementation": "b3ceea7b5706dd43da35a0eef2aa93f7e5e3e0eb",
+        "deployment": 7493313805,
+        "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/29",
+        "test": "Local typecheck/build PASS; PR full quality with 64 suites/258 tests PASS. Live both event URLs expose JPEG 1200x630 CDN OG image and canonical event host; release endpoint matches main source. CDN exact bytes and crawler UA HTTP200 image/jpeg verified.",
+        "businessData": "No ad, budget, account security, backend or business-data changes. Meta authentication 3858385 and saved preview cache require owner action."
+      }
     }
   ]
 }

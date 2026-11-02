@@ -1427,5 +1427,13 @@
     "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/26",
     "test": "Full quality/build and 124 tests PASS; 13 appointment regressions PASS; PR CI PASS. Production rendered form verifies Linh Anh, selected first service, value=min and ~60.6 minutes ahead in Hanoi. Release endpoint matches source.",
     "businessData": "No booking submitted, backend/schema or production records changed."
+  },
+  "eventSocialImageRelease": {
+    "source": "5ed26899e2f239350b892c53b847b90968b36326",
+    "implementation": "b3ceea7b5706dd43da35a0eef2aa93f7e5e3e0eb",
+    "deployment": 7493313805,
+    "pr": "https://github.com/hopdevnbi/moc_maria_fe/pull/29",
+    "test": "Local typecheck/build PASS; PR full quality with 64 suites/258 tests PASS. Live both event URLs expose JPEG 1200x630 CDN OG image and canonical event host; release endpoint matches main source. CDN exact bytes and crawler UA HTTP200 image/jpeg verified.",
+    "businessData": "No ad, budget, account security, backend or business-data changes. Meta authentication 3858385 and saved preview cache require owner action."
   }
 }

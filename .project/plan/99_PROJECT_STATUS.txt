@@ -1,3 +1,8 @@
+EVENT SOCIAL IMAGE RELEASE — 2026-11-02
+CODE/TEST/COMMIT/DEPLOY complete: main 5ed26899e2f239350b892c53b847b90968b36326; Vercel 7493313805.
+1200x630 JPEG on Bunny CDN; explicit OG type/dimensions/secure URL and event host canonical. Local typecheck/build and 258 tests/full PR quality PASS. Live crawler metadata/image200 verified.
+BUSINESS_DATA unchanged. Meta account authentication 3858385 and stale saved-ad previews remain owner-side steps. See docs/EVENT_SOCIAL_IMAGE.md.
+
 SERVICE RESPONSIVE UI RELEASE - 2026-10-10
 FE 1d3c282e34d255180a3dfa7278abaf170863d47c; Vercel 6975569768 SUCCESS; PR15/main CI PASS.
 Full-width 16:10 owner photos, responsive 1/2/3-column cards, labelled 44px actions. 46 tests/full quality and mobile/tablet/desktop browser checks PASS.
