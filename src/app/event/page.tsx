@@ -15,7 +15,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "https://giangxa-media-cdn.b-cdn.net/moc-maria/event/social/christmas-share-825c92205b81.jpg",
-        secureUrl: "https://giangxa-media-cdn.b-cdn.net/moc-maria/event/social/christmas-share-825c92205b81.jpg",
+        secureUrl:
+          "https://giangxa-media-cdn.b-cdn.net/moc-maria/event/social/christmas-share-825c92205b81.jpg",
         type: "image/jpeg",
         width: 1200,
         height: 630,
@@ -27,7 +28,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Giáng sinh an lành | Mộc Maria",
     description: "Mở hộp quà, nhận yêu thương. Những lời tri ân dành cho khách hàng Mộc Maria.",
-    images: ["https://giangxa-media-cdn.b-cdn.net/moc-maria/event/social/christmas-share-825c92205b81.jpg"],
+    images: [
+      "https://giangxa-media-cdn.b-cdn.net/moc-maria/event/social/christmas-share-825c92205b81.jpg",
+    ],
   },
   alternates: { canonical: "https://event.mocmaria.com/" },
 };
