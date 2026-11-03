@@ -2,6 +2,18 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EventSupport } from "./event-support";
 
+vi.mock("next/link", () => ({
+  default: ({ onClick, ...props }: React.ComponentProps<"a">) => (
+    <a
+      {...props}
+      onClick={(event) => {
+        event.preventDefault();
+        onClick?.(event);
+      }}
+    />
+  ),
+}));
+
 const mocks = vi.hoisted(() => ({
   providers: [
     {
@@ -22,8 +34,10 @@ const mocks = vi.hoisted(() => ({
     },
   ],
   error: false,
+  seed: vi.fn(),
 }));
 vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ setQueryData: mocks.seed }),
   useQuery: ({ enabled }: { enabled: boolean }) => ({
     data: enabled && !mocks.error ? mocks.providers : undefined,
     isPending: !enabled,
@@ -33,9 +47,11 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 const authFetch = vi.fn();
+const customer = { id: "customer-1", permissions: ["customer.portal"] };
 afterEach(() => {
   cleanup();
   mocks.error = false;
+  mocks.seed.mockClear();
   vi.restoreAllMocks();
 });
 
@@ -58,9 +74,7 @@ describe("Mộc Maria event floating support", () => {
   });
 
   it("allows signed-in customers to filter and chat with their chosen real KTV", () => {
-    render(
-      <EventSupport status="authenticated" user={{ id: "customer-1" }} authFetch={authFetch} />,
-    );
+    render(<EventSupport status="authenticated" user={customer} authFetch={authFetch} />);
     fireEvent.click(screen.getByRole("button", { name: "Mở hỗ trợ online" }));
     expect(screen.getByRole("link", { name: "Nhắn tin với KTV Nguyệt" })).toHaveAttribute(
       "href",
@@ -72,18 +86,53 @@ describe("Mộc Maria event floating support", () => {
     });
     expect(screen.getByRole("link", { name: "Nhắn tin với KTV Nguyệt" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Nhắn tin với KTV Huyền" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("link", { name: "Nhắn tin với KTV Nguyệt" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(mocks.seed).toHaveBeenCalledWith(
+      ["ktv-chat", customer.id, "providers"],
+      mocks.providers,
+    );
   });
 
   it("offers safe fallback if directory cannot load", () => {
     mocks.error = true;
-    render(
-      <EventSupport status="authenticated" user={{ id: "customer-1" }} authFetch={authFetch} />,
-    );
+    render(<EventSupport status="authenticated" user={customer} authFetch={authFetch} />);
     fireEvent.click(screen.getByRole("button", { name: "Mở hỗ trợ online" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Chưa tải được KTV");
     expect(screen.getByRole("link", { name: /Xem các cuộc trò chuyện/ })).toHaveAttribute(
       "href",
       "/tin-nhan",
     );
+  });
+
+  it("never offers a KTV picker to staff accounts without customer chat capability", () => {
+    render(
+      <EventSupport
+        status="authenticated"
+        user={{ id: "staff", permissions: ["provider.portal"] }}
+        authFetch={authFetch}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Mở hỗ trợ online" }));
+    expect(screen.getByText("Tin nhắn của khách hàng")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Nhắn tin với/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("link", { name: /Mở hộp thư khách hàng/ }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("finds Vietnamese names without accents, closes outside and restores focus on Escape", () => {
+    render(<EventSupport status="authenticated" user={customer} authFetch={authFetch} />);
+    const launcher = screen.getByRole("button", { name: "Mở hỗ trợ online" });
+    fireEvent.click(launcher);
+    fireEvent.change(screen.getByRole("searchbox", { name: "Tìm kỹ thuật viên" }), {
+      target: { value: "nguyet" },
+    });
+    expect(screen.getByRole("link", { name: "Nhắn tin với KTV Nguyệt" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Nhắn tin với KTV Huyền" })).not.toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(launcher).toHaveFocus();
+    fireEvent.click(launcher);
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

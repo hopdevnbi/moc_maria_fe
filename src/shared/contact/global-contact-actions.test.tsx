@@ -5,11 +5,13 @@ import { GlobalContactActions } from "./global-contact-actions";
 const mocks = vi.hoisted(() => ({
   loggedIn: false,
   authFetch: vi.fn(),
+  path: "/",
 }));
+vi.mock("next/navigation", () => ({ usePathname: () => mocks.path }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
     status: mocks.loggedIn ? "authenticated" : "anonymous",
-    user: mocks.loggedIn ? { id: "sample-customer" } : null,
+    user: mocks.loggedIn ? { id: "sample-customer", permissions: ["customer.portal"] } : null,
     authFetch: mocks.authFetch,
   }),
 }));
@@ -27,6 +29,7 @@ vi.mock("@/features/gift-events/event-support", () => ({
 afterEach(() => {
   cleanup();
   mocks.loggedIn = false;
+  mocks.path = "/";
 });
 
 describe("global Mộc Maria contact actions", () => {
@@ -41,6 +44,11 @@ describe("global Mộc Maria contact actions", () => {
     expect(facebook).toHaveAttribute("href", "https://www.facebook.com/mocmariads");
     expect(facebook).toHaveAttribute("target", "_blank");
     expect(facebook).toHaveAttribute("rel", "noopener noreferrer");
+  });
+  it("removes the redundant support picker and Facebook floaters from the chat page", () => {
+    mocks.path = "/tin-nhan";
+    const { container } = render(<GlobalContactActions />);
+    expect(container).toBeEmptyDOMElement();
   });
   it("passes the signed-in session through to the existing KTV support", () => {
     mocks.loggedIn = true;

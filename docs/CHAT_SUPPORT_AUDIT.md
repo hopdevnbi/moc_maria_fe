@@ -1,0 +1,24 @@
+# Chat support audit and mobile interaction repair
+
+Date: 2026-11-03. Scope: frontend support entry and existing private customer/KTV chat.
+
+## Findings and changes
+
+1. **Picker persisted over chat.** The support component lives under the shared app providers, so Next navigation preserved its open state. Every navigation action now dismisses it immediately. The chat route removes the redundant floating support/Facebook controls; a scoped CSS fallback also protects chat mounted elsewhere.
+2. **Account capabilities disagreed.** Support offered every authenticated account a provider picker, while both the chat page and server permit starting a KTV conversation only with `customer.portal`. Support now offers eligible customers the KTV directory and provider-only/staff accounts their existing customer inbox with an explanation. Legacy selected-KTV links show an explicit capability notice instead of silently ignoring selection. Server permissions are unchanged.
+3. **Opening races and incorrect retries.** Route selection and picker selection now use one mutation, reuse an already loaded matching thread and verify the response matches both requested provider and current customer. A monotonically increasing selection version fences late completions after another selection, cancellation or navigation. Failed opens retain their exact target for retry, including when the URL still contains an older KTV. Inbox filters reset when entering a conversation.
+4. **Repeated directory work and service alias mismatch.** Support primes only the public provider-directory cache for the chat page. A one-minute freshness window shares names/photos without another initial directory wait. Consultation service selection compares the resolved provider UUID rather than its presentation alias. Existing stable public URLs and chat history IDs remain compatible.
+5. **Mobile content was obstructed.** Conversation mode now occupies the actual visual viewport above the seasonal banner and tracks viewport height/offset changes. The input grid has 44px controls, no horizontal overflow and safe-area padding. With a short viewport and focused composer, optional service/privacy/block toolbars and the footer hint yield space to messages; locked-chat forms and blocking enforcement remain intact.
+6. **Interaction polish.** The support sheet has a compact heading, persisted provider portraits, accent-insensitive search, a clear per-provider action, 44px close control, Escape focus restoration and outside dismissal. Outgoing bubbles have a short entrance animation respecting reduced motion. Readers can return to latest messages without background polling moving their position. The greeting action clearly says it composes a draft. Enter key hints and composition-code protection avoid sending a Vietnamese IME confirmation.
+
+## Sending and privacy
+
+The existing optimistic outbox remains in place for both text and images: local bubble first, ordered background upload/save, stable client message UUID for retry, upload reuse after save failure, separate per-thread drafts and no duplicate reconciliation. The composer remains available while saves are delayed. A failed send shows its explanation and a 44px retry action on that message, instead of a misleading general reconnect action elsewhere. Server membership, customer capability, rate limits, privacy unlock tokens, block checks and idempotency remain authoritative. No backend or auth grant changes are included.
+
+## Validation
+
+- Added regressions cover picker dismissal/cache handoff, staff capability, accent-insensitive search/Escape/outside dismissal, redundant contact controls, existing-thread reuse, service aliases, same-page provider changes, reversed response order, canceled opens, mismatched recipients, retry target retention, Vietnamese IME and scroll preservation.
+- Existing optimistic text/image queuing, failure/retry UUIDs, attachment cleanup, thread draft separation, block/privacy enforcement and incremental update tests are retained.
+- Browser QA uses the real public directory and the actual UI components, with a temporary local-only AuthContext transport for private conversations, delayed saves and failure simulation. No real messages or conversation writes are sent to providers. The temporary QA route is removed before quality checks and release.
+- Mobile checks include 320x568, 390x844 and 390x420: picker fits, selection closes it, the requested KTV appears, queued messages show before delayed persistence, drafts survive and the composer stays within the visual viewport. Desktop layout is checked separately.
+- Final quality, main SHA, CI, production deployment, screenshots and live read-only observations are recorded in the Plan release trackers. Authenticated production message delivery is not exercised with real customers.

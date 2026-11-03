@@ -12,6 +12,10 @@
   font-family: var(--font-wellness-sans), system-ui, sans-serif;
 }
 
+body:has(.ktv-chat-shell) .mm-global-contact {
+  display: none;
+}
+
 .mm-global-contact > *,
 .mm-global-contact .mm-ev-support > * {
   pointer-events: auto;
@@ -105,6 +109,25 @@
 @media (max-width: 400px) {
   .mm-global-contact .mm-ev-support-launcher span {
     font-size: 11px;
+  }
+}
+
+@media (max-width: 700px) {
+  .mm-global-contact .mm-ev-support-panel {
+    position: fixed;
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    width: auto;
+    max-height: calc(100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    border-radius: 20px;
+  }
+  .mm-ev-support-head h2 {
+    font-size: 17px;
+  }
+  .mm-ev-support-head span {
+    font-size: 8px;
+    letter-spacing: 0.6px;
   }
 }
 

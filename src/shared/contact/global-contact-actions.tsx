@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { EventSupport } from "@/features/gift-events/event-support";
 import "./global-contact-actions.css";
@@ -9,11 +11,23 @@ import "./global-contact-actions.css";
  * Render under AuthProvider in the shared root to preserve login and KTV chat state.
  */
 export function GlobalContactActions() {
+  return (
+    <Suspense fallback={null}>
+      <ContactActions />
+    </Suspense>
+  );
+}
+
+function ContactActions() {
   const { status, user, authFetch } = useAuth();
+  const pathname = usePathname();
+
+  // Chat already owns contact selection and its composer. A second picker masks both.
+  if (pathname === "/tin-nhan") return null;
 
   return (
     <div className="mm-global-contact" aria-label="Liên hệ Mộc Maria">
-      <EventSupport status={status} user={user} authFetch={authFetch} />
+      <EventSupport key={user?.id ?? "guest"} status={status} user={user} authFetch={authFetch} />
       <a
         className="mm-global-contact-facebook"
         href="https://www.facebook.com/mocmariads"

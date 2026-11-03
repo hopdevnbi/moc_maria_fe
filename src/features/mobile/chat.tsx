@@ -3,7 +3,16 @@ import { providerProfileHref } from "./provider-slugs";
 
 import Link from "next/link";
 import Image from "next/image";
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   useInfiniteQuery,
   useMutation,
@@ -13,6 +22,7 @@ import {
 } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  ArrowDown,
   ArrowRight,
   ChevronRight,
   ImagePlus,
@@ -59,6 +69,7 @@ type ChatMessage = {
   image_url?: string | null;
   created_at: string;
   delivery?: "sending" | "failed" | "sent";
+  deliveryError?: string;
 };
 type ImageAttachment = { threadId: string; file: File; previewUrl: string };
 type SendInput = {
@@ -145,7 +156,9 @@ const ChatMessageRow = memo(function ChatMessageRow({
   return (
     <div className="ktv-chat-message-row">
       {showDate && <p className="ktv-chat-date">{day(item.created_at)}</p>}
-      <div className={`ktv-chat-bubble${own ? " own" : ""}`}>
+      <div
+        className={`ktv-chat-bubble${own ? " own" : ""}${item.delivery === "sending" ? " is-sending" : ""}`}
+      >
         {item.body && <p>{item.body}</p>}
         {item.image_url && (
           <button
@@ -178,6 +191,11 @@ const ChatMessageRow = memo(function ChatMessageRow({
             )}
           </small>
         )}
+        {item.delivery === "failed" && item.deliveryError && (
+          <span className="ktv-chat-delivery-error" role="status">
+            {item.deliveryError}
+          </span>
+        )}
       </div>
       {expanded && item.image_url && (
         <div
@@ -206,6 +224,8 @@ const ChatMessageRow = memo(function ChatMessageRow({
 });
 function chatError(error: unknown) {
   const message = error instanceof Error ? error.message : "";
+  if (message === "CHAT_RECEIVER_MISMATCH")
+    return "Chưa mở đúng KTV bạn chọn. Hãy thử chọn lại KTV.";
   if (
     message.includes("chỉ cho phép xem lịch sử") ||
     message.includes("quá nhanh") ||
@@ -238,6 +258,10 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const messagesRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const openedProvider = useRef("");
+  const selectionVersion = useRef(0);
+  const failedOpening = useRef<{ id: string; name: string } | null>(null);
+  const [openingProvider, setOpeningProvider] = useState<{ id: string; name: string } | null>(null);
+  const [showLatest, setShowLatest] = useState(false);
   const nearBottom = useRef(true);
   const olderScroll = useRef<{ id: string; height: number; top: number } | null>(null);
   const pendingSend = useRef<Record<string, SendInput>>({});
@@ -262,6 +286,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
         services: (provider.services || []).map(officialServiceLabel),
       })),
     enabled: enabled && customer,
+    staleTime: 60_000,
     retry: 1,
   });
   // Public KTV cards use presentation aliases; the private Chat API requires the
@@ -363,7 +388,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const currentProvider = directory.data?.find((p) => p.id === current?.provider_application_id);
   const selectedService = current
     ? (serviceSelections[current.id] ??
-      (current.provider_application_id === provider ? (service ?? "") : ""))
+      (current.provider_application_id === receiverId ? (service ?? "") : ""))
     : "";
   const consultationService = currentProvider?.services?.find((s) => s.id === selectedService);
   const returnTo = provider ? chatHref(provider, service) : "/tin-nhan";
@@ -519,21 +544,59 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     if (!locked && selectedId && user && page && incoming.history(selectedId, page, user.id))
       playSound();
   }, [history.data, selectedId, user, incoming, playSound, locked]);
+  const leaveForNavigation = useEffectEvent(leaving);
+  const requestedProviderName = useEffectEvent(
+    (id: string) => directory.data?.find((item) => item.id === id)?.publicName ?? "KTV bạn chọn",
+  );
   const open = useMutation({
-    mutationFn: (id: string) =>
-      authFetch<Thread>("/ktv-chat/threads", json({ providerApplicationId: id })),
-    onSuccess: (thread) => {
+    mutationFn: async ({ id, version }: { id: string; version: number; name: string }) => {
+      if (selectionVersion.current !== version) throw new Error("CHAT_OPEN_CANCELLED");
+      const existing = client
+        .getQueryData<Thread[]>([...key, "threads"])
+        ?.find(
+          (thread) => thread.provider_application_id === id && thread.customer_user_id === user?.id,
+        );
+      const thread =
+        existing ??
+        (await authFetch<Thread>("/ktv-chat/threads", json({ providerApplicationId: id })));
+      if (thread.provider_application_id !== id || thread.customer_user_id !== user?.id)
+        throw new Error("CHAT_RECEIVER_MISMATCH");
+      return thread;
+    },
+    onMutate: (request) => {
+      if (selectionVersion.current !== request.version) return;
+      failedOpening.current = null;
+      setSelectedId(null);
+      setChoosing(false);
+      setSearch("");
+      setActionError("");
+      setOpeningProvider({ id: request.id, name: request.name });
+      nearBottom.current = true;
+    },
+    onSuccess: (thread, request) => {
+      if (selectionVersion.current !== request.version || thread.customer_user_id !== user?.id)
+        return;
       client.setQueryData<Thread[]>([...key, "threads"], (old) => [
         thread,
         ...(old ?? []).filter((item) => item.id !== thread.id),
       ]);
+      openedProvider.current = user?.id + ":" + request.id;
+      setOpeningProvider(null);
       setSelectedId(thread.id);
       setChoosing(false);
+      setSearch("");
       setActionError("");
       nearBottom.current = true;
     },
-    onError: (error) => setActionError(chatError(error)),
+    onError: (error, request) => {
+      if (selectionVersion.current !== request.version) return;
+      openedProvider.current = "";
+      failedOpening.current = { id: request.id, name: request.name };
+      setOpeningProvider(null);
+      setActionError(chatError(error));
+    },
   });
+  const { mutate: openThread } = open;
   useEffect(() => {
     if (!enabled || !customer || !provider) return;
     // Wait for the directory before resolving public aliases. Never POST a
@@ -541,45 +604,28 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     if (!receiverId) return;
     const requested = user?.id + ":" + receiverId;
     if (openedProvider.current === requested) return;
-    let disposed = false;
-    void authFetch<Thread>("/ktv-chat/threads", json({ providerApplicationId: receiverId }))
-      .then((thread) => {
-        if (disposed) return;
-        openedProvider.current = requested;
-        client.setQueryData<Thread[]>(["ktv-chat", user?.id, "threads"], (old) => [
-          thread,
-          ...(old ?? []).filter((item) => item.id !== thread.id),
-        ]);
-        setSelectedId(thread.id);
-        setChoosing(false);
-        setActionError("");
-      })
-      .catch((error) => {
-        if (!disposed) setActionError(chatError(error));
-      });
+    const navigation = selectionVersion;
+    const version = ++navigation.current;
+    leaveForNavigation();
+    openThread({ id: receiverId, name: requestedProviderName(receiverId), version });
     return () => {
-      disposed = true;
+      if (navigation.current === version) ++navigation.current;
     };
-  }, [
-    enabled,
-    customer,
-    provider,
-    receiverId,
-    directory.isPending,
-    directory.isError,
-    authFetch,
-    client,
-    user?.id,
-    deepLinkAttempt,
-  ]);
+  }, [enabled, customer, provider, receiverId, user?.id, deepLinkAttempt, openThread]);
   useEffect(() => {
     const viewport = window.visualViewport;
     if (!viewport) return;
-    const resize = () =>
+    const resize = () => {
       shellRef.current?.style.setProperty("--ktv-chat-height", `${viewport.height}px`);
+      shellRef.current?.style.setProperty("--ktv-chat-top", `${viewport.offsetTop}px`);
+    };
     resize();
     viewport.addEventListener("resize", resize);
-    return () => viewport.removeEventListener("resize", resize);
+    viewport.addEventListener("scroll", resize);
+    return () => {
+      viewport.removeEventListener("resize", resize);
+      viewport.removeEventListener("scroll", resize);
+    };
   }, []);
   useEffect(() => {
     if (!enabled || !selectedId || !latestMessageId || choosing || locked) return;
@@ -619,8 +665,10 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     conceal,
   ]);
   useEffect(() => {
-    if (nearBottom.current && messagesRef.current)
+    if (nearBottom.current && messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      setShowLatest(false);
+    }
   }, [messages, selectedId, choosing]);
   const send = useMutation({
     // Keep server order while every queued message is already visible locally.
@@ -698,13 +746,20 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
         conceal(input.id);
         return;
       }
-      if (selectedId === input.id) setActionError(chatError(error));
       // The failed bubble owns its image and retry action, independent of the next draft.
       if (!input.attachment)
         setDrafts((old) => (old[input.id] ? old : { ...old, [input.id]: input.body }));
       setOutbox((old) =>
         old.map((item) =>
-          item.id === input.clientMessageId ? { ...item, delivery: "failed" } : item,
+          item.id === input.clientMessageId
+            ? {
+                ...item,
+                delivery: "failed",
+                deliveryError: chatError(error).startsWith("Chưa kết nối được chat")
+                  ? "Kiểm tra kết nối rồi chạm Gửi lại."
+                  : chatError(error),
+              }
+            : item,
         ),
       );
     },
@@ -786,6 +841,9 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const unresolvedProvider =
     enabled && customer && !!provider && !receiverId && !directory.isPending && !directory.isError;
   const error =
+    (enabled && !customer && provider
+      ? "Tài khoản này dùng để trả lời khách hàng, chưa có quyền bắt đầu trò chuyện với KTV khác. Hãy dùng tài khoản khách hàng để nhận tư vấn."
+      : "") ||
     actionError ||
     (unresolvedProvider
       ? "Không tìm thấy KTV này trong danh sách chat. Hãy chọn KTV khác."
@@ -795,6 +853,9 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
           ? chatError(history.error)
           : "");
   const select = (thread: Thread) => {
+    ++selectionVersion.current;
+    failedOpening.current = null;
+    setOpeningProvider(null);
     if (current?.id !== thread.id) leaving();
     if (current?.id !== thread.id) {
       setAttachment(null);
@@ -802,10 +863,15 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     }
     setSelectedId(thread.id);
     setChoosing(false);
+    setSearch("");
+    setShowLatest(false);
     setActionError("");
     nearBottom.current = true;
   };
   const pick = () => {
+    ++selectionVersion.current;
+    failedOpening.current = null;
+    setOpeningProvider(null);
     leaving();
     setAttachment(null);
     setAttachmentError("");
@@ -818,13 +884,15 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
     void threads.refetch();
     void directory.refetch();
     if (selectedId) void history.refetch();
-    if (provider && !selectedId) setDeepLinkAttempt((old) => old + 1);
+    const failed = failedOpening.current;
+    if (failed) openThread({ ...failed, version: ++selectionVersion.current });
+    else if (provider && !selectedId) setDeepLinkAttempt((old) => old + 1);
   };
 
   return (
     <div
       ref={shellRef}
-      className={`mobile-experience ktv-chat-shell${current && !choosing ? " is-conversation" : ""}`}
+      className={`mobile-experience ktv-chat-shell${(current && !choosing) || openingProvider ? " is-conversation" : ""}`}
     >
       <MobileHeader />
       <main className="mm-container ktv-chat-main">
@@ -896,7 +964,13 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder={showDirectory ? "Tìm tên KTV, khu vực..." : "Tìm cuộc trò chuyện..."}
+                  placeholder={
+                    showDirectory && customer ? "Tìm tên KTV, khu vực..." : "Tìm cuộc trò chuyện..."
+                  }
+                  aria-label={
+                    showDirectory && customer ? "Tìm kỹ thuật viên" : "Tìm cuộc trò chuyện"
+                  }
+                  type="search"
                 />
               </label>
               {customer && (
@@ -906,6 +980,8 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                     onClick={() => {
                       setChoosing(false);
                       setSearch("");
+                      ++selectionVersion.current;
+                      setOpeningProvider(null);
                     }}
                   >
                     Hội thoại {threads.data?.length ? <span>{threads.data.length}</span> : null}
@@ -918,7 +994,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
               {error && (
                 <div className="ktv-chat-error" role="alert">
                   <p>{error}</p>
-                  <button onClick={retry}>Thử kết nối lại</button>
+                  {(customer || !provider) && <button onClick={retry}>Thử kết nối lại</button>}
                 </div>
               )}
               <div className="ktv-chat-contacts">
@@ -948,7 +1024,6 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                         <button
                           className="ktv-chat-contact"
                           key={item.id}
-                          disabled={open.isPending}
                           onClick={() => {
                             const existing = threads.data?.find(
                               (thread) =>
@@ -956,7 +1031,16 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                                 thread.customer_user_id === user.id,
                             );
                             if (existing) select(existing);
-                            else open.mutate(item.id);
+                            else {
+                              leaving();
+                              const version = ++selectionVersion.current;
+                              setSelectedId(null);
+                              setChoosing(false);
+                              setActionError("");
+                              setSearch("");
+                              setOpeningProvider({ id: item.id, name: item.publicName });
+                              open.mutate({ id: item.id, name: item.publicName, version });
+                            }
                           }}
                         >
                           <span className="ktv-chat-avatar">
@@ -977,7 +1061,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                             <small>{item.title || "Kỹ thuật viên Mộc Maria"}</small>
                             <small>{item.serviceArea || "Trao đổi về dịch vụ và lịch hẹn"}</small>
                           </span>
-                          {open.isPending && open.variables === item.id ? (
+                          {openingProvider?.id === item.id ? (
                             <LoaderCircle size={18} className="ktv-chat-spinner" />
                           ) : (
                             <ChevronRight size={18} />
@@ -1044,7 +1128,27 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
               </p>
             </aside>
             <section className="ktv-chat-dialog" aria-label="Nội dung hội thoại">
-              {current && !choosing ? (
+              {openingProvider ? (
+                <div className="ktv-chat-opening" role="status">
+                  <button
+                    type="button"
+                    className="ktv-chat-icon-button"
+                    aria-label="Hủy mở hội thoại"
+                    onClick={() => {
+                      ++selectionVersion.current;
+                      setOpeningProvider(null);
+                      setActionError("");
+                    }}
+                  >
+                    <ArrowLeft size={22} />
+                  </button>
+                  <LoadingState
+                    title={`Đang mở trò chuyện với ${openingProvider.name}`}
+                    description="Chuẩn bị hội thoại riêng của bạn…"
+                    shape="messages"
+                  />
+                </div>
+              ) : current && !choosing ? (
                 <>
                   <header className="ktv-chat-recipient">
                     <button
@@ -1052,13 +1156,27 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                       aria-label="Quay lại danh sách hội thoại"
                       onClick={() => {
                         leaving();
+                        ++selectionVersion.current;
+                        setOpeningProvider(null);
                         setSelectedId(null);
                         setActionError("");
                       }}
                     >
                       <ArrowLeft size={22} />
                     </button>
-                    <span className="ktv-chat-avatar">{initials(recipient(current))}</span>
+                    <span className="ktv-chat-avatar">
+                      {user.id === current.customer_user_id && currentProvider?.avatarUrl ? (
+                        <Image
+                          src={currentProvider.avatarUrl}
+                          alt=""
+                          width={46}
+                          height={46}
+                          unoptimized
+                        />
+                      ) : (
+                        initials(recipient(current))
+                      )}
+                    </span>
                     <div>
                       <strong>{recipient(current)}</strong>
                       <small>
@@ -1163,9 +1281,11 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                         ref={messagesRef}
                         onScroll={() => {
                           const el = messagesRef.current;
-                          if (el)
+                          if (el) {
                             nearBottom.current =
                               el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+                            setShowLatest(!nearBottom.current);
+                          }
                         }}
                         role="log"
                         aria-label="Tin nhắn"
@@ -1228,22 +1348,37 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                               {customer && !paused && (
                                 <button
                                   className="ktv-chat-suggestion"
-                                  onClick={() =>
+                                  onClick={() => {
                                     setDrafts((old) => ({
                                       ...old,
                                       [current.id]: consultationService
                                         ? `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}.`
                                         : "Chào anh/chị, tôi muốn tìm hiểu thêm về dịch vụ chăm sóc.",
-                                    }))
-                                  }
+                                    }));
+                                    inputRef.current?.focus();
+                                  }}
                                 >
-                                  Gửi một lời chào <ArrowRight size={15} />
+                                  Soạn lời chào <ArrowRight size={15} />
                                 </button>
                               )}
                             </div>
                           )
                         )}
                       </div>
+                      {showLatest && (
+                        <button
+                          type="button"
+                          className="ktv-chat-latest"
+                          onClick={() => {
+                            nearBottom.current = true;
+                            if (messagesRef.current)
+                              messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+                            setShowLatest(false);
+                          }}
+                        >
+                          <ArrowDown size={15} /> Về tin mới nhất
+                        </button>
+                      )}
                       {error && (
                         <div className="ktv-chat-dialog-error" role="alert">
                           <p>{error}</p>
@@ -1379,6 +1514,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                           ref={inputRef}
                           rows={1}
                           aria-label="Nội dung tin nhắn"
+                          enterKeyHint="send"
                           value={draft}
                           onChange={(event) =>
                             setDrafts((old) => ({ ...old, [current.id]: event.target.value }))
@@ -1391,6 +1527,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                             if (
                               event.key === "Enter" &&
                               !event.shiftKey &&
+                              event.nativeEvent.keyCode !== 229 &&
                               !event.nativeEvent.isComposing
                             ) {
                               event.preventDefault();
