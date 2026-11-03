@@ -113,6 +113,11 @@ body:has(.ktv-chat-shell) .mm-global-contact {
 }
 
 @media (max-width: 700px) {
+  .mm-global-contact:has(.mm-ev-support-panel)
+    :is(.mm-ev-support-launcher, .mm-global-contact-facebook) {
+    visibility: hidden;
+    pointer-events: none;
+  }
   .mm-global-contact .mm-ev-support-panel {
     position: fixed;
     left: max(12px, env(safe-area-inset-left));

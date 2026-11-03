@@ -45,6 +45,7 @@ export function EventSupport({
   const [search, setSearch] = useState("");
   const closeRef = useRef<HTMLButtonElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
   const rootRef = useRef<HTMLElement>(null);
   const authenticated = status === "authenticated" && !!user;
   const canChooseProvider = authenticated && user.permissions.includes("customer.portal");
@@ -69,12 +70,18 @@ export function EventSupport({
   );
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      if (restoreFocus.current) {
+        restoreFocus.current = false;
+        launcherRef.current?.focus();
+      }
+      return;
+    }
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        restoreFocus.current = true;
         setOpen(false);
-        launcherRef.current?.focus();
       }
     };
     const onOutside = (event: PointerEvent) => {
@@ -112,8 +119,8 @@ export function EventSupport({
               aria-label="Đóng hỗ trợ"
               ref={closeRef}
               onClick={() => {
+                restoreFocus.current = true;
                 setOpen(false);
-                launcherRef.current?.focus();
               }}
             >
               <X size={19} />
