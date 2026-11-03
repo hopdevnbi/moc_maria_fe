@@ -4,6 +4,11 @@ import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { TechnicianWorkspace } from "./ktv-workspace";
 import type { Inquiry } from "./inquiries";
 import { DEFAULT_COMPLETION_NOTE } from "@/shared/booking/inquiry-status";
+import {
+  completionAvailability,
+  DEFAULT_DECLINE_REASON,
+  DECLINE_REASON_OPTIONS,
+} from "./ktv-workspace-data";
 const auth = vi.hoisted(() => ({
   user: {
     id: "ktv",
@@ -79,6 +84,14 @@ beforeEach(() => {
       const updated = { providerCompletedAt: new Date().toISOString() };
       items = items.map((i) => (i.id === id ? { ...i, ...updated } : i));
       return Promise.resolve({ inquiryId: id, ...updated });
+    }
+    if (init?.method === "PATCH" && path.startsWith("/appointment-inquiries/")) {
+      const id = path.split("/")[2];
+      const body = JSON.parse(init.body as string);
+      items = items.map((i) =>
+        i.id === id ? { ...i, status: body.status, declineReason: body.reason } : i,
+      );
+      return Promise.resolve(items.find((i) => i.id === id));
     }
     if (init?.method === "PATCH") return Promise.resolve({ status: "COMPLETED", version: 3 });
     return Promise.reject(Error("Unexpected fixture API"));
@@ -185,6 +198,47 @@ describe("KTV working dashboard", () => {
     );
     expect(screen.queryByText("Đã cập nhật hoàn thành buổi chăm sóc.")).not.toBeInTheDocument();
   });
+  it("shows why completion is disabled and the exact eligible time", async () => {
+    items[0].requestedAt = new Date(Date.now() + 3600000).toISOString();
+    mount();
+    await screen.findByText("Khách An");
+    const card = screen.getByText("Khách An").closest("article")!;
+    expect(within(card).getByRole("button", { name: "Đánh dấu đã hoàn thành" })).toBeDisabled();
+    fireEvent.click(within(card).getByRole("button", { name: "Vì sao chưa thể hoàn thành?" }));
+    const help = within(card).getByRole("status");
+    expect(help).toHaveTextContent("Chưa đến giờ khách đề nghị");
+    expect(help).toHaveTextContent("Bạn có thể đánh dấu hoàn thành từ");
+  });
+  it("allows a KTV to decline after contacting, prefills and saves a concrete reason", async () => {
+    mount();
+    await screen.findByText("Khách An");
+    const card = screen.getByText("Khách An").closest("article")!;
+    fireEvent.click(within(card).getByRole("button", { name: "Từ chối phục vụ" }));
+    const dialog = screen.getByRole("dialog", { name: "Từ chối phục vụ" });
+    expect(within(dialog).getByRole("textbox", { name: "Lý do từ chối phục vụ" })).toHaveValue(
+      DEFAULT_DECLINE_REASON,
+    );
+    fireEvent.click(within(dialog).getByRole("button", { name: DECLINE_REASON_OPTIONS[0].label }));
+    const edited = "Tôi có lịch phục vụ khác trùng giờ và không thể nhận buổi này.";
+    fireEvent.change(within(dialog).getByRole("textbox", { name: "Lý do từ chối phục vụ" }), {
+      target: { value: edited },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Xác nhận từ chối phục vụ" }));
+    await screen.findByText("Đã ghi nhận việc từ chối và lý do xử lý lịch hẹn.");
+    const call = auth.fetch.mock.calls.find(
+      ([path, init]) => path.includes("/appointment-inquiries/") && init?.method === "PATCH",
+    );
+    expect(call).toBeDefined();
+    expect(JSON.parse(call![1].body)).toEqual({ status: "DECLINED", reason: edited });
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả" }));
+    expect(screen.getByText("Lý do từ chối: " + edited)).toBeInTheDocument();
+  });
+  it("does not allow declining an officially confirmed appointment", async () => {
+    mount();
+    await screen.findByText("Khách Chi");
+    const card = screen.getByText("Khách Chi").closest("article")!;
+    expect(within(card).queryByRole("button", { name: "Từ chối phục vụ" })).not.toBeInTheDocument();
+  });
   it("has a direct logout and never loads provider data for a customer role", async () => {
     mount();
     await screen.findByText("Khách An");
@@ -196,5 +250,43 @@ describe("KTV working dashboard", () => {
     mount();
     expect(screen.queryByText("Công việc của bạn")).not.toBeInTheDocument();
     expect(auth.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("KTV completion eligibility", () => {
+  it("requires full scheduled time for an official in-service appointment", () => {
+    const now = Date.now();
+    const official = {
+      appointmentId: "official",
+      requestedAt: new Date(now - 600000).toISOString(),
+    };
+    expect(
+      completionAvailability(
+        "IN_SERVICE",
+        official,
+        {
+          inquiryId: "id",
+          status: "IN_SERVICE",
+          version: 2,
+          startsAt: new Date(now - 600000).toISOString(),
+          endsAt: new Date(now + 600000).toISOString(),
+        },
+        now,
+      ),
+    ).toMatchObject({ allowed: false, message: expect.stringContaining("từ") });
+    expect(
+      completionAvailability(
+        "IN_SERVICE",
+        official,
+        {
+          inquiryId: "id",
+          status: "IN_SERVICE",
+          version: 2,
+          startsAt: new Date(now - 3600000).toISOString(),
+          endsAt: new Date(now - 1000).toISOString(),
+        },
+        now,
+      ).allowed,
+    ).toBe(true);
   });
 });

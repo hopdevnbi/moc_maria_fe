@@ -18,6 +18,7 @@ export interface Inquiry {
   status: string;
   serviceId?: string;
   providerCompletedAt?: string;
+  declineReason?: string;
   appointmentId?: string;
   fulfillmentStatus?: string;
   archivedAt?: string;
@@ -109,6 +110,9 @@ export function AppointmentInquiries() {
               {item.address}
             </p>
             {item.notes && <p className="mm-preserve-lines">Ghi chú: {item.notes}</p>}
+            {item.status === "DECLINED" && item.declineReason && (
+              <p className="mm-preserve-lines">Lý do KTV từ chối: {item.declineReason}</p>
+            )}
             <div className="mm-inquiry-actions">
               {user?.id !== item.customerId &&
                 user?.roles.some((r) => r === "THERAPIST" || r === "DOCTOR_CONSULTANT") &&
@@ -149,13 +153,9 @@ export function AppointmentInquiries() {
                       >
                         Nhận trao đổi
                       </button>
-                      <button
-                        disabled={!!busy || loading}
-                        className="mm-outline-cta"
-                        onClick={() => void reply(item.id, "DECLINED")}
-                      >
-                        Chưa thể phục vụ
-                      </button>
+                      <Link className="mm-outline-cta" href="/tai-khoan">
+                        Từ chối phục vụ (ghi lý do)
+                      </Link>
                     </>
                   )}
             </div>

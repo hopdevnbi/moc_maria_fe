@@ -16,6 +16,8 @@ import {
   UserRound,
   KeyRound,
   GraduationCap,
+  Info,
+  Ban,
   X,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -32,6 +34,9 @@ import {
   hanoiDay,
   workTime,
   matchWorkSearch,
+  completionAvailability,
+  DEFAULT_DECLINE_REASON,
+  DECLINE_REASON_OPTIONS,
 } from "./ktv-workspace-data";
 import "./ktv-workspace.css";
 
@@ -69,6 +74,10 @@ export function TechnicianWorkspace() {
     [query, setQuery] = useState(""),
     [panel, setPanel] = useState("schedule");
   const [completion, setCompletion] = useState<Inquiry | null>(null),
+    [refusal, setRefusal] = useState<Inquiry | null>(null),
+    [refusalReason, setRefusalReason] = useState(DEFAULT_DECLINE_REASON),
+    [selectedRefusalReason, setSelectedRefusalReason] = useState(""),
+    [openHelpId, setOpenHelpId] = useState<string | null>(null),
     [attested, setAttested] = useState(false),
     [note, setNote] = useState(DEFAULT_COMPLETION_NOTE),
     [notice, setNotice] = useState(""),
@@ -110,6 +119,20 @@ export function TechnicianWorkspace() {
   const mutation = useMutation({
     mutationFn: async ({ item, status }: { item: Inquiry; status: string }) => {
       const fulfillment = progress.get(item.id);
+      if (status === "DECLINED") {
+        if (item.appointmentId)
+          throw Error(
+            "Lịch chính thức đã được xác nhận. Vui lòng liên hệ quản trị viên để xử lý hủy lịch.",
+          );
+        const reason = refusalReason.trim();
+        if (reason.length < 10 || reason.length > 500)
+          throw Error("Vui lòng ghi lý do từ chối từ 10 đến 500 ký tự.");
+        return authFetch("/appointment-inquiries/" + item.id, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status, reason }),
+        });
+      }
       if (status === "COMPLETED" || status === "IN_SERVICE") {
         if (status === "IN_SERVICE" && !item.appointmentId)
           return authFetch("/provider/appointment-inquiries/" + item.id + "/start", {
@@ -176,12 +199,15 @@ export function TechnicianWorkspace() {
         );
       void client.invalidateQueries({ queryKey: key });
       setCompletion(null);
+      setRefusal(null);
       setAttested(false);
       setNote(DEFAULT_COMPLETION_NOTE);
       setNotice(
         action.status === "COMPLETED"
           ? "Đã cập nhật hoàn thành buổi chăm sóc."
-          : "Đã cập nhật yêu cầu của khách hàng.",
+          : action.status === "DECLINED"
+            ? "Đã ghi nhận việc từ chối và lý do xử lý lịch hẹn."
+            : "Đã cập nhật yêu cầu của khách hàng.",
       );
     },
     onError: (e) =>
@@ -199,7 +225,7 @@ export function TechnicianWorkspace() {
   }
   const dialogRef = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (!completion || !dialogRef.current) return;
+    if ((!completion && !refusal) || !dialogRef.current) return;
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     const dialog = dialogRef.current;
@@ -234,7 +260,7 @@ export function TechnicianWorkspace() {
       document.body.style.overflow = overflow;
       previous?.focus();
     };
-  }, [completion]);
+  }, [completion, refusal]);
   if (!enabled || !user) return null;
   const counts = [
     { label: "Hẹn hôm nay", value: todayItems.length, Icon: CalendarDays },
@@ -393,10 +419,8 @@ export function TechnicianWorkspace() {
                 official = !!item.appointmentId;
               const startAllowed =
                 Date.parse(official ? f?.startsAt || "" : item.requestedAt) - 30 * 60000 <= now;
-              const finishAllowed = official
-                ? status === "IN_SERVICE" && !!f?.endsAt && Date.parse(f.endsAt) <= now
-                : ["CONTACTED", "IN_SERVICE"].includes(status) &&
-                  Date.parse(item.requestedAt) <= now;
+              const finish = completionAvailability(status, item, f, now);
+              const finishAllowed = finish.allowed;
               return (
                 <article className="ktvw-card" key={item.id}>
                   <div className="ktvw-card-top">
@@ -446,6 +470,9 @@ export function TechnicianWorkspace() {
                       {workTime(item.providerCompletedAt)}
                     </p>
                   )}
+                  {status === "DECLINED" && item.declineReason && (
+                    <p className="ktvw-decline-note">Lý do từ chối: {item.declineReason}</p>
+                  )}
                   <div className="ktvw-card-actions">
                     <Link href="/tin-nhan" className="ktvw-light">
                       <MessageCircle size={16} /> Mở chat
@@ -465,14 +492,6 @@ export function TechnicianWorkspace() {
                         >
                           Nhận trao đổi
                         </button>
-                        <button
-                          type="button"
-                          className="ktvw-text"
-                          disabled={mutation.isPending}
-                          onClick={() => mutation.mutate({ item, status: "DECLINED" })}
-                        >
-                          Chưa thể phục vụ
-                        </button>
                       </>
                     )}
                     {status === "CONFIRMED" && (
@@ -487,24 +506,63 @@ export function TechnicianWorkspace() {
                     )}
                     {["CONTACTED", "IN_SERVICE"].includes(status) &&
                       (!official || status === "IN_SERVICE") && (
-                        <button
-                          type="button"
-                          className="ktvw-complete"
-                          disabled={mutation.isPending || !finishAllowed}
-                          onClick={() => {
-                            setCompletion(item);
-                            setAttested(false);
-                            setNote(DEFAULT_COMPLETION_NOTE);
-                            setNotice("");
-                          }}
-                        >
-                          <CheckCircle2 size={16} /> Đánh dấu đã hoàn thành
-                        </button>
+                        <div className="ktvw-finish-control">
+                          <button
+                            type="button"
+                            className="ktvw-complete"
+                            disabled={mutation.isPending || !finishAllowed}
+                            aria-describedby={!finishAllowed ? `ktvw-help-${item.id}` : undefined}
+                            onClick={() => {
+                              setCompletion(item);
+                              setAttested(false);
+                              setNote(DEFAULT_COMPLETION_NOTE);
+                              setNotice("");
+                            }}
+                          >
+                            <CheckCircle2 size={16} /> Đánh dấu đã hoàn thành
+                          </button>
+                          {!finishAllowed && (
+                            <div
+                              className={`ktvw-finish-help${openHelpId === item.id ? " is-open" : ""}`}
+                            >
+                              <button
+                                type="button"
+                                className="ktvw-help-toggle"
+                                aria-expanded={openHelpId === item.id}
+                                aria-controls={`ktvw-help-${item.id}`}
+                                onClick={() =>
+                                  setOpenHelpId((id) => (id === item.id ? null : item.id))
+                                }
+                              >
+                                <Info size={15} /> Vì sao chưa thể hoàn thành?
+                              </button>
+                              <p
+                                id={`ktvw-help-${item.id}`}
+                                className="ktvw-help-message"
+                                role="status"
+                              >
+                                {finish.message}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       )}
+                    {!official && ["PENDING", "CONTACTED"].includes(status) && (
+                      <button
+                        type="button"
+                        className="ktvw-decline"
+                        disabled={mutation.isPending}
+                        onClick={() => {
+                          setRefusal(item);
+                          setRefusalReason(DEFAULT_DECLINE_REASON);
+                          setSelectedRefusalReason("");
+                          setNotice("");
+                        }}
+                      >
+                        <Ban size={16} /> Từ chối phục vụ
+                      </button>
+                    )}
                   </div>
-                  {!finishAllowed && status === "IN_SERVICE" && f?.endsAt && (
-                    <p className="ktvw-hint">Có thể hoàn thành từ {workTime(f.endsAt)}.</p>
-                  )}
                   {fulfillments.isError && official && (
                     <p className="ktvw-hint" role="alert">
                       Chưa tải được tiến độ lịch chính thức. Hãy tải lại trước khi cập nhật.
@@ -613,11 +671,14 @@ export function TechnicianWorkspace() {
           </div>
         )}
       </section>
-      {completion && (
+      {(completion || refusal) && (
         <div
           className="ktvw-modal-backdrop"
           onKeyDown={(e) => {
-            if (e.key === "Escape" && !mutation.isPending) setCompletion(null);
+            if (e.key === "Escape" && !mutation.isPending) {
+              setCompletion(null);
+              setRefusal(null);
+            }
           }}
         >
           <section
@@ -633,59 +694,120 @@ export function TechnicianWorkspace() {
               className="ktvw-icon-button ktvw-modal-close"
               aria-label="Đóng xác nhận"
               disabled={mutation.isPending}
-              onClick={() => setCompletion(null)}
+              onClick={() => {
+                setCompletion(null);
+                setRefusal(null);
+              }}
             >
               <X size={20} />
             </button>
-            <CheckCircle2 size={32} />
-            <h2 id="ktvw-completion-title">Xác nhận hoàn thành</h2>
+            {completion ? <CheckCircle2 size={32} /> : <Ban size={32} />}
+            <h2 id="ktvw-completion-title">
+              {completion ? "Xác nhận hoàn thành" : "Từ chối phục vụ"}
+            </h2>
             <p>
-              {completion.customerName} ·{" "}
+              {(completion || refusal)!.customerName} ·{" "}
               {
                 officialServiceLabel({
-                  id: completion.serviceId || "",
-                  name: completion.serviceName,
+                  id: (completion || refusal)!.serviceId || "",
+                  name: (completion || refusal)!.serviceName,
                 }).name
               }
             </p>
-            <label className="ktvw-attest">
-              <input
-                type="checkbox"
-                checked={attested}
-                onChange={(e) => setAttested(e.target.checked)}
-              />{" "}
-              Buổi chăm sóc đã diễn ra và tôi đã phục vụ xong.
-            </label>
-            <label className="ktvw-modal-note">
-              Ghi chú hoàn thành (không bắt buộc)
-              <textarea
-                maxLength={500}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Thông tin cần lưu lại cho buổi chăm sóc..."
-              />
-            </label>
+            {refusal ? (
+              <>
+                <p>
+                  Chọn một lý do phổ biến hoặc sửa nội dung để giải thích cụ thể cho khách hàng. Lý
+                  do sẽ được lưu vào lịch sử xử lý.
+                </p>
+                <div
+                  className="ktvw-reason-options"
+                  role="group"
+                  aria-label="Các lý do từ chối phổ biến"
+                >
+                  {DECLINE_REASON_OPTIONS.map((option) => (
+                    <button
+                      type="button"
+                      key={option.id}
+                      className={selectedRefusalReason === option.id ? "is-selected" : ""}
+                      aria-pressed={selectedRefusalReason === option.id}
+                      onClick={() => {
+                        setSelectedRefusalReason(option.id);
+                        setRefusalReason(option.description);
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <label className="ktvw-modal-note">
+                  Lý do cụ thể (bắt buộc, 10–500 ký tự)
+                  <textarea
+                    aria-label="Lý do từ chối phục vụ"
+                    maxLength={500}
+                    value={refusalReason}
+                    onChange={(e) => {
+                      setRefusalReason(e.target.value);
+                      setSelectedRefusalReason("");
+                    }}
+                    rows={4}
+                  />
+                </label>
+                <p className="ktvw-character-count">{refusalReason.trim().length}/500 ký tự</p>
+              </>
+            ) : (
+              <>
+                <label className="ktvw-attest">
+                  <input
+                    type="checkbox"
+                    checked={attested}
+                    onChange={(e) => setAttested(e.target.checked)}
+                  />{" "}
+                  Buổi chăm sóc đã diễn ra và tôi đã phục vụ xong.
+                </label>
+                <label className="ktvw-modal-note">
+                  Ghi chú hoàn thành (không bắt buộc)
+                  <textarea
+                    maxLength={500}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Thông tin cần lưu lại cho buổi chăm sóc..."
+                  />
+                </label>
+              </>
+            )}
             {notice && <p role="alert">{notice}</p>}
             <div className="ktvw-card-actions">
               <button
                 type="button"
                 className="ktvw-light"
                 disabled={mutation.isPending}
-                onClick={() => setCompletion(null)}
+                onClick={() => {
+                  setCompletion(null);
+                  setRefusal(null);
+                }}
               >
                 Quay lại
               </button>
               <button
                 type="button"
-                className="ktvw-complete"
+                className={refusal ? "ktvw-decline" : "ktvw-complete"}
                 disabled={
-                  !attested ||
                   mutation.isPending ||
-                  (note.trim().length > 0 && note.trim().length < 10)
+                  (refusal
+                    ? refusalReason.trim().length < 10 || refusalReason.trim().length > 500
+                    : !attested || (note.trim().length > 0 && note.trim().length < 10))
                 }
-                onClick={() => mutation.mutate({ item: completion, status: "COMPLETED" })}
+                onClick={() => {
+                  if (refusal) mutation.mutate({ item: refusal, status: "DECLINED" });
+                  else if (completion) mutation.mutate({ item: completion, status: "COMPLETED" });
+                }}
               >
-                {mutation.isPending ? "Đang cập nhật..." : "Xác nhận đã hoàn thành"}
+                {mutation.isPending
+                  ? "Đang cập nhật..."
+                  : refusal
+                    ? "Xác nhận từ chối phục vụ"
+                    : "Xác nhận đã hoàn thành"}
               </button>
             </div>
           </section>
