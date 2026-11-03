@@ -16,8 +16,6 @@ import {
   Flower2,
   HandHeart,
   Heart,
-  Home,
-  MessageCircle,
   MapPin,
   Search,
   ShieldCheck,
@@ -38,6 +36,8 @@ import { BrandLogo } from "./brand-logo";
 import { SiteReleaseUpdate } from "@/shared/release/site-release-update";
 import { useCatalogRealtime } from "./useCatalogRealtime";
 import { ktvAvatarUrl } from "./ktv-avatar";
+import { MobileNavigation } from "./mobile-navigation";
+export { MobileNavigation };
 
 type Focus = "providers" | "services";
 type Props = {
@@ -64,39 +64,6 @@ function normalized(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d")
     .toLocaleLowerCase("vi");
-}
-
-export function MobileNavigation({
-  active = "home",
-}: {
-  active?: "home" | "providers" | "services" | "booking" | "chat" | "account";
-}) {
-  const nav = [
-    { href: "/", label: "KTV", icon: Home, key: "home" },
-    { href: "/dich-vu", label: "Dịch vụ", icon: HandHeart, key: "services" },
-    { href: "/dat-lich", label: "Đặt lịch", icon: CalendarDays, key: "booking" },
-    { href: "/tin-nhan", label: "Chat", icon: MessageCircle, key: "chat" },
-    { href: "/tai-khoan", label: "Tài khoản", icon: UserRound, key: "account" },
-  ] as const;
-  return (
-    <>
-      <nav className="mobile-tabbar" aria-label="Điều hướng nhanh">
-        {nav.map(({ href, label, icon: Icon, key }) => (
-          <Link
-            key={key}
-            href={href}
-            aria-current={active === key ? "page" : undefined}
-            className={"mobile-tab" + (active === key ? " is-current" : "")}
-          >
-            <span className="mobile-tab-icon">
-              <Icon size={21} strokeWidth={active === key ? 2.3 : 1.8} />
-            </span>
-            <span>{label}</span>
-          </Link>
-        ))}
-      </nav>
-    </>
-  );
 }
 
 function MobileAccountLink() {

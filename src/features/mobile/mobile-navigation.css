@@ -1,0 +1,58 @@
+.mobile-tabbar {
+  display: none;
+}
+@media (max-width: 700px) {
+  .mobile-tabbar {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    box-sizing: border-box;
+    background: #fffefbfa;
+    border-top: 1px solid #e4e9df;
+    box-shadow: 0 -7px 23px #26482c0d;
+    padding: 8px 5px calc(8px + env(safe-area-inset-bottom));
+    font-family: var(--font-wellness-sans), Arial, sans-serif;
+    backdrop-filter: blur(14px);
+  }
+  .mobile-tab {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 10px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: #758375;
+    min-width: 0;
+    min-height: 46px;
+    justify-content: center;
+    text-decoration: none;
+  }
+  .mobile-tab.is-current {
+    color: #2c6746;
+  }
+  .mobile-tab:focus-visible {
+    outline: 3px solid #b69a5a;
+    outline-offset: -3px;
+    border-radius: 8px;
+  }
+  .mobile-tab-icon {
+    height: 26px;
+    display: grid;
+    place-items: center;
+  }
+  .mobile-tab.is-current .mobile-tab-icon {
+    transform: translateY(-1px);
+  }
+  .mm-event-mobile-shell {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+    background: #f8f5eb;
+  }
+  .mm-event-mobile-shell .mm-ev-booking-continue {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GiftEventLanding } from "@/features/gift-events/gift-event-landing";
+import { MobileNavigation } from "@/features/mobile/mobile-navigation";
 
 export const metadata: Metadata = {
   title: "Giáng sinh an lành · Mở quà yêu thương",
@@ -36,5 +37,10 @@ export const metadata: Metadata = {
 };
 
 export default function EventPage() {
-  return <GiftEventLanding />;
+  return (
+    <div className="mm-event-mobile-shell">
+      <GiftEventLanding />
+      <MobileNavigation mainSite active={null} />
+    </div>
+  );
 }
