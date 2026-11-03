@@ -24,6 +24,11 @@ import {
   type InquiryStatus,
 } from "@/shared/booking/inquiry-status";
 import "./appointment-requests-admin.css";
+import {
+  AppointmentBulkSelection,
+  AppointmentBulkCheckbox,
+  AppointmentBulkToolbar,
+} from "./appointment-request-bulk";
 
 export type RequestStatus = InquiryStatus;
 export interface AdminAppointmentRequest {
@@ -192,7 +197,12 @@ export function AppointmentRequestsAdmin() {
   }
 
   return (
-    <div className="mm-request-admin">
+    <AppointmentBulkSelection
+      className="mm-request-admin"
+      records={entries}
+      scope={endpoint}
+      disabled={requests.isFetching || change.isPending}
+    >
       <section className="mm-request-intro">
         <span className="mm-request-intro-icon">
           <CalendarClock size={24} />
@@ -301,6 +311,7 @@ export function AppointmentRequestsAdmin() {
           </button>
         </div>
 
+        <AppointmentBulkToolbar />
         {success && (
           <p className="mm-request-flash" role="status">
             <Check size={16} /> {success}
@@ -324,32 +335,35 @@ export function AppointmentRequestsAdmin() {
           <div className="mm-request-content">
             <div className="mm-request-list" aria-label="Các yêu cầu">
               {entries.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={"mm-request-row" + (selected?.id === item.id ? " is-selected" : "")}
-                  onClick={() => {
-                    setSelectedId(item.id);
-                    setAction(null);
-                    setSuccess("");
-                  }}
-                  aria-pressed={selected?.id === item.id}
-                >
-                  <span className="mm-request-row-top">
-                    <strong>{item.customerName}</strong>
-                    <span className={`mm-request-status is-${item.status.toLowerCase()}`}>
-                      {requestStatusLabels[item.status] || item.status}
+                <div className="mm-request-select-row" key={item.id}>
+                  <AppointmentBulkCheckbox record={item} />
+                  <button
+                    type="button"
+                    className={"mm-request-row" + (selected?.id === item.id ? " is-selected" : "")}
+                    onClick={() => {
+                      setSelectedId(item.id);
+                      setAction(null);
+                      setSuccess("");
+                    }}
+                    aria-pressed={selected?.id === item.id}
+                  >
+                    <span className="mm-request-row-top">
+                      <strong>{item.customerName}</strong>
+                      <span className={`mm-request-status is-${item.status.toLowerCase()}`}>
+                        {requestStatusLabels[item.status] || item.status}
+                      </span>
                     </span>
-                  </span>
-                  <span className="mm-request-row-service">{item.serviceName}</span>
-                  <span className="mm-request-row-meta">
-                    <Clock3 size={14} /> {formatRequestDate(item.requestedAt)} · {item.providerName}
-                  </span>
-                  <span className="mm-request-row-meta">
-                    {item.location === "AT_HOME" ? <Home size={14} /> : <MapPin size={14} />}{" "}
-                    {item.location === "AT_HOME" ? "Phục vụ tại nhà" : "Tại cơ sở"}
-                  </span>
-                </button>
+                    <span className="mm-request-row-service">{item.serviceName}</span>
+                    <span className="mm-request-row-meta">
+                      <Clock3 size={14} /> {formatRequestDate(item.requestedAt)} ·{" "}
+                      {item.providerName}
+                    </span>
+                    <span className="mm-request-row-meta">
+                      {item.location === "AT_HOME" ? <Home size={14} /> : <MapPin size={14} />}{" "}
+                      {item.location === "AT_HOME" ? "Phục vụ tại nhà" : "Tại cơ sở"}
+                    </span>
+                  </button>
+                </div>
               ))}
             </div>
             {selected && (
@@ -662,6 +676,6 @@ export function AppointmentRequestsAdmin() {
           </form>
         </div>
       )}
-    </div>
+    </AppointmentBulkSelection>
   );
 }
