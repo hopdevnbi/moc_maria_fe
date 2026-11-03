@@ -15,7 +15,7 @@ import {
 } from "react";
 import {
   useInfiniteQuery,
-  mutationOptions,
+  type UseMutationOptions,
   useMutation,
   useQuery,
   useQueryClient,
@@ -791,7 +791,7 @@ export function KtvChatPage({
       setShowLatest(false);
     }
   }, [messages, selectedId, choosing]);
-  const sendOptions = mutationOptions({
+  const sendOptions: UseMutationOptions<ChatMessage, Error, SendInput> = {
     onMutate: (input: SendInput) => {
       if (pendingSend.current[input.clientMessageId] !== input) return;
       const { id, body, clientMessageId, imageUrl, attachment: image } = input;
@@ -890,7 +890,7 @@ export function KtvChatPage({
     onSettled: (_message, _error, input) => {
       inFlight.current.delete(input.clientMessageId);
     },
-  });
+  };
   const { mutate: sendMessage } = useMutation({
     ...sendOptions,
     scope: { id: `ktv-chat-text:${user?.id}` },
