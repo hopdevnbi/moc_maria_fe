@@ -851,6 +851,8 @@
     inset: var(--ktv-chat-top, 0px) 0 auto;
     z-index: 80;
     height: var(--ktv-chat-height, 100dvh);
+    /* The shared page minimum would override the keyboard-adjusted height. */
+    min-height: 0;
     overflow: hidden;
     overscroll-behavior: none;
   }
