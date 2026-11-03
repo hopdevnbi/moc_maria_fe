@@ -47,6 +47,7 @@ import { MobileHeader, MobileNavigation } from "./experience";
 import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
 import { IncomingChatTracker, useChatSound } from "./chat-sound";
+import { chatViewportGeometry } from "./chat-viewport";
 import { KtvChatPushControl } from "./chat-notifications";
 import { ChatPrivacyControls, isChatLockedError, type ChatPrivacyState } from "./chat-privacy";
 
@@ -631,18 +632,101 @@ export function KtvChatPage({
     };
   }, [enabled, customer, provider, receiverId, user?.id, deepLinkAttempt, openThread]);
   useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
     const viewport = window.visualViewport;
-    if (!viewport) return;
-    const resize = () => {
-      shellRef.current?.style.setProperty("--ktv-chat-height", `${viewport.height}px`);
-      shellRef.current?.style.setProperty("--ktv-chat-top", `${viewport.offsetTop}px`);
+    const keyboard = (
+      navigator as Navigator & {
+        virtualKeyboard?: EventTarget & {
+          boundingRect?: DOMRectReadOnly;
+          overlaysContent?: boolean;
+        };
+      }
+    ).virtualKeyboard;
+    // Let the browser resize content where supported. Still handle overlay
+    // keyboards explicitly because the PWA/browser may ignore this setting.
+    if (keyboard) {
+      try {
+        keyboard.overlaysContent = false;
+      } catch {
+        // Older browsers expose the geometry but not the resize preference.
+      }
+    }
+    let restingHeight = Math.max(
+      window.innerHeight,
+      (viewport?.height ?? window.innerHeight) + (viewport?.offsetTop ?? 0),
+    );
+    let lastWidth = window.innerWidth;
+    let frame = 0;
+    const timers: Array<ReturnType<typeof setTimeout>> = [];
+    const measure = () => {
+      const focused = document.activeElement === inputRef.current && !!inputRef.current;
+      const height = viewport?.height ?? window.innerHeight;
+      const top = viewport?.offsetTop ?? 0;
+      if (window.innerWidth !== lastWidth) {
+        lastWidth = window.innerWidth;
+        restingHeight = Math.max(window.innerHeight, height + top);
+      } else if (!focused) {
+        // Keep the taller resting viewport while the keyboard is closing.
+        restingHeight = Math.max(restingHeight, window.innerHeight, height + top);
+      }
+      const rect = keyboard?.boundingRect;
+      const geometry = chatViewportGeometry({
+        viewportHeight: height,
+        viewportTop: top,
+        layoutHeight: window.innerHeight,
+        restingHeight,
+        keyboardTop: rect?.top,
+        keyboardHeight: rect?.height,
+        focused,
+      });
+      shell.style.setProperty("--ktv-chat-height", `${geometry.height}px`);
+      shell.style.setProperty("--ktv-chat-top", `${geometry.top}px`);
+      if (focused) shell.dataset.composerFocused = "true";
+      else delete shell.dataset.composerFocused;
+      if (geometry.keyboardOpen) shell.dataset.keyboardOpen = "true";
+      else delete shell.dataset.keyboardOpen;
+      if (focused && nearBottom.current && messagesRef.current) {
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      }
     };
-    resize();
-    viewport.addEventListener("resize", resize);
-    viewport.addEventListener("scroll", resize);
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    };
+    const onFocusChange = (event: FocusEvent) => {
+      if (event.target !== inputRef.current) return;
+      for (const timer of timers) clearTimeout(timer);
+      timers.length = 0;
+      schedule();
+      // Safari and Android WebView animate their keyboards after focus has
+      // fired; re-measure at the end without changing draft or focus state.
+      for (const delay of [80, 240, 420]) timers.push(setTimeout(schedule, delay));
+    };
+    measure();
+    viewport?.addEventListener("resize", schedule);
+    viewport?.addEventListener("scroll", schedule);
+    keyboard?.addEventListener("geometrychange", schedule);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("orientationchange", schedule);
+    window.addEventListener("pageshow", schedule);
+    document.addEventListener("visibilitychange", schedule);
+    shell.addEventListener("focusin", onFocusChange);
+    shell.addEventListener("focusout", onFocusChange);
     return () => {
-      viewport.removeEventListener("resize", resize);
-      viewport.removeEventListener("scroll", resize);
+      cancelAnimationFrame(frame);
+      for (const timer of timers) clearTimeout(timer);
+      viewport?.removeEventListener("resize", schedule);
+      viewport?.removeEventListener("scroll", schedule);
+      keyboard?.removeEventListener("geometrychange", schedule);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("orientationchange", schedule);
+      window.removeEventListener("pageshow", schedule);
+      document.removeEventListener("visibilitychange", schedule);
+      shell.removeEventListener("focusin", onFocusChange);
+      shell.removeEventListener("focusout", onFocusChange);
+      delete shell.dataset.keyboardOpen;
+      delete shell.dataset.composerFocused;
     };
   }, []);
   useEffect(() => {

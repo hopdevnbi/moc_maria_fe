@@ -852,6 +852,7 @@
     z-index: 80;
     height: var(--ktv-chat-height, 100dvh);
     overflow: hidden;
+    overscroll-behavior: none;
   }
   body:has(.ktv-chat-shell.is-conversation) {
     overflow: hidden;
@@ -876,6 +877,8 @@
   .is-conversation .ktv-chat-dialog {
     display: flex;
     height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
   .ktv-chat-mobile-back {
     display: grid;
@@ -908,6 +911,9 @@
   }
   .ktv-chat-messages {
     padding: 18px 14px;
+    flex: 1 1 0%;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
   }
   .ktv-chat-bubble {
     max-width: 87%;
@@ -917,6 +923,9 @@
     gap: 6px;
     display: grid;
     grid-template-columns: 44px 44px minmax(0, 1fr) 44px;
+    flex: 0 0 auto;
+    z-index: 2;
+    box-shadow: 0 -4px 18px rgb(22 52 31 / 5%);
   }
   .ktv-chat-composer > button {
     width: 44px;
@@ -933,6 +942,20 @@
   .ktv-chat-composer > small {
     font-size: 9px;
     line-height: 1.5;
+  }
+  /* Keep the composer in the visible viewport instead of below the keyboard. */
+  .ktv-chat-shell.is-conversation[data-keyboard-open="true"] .ktv-chat-composer {
+    padding-bottom: 8px;
+  }
+  /* While typing, prioritize message history and the composer on small phones.
+     Avoid using max-height media queries: the layout viewport may not shrink
+     when iOS Safari or Android PWA opens the virtual keyboard. */
+  .ktv-chat-shell.is-conversation[data-composer-focused="true"] .ktv-chat-service,
+  .ktv-chat-shell.is-conversation[data-composer-focused="true"] .ktv-chat-block-status,
+  .ktv-chat-shell.is-conversation[data-composer-focused="true"]
+    .ktv-chat-privacy:not(.locked):not(:has(.ktv-chat-privacy-overlay)),
+  .ktv-chat-shell.is-conversation[data-composer-focused="true"] .ktv-chat-composer > small {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

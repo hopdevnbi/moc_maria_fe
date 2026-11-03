@@ -1020,4 +1020,50 @@ describe("private KTV chat interactions", () => {
       false,
     );
   });
+  it("keeps the composer inside the visual viewport when a mobile keyboard opens", async () => {
+    const previous = Object.getOwnPropertyDescriptor(window, "visualViewport");
+    const viewport = Object.assign(new EventTarget(), {
+      height: 768,
+      offsetTop: 0,
+    });
+    Object.defineProperty(window, "visualViewport", {
+      configurable: true,
+      value: viewport,
+    });
+    try {
+      mount();
+      fireEvent.click(await screen.findByRole("button", { name: /Ngọc Mai/ }));
+      const textarea = await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
+      await act(async () => {
+        textarea.focus();
+      });
+      viewport.height = 380;
+      viewport.offsetTop = 36;
+      act(() => viewport.dispatchEvent(new Event("resize")));
+      await waitFor(() => {
+        const shell = document.querySelector<HTMLElement>(".ktv-chat-shell");
+        expect(shell?.style.getPropertyValue("--ktv-chat-height")).toBe("380px");
+        expect(shell?.style.getPropertyValue("--ktv-chat-top")).toBe("36px");
+        expect(shell?.dataset.keyboardOpen).toBe("true");
+        expect(shell?.dataset.composerFocused).toBe("true");
+      });
+      expect(textarea).toBeInTheDocument();
+      await act(async () => {
+        textarea.blur();
+      });
+      viewport.height = 768;
+      viewport.offsetTop = 0;
+      act(() => viewport.dispatchEvent(new Event("resize")));
+      await waitFor(() => {
+        const shell = document.querySelector<HTMLElement>(".ktv-chat-shell");
+        expect(shell?.style.getPropertyValue("--ktv-chat-height")).toBe("768px");
+        expect(shell?.dataset.keyboardOpen).toBeUndefined();
+        expect(shell?.dataset.composerFocused).toBeUndefined();
+      });
+    } finally {
+      cleanup();
+      if (previous) Object.defineProperty(window, "visualViewport", previous);
+      else Reflect.deleteProperty(window, "visualViewport");
+    }
+  });
 });
