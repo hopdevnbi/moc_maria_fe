@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 import { AuthProvider } from "@/features/auth/context/AuthProvider";
 import { GlobalContactActions } from "@/shared/contact/global-contact-actions";
 import { PwaInstallAssistant } from "@/shared/pwa/pwa-install-assistant";
-import { KtvChatNotificationListener } from "@/features/mobile/chat-notifications";
+import { ChatNotificationListener } from "@/features/mobile/chat-notifications";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -27,7 +27,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         {children}
         <GlobalContactActions />
         <PwaInstallAssistant />
-        <KtvChatNotificationListener />
+        <ChatNotificationListener />
       </AuthProvider>
     </QueryClientProvider>
   );

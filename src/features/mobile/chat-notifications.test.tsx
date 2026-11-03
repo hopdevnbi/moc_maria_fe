@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { KtvChatPushControl } from "./chat-notifications";
+import { ChatPushControl } from "./chat-notifications";
 
 const mocks = vi.hoisted(() => ({
   user: { id: "test-ktv", roles: ["THERAPIST"] as string[] },
@@ -35,10 +35,19 @@ afterEach(() => {
   else Reflect.deleteProperty(navigator, "serviceWorker");
 });
 
-describe("KTV Web Push opt-in", () => {
-  it("never offers registration to an ordinary customer", () => {
+describe("two-way chat Web Push opt-in", () => {
+  it("offers the same notification control to customers as KTVs", async () => {
     mocks.user = { id: "customer", roles: ["CUSTOMER"] };
-    render(<KtvChatPushControl />);
+    render(<ChatPushControl />);
+    expect(
+      await screen.findByRole("button", { name: /bật thông báo tin nhắn/i }),
+    ).toBeInTheDocument();
+    expect(mocks.authFetch).toHaveBeenCalledWith("/ktv-chat/push/config");
+  });
+
+  it("never registers unrelated admin roles", () => {
+    mocks.user = { id: "admin", roles: ["ADMIN"] };
+    render(<ChatPushControl />);
     expect(screen.queryByRole("button", { name: /bật thông báo tin nhắn/i })).toBeNull();
     expect(mocks.authFetch).not.toHaveBeenCalled();
   });
@@ -71,7 +80,7 @@ describe("KTV Web Push opt-in", () => {
       value: { register, ready: Promise.resolve(registration) },
     });
 
-    render(<KtvChatPushControl />);
+    render(<ChatPushControl />);
     const button = await screen.findByRole("button", { name: /bật thông báo tin nhắn/i });
     await waitFor(() => expect(button).not.toBeDisabled());
     expect(requestPermission).not.toHaveBeenCalled();

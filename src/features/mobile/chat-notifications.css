@@ -31,6 +31,16 @@
   color: #617467;
   padding-top: 4px;
 }
+.moc-chat-push.is-compact {
+  padding: 0;
+  flex: 0 0 auto;
+}
+.moc-chat-push.is-compact .moc-chat-push-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+}
 .moc-chat-push-spin {
   animation: moc-push-spin 1s linear infinite;
 }

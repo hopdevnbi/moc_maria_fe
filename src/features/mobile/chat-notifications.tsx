@@ -61,14 +61,18 @@ function subscriptionDto(subscription: PushSubscription) {
   };
 }
 
-// KTV opt-in only; force a fresh component instance when the account changes.
-export function KtvChatPushControl() {
+// Web Push is opt-in for both chat participants and scoped to the logged-in account.
+export function ChatPushControl({ compact = false }: { compact?: boolean }) {
   const { status, user } = useAuth();
-  const therapist = status === "authenticated" && !!user?.roles?.includes("THERAPIST");
-  return therapist && user ? <KtvChatPushControlForUser key={user.id} userId={user.id} /> : null;
+  const participant =
+    status === "authenticated" &&
+    !!user?.roles?.some((role) => ["CUSTOMER", "THERAPIST", "DOCTOR_CONSULTANT"].includes(role));
+  return participant && user ? (
+    <ChatPushControlForUser key={user.id} userId={user.id} compact={compact} />
+  ) : null;
 }
 
-function KtvChatPushControlForUser({ userId }: { userId: string }) {
+function ChatPushControlForUser({ userId, compact }: { userId: string; compact: boolean }) {
   const { authFetch } = useAuth();
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [active, setActive] = useState(false);
@@ -146,7 +150,7 @@ function KtvChatPushControlForUser({ userId }: { userId: string }) {
       });
       localStorage.setItem(optInKey, "yes");
       setActive(true);
-      setMessage("Đã bật. Tin nhắn khách sẽ hiện cả khi ứng dụng chạy nền.");
+      setMessage("Đã bật thông báo chat trên thiết bị này.");
     } catch {
       setMessage("Không bật được thông báo. Kiểm tra quyền và thử lại.");
     } finally {
@@ -189,7 +193,7 @@ function KtvChatPushControlForUser({ userId }: { userId: string }) {
           : message;
 
   return (
-    <div className="moc-chat-push">
+    <div className={compact ? "moc-chat-push is-compact" : "moc-chat-push"}>
       <button
         type="button"
         className={active ? "moc-chat-push-button is-enabled" : "moc-chat-push-button"}
@@ -200,6 +204,9 @@ function KtvChatPushControlForUser({ userId }: { userId: string }) {
           busy || !supported || outsideApp || !configured || (!active && permission === "denied")
         }
         aria-pressed={active}
+        title={
+          compact ? explanation || (active ? "Tắt thông báo" : "Bật thông báo tin nhắn") : undefined
+        }
         aria-label={
           active ? "Tắt thông báo tin nhắn trên thiết bị" : "Bật thông báo tin nhắn trên thiết bị"
         }
@@ -211,21 +218,29 @@ function KtvChatPushControlForUser({ userId }: { userId: string }) {
         ) : (
           <BellOff size={17} />
         )}
-        <span>{active ? "Đã bật thông báo tin nhắn" : "Bật thông báo tin nhắn"}</span>
+        {!compact && <span>{active ? "Đã bật thông báo tin nhắn" : "Bật thông báo tin nhắn"}</span>}
       </button>
-      {explanation && <small role="status">{explanation}</small>}
+      {explanation && !compact && <small role="status">{explanation}</small>}
     </div>
   );
 }
 
-// A private KTV socket remains connected across every authenticated page.
-export function KtvChatNotificationListener() {
+// A private recipient socket remains connected across every authenticated page.
+export function ChatNotificationListener() {
   const { status, user } = useAuth();
-  const therapist = status === "authenticated" && !!user?.roles?.includes("THERAPIST");
-  return therapist && user ? <KtvChatNotificationSession key={user.id} userId={user.id} /> : null;
+  const participant =
+    status === "authenticated" &&
+    !!user?.roles?.some((role) => ["CUSTOMER", "THERAPIST", "DOCTOR_CONSULTANT"].includes(role));
+  return participant && user ? (
+    <ChatNotificationSession
+      key={user.id}
+      userId={user.id}
+      fromKtv={user.roles.includes("CUSTOMER") && !user.roles.includes("THERAPIST")}
+    />
+  ) : null;
 }
 
-function KtvChatNotificationSession({ userId }: { userId: string }) {
+function ChatNotificationSession({ userId, fromKtv }: { userId: string; fromKtv: boolean }) {
   const { accessToken, refresh } = useAuth();
   const client = useQueryClient();
   const router = useRouter();
@@ -295,7 +310,7 @@ function KtvChatNotificationSession({ userId }: { userId: string }) {
     <aside className="moc-chat-toast" role="status" aria-live="polite">
       <Bell size={20} aria-hidden />
       <div>
-        <strong>Khách hàng vừa gửi tin nhắn</strong>
+        <strong>{fromKtv ? "KTV vừa gửi tin nhắn" : "Khách hàng vừa gửi tin nhắn"}</strong>
         <p>Bấm để mở hội thoại và trả lời.</p>
       </div>
       <button

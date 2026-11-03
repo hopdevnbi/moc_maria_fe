@@ -48,7 +48,7 @@ import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
 import { IncomingChatTracker, useChatSound } from "./chat-sound";
 import { chatViewportGeometry } from "./chat-viewport";
-import { KtvChatPushControl } from "./chat-notifications";
+import { ChatPushControl } from "./chat-notifications";
 import { ChatPrivacyControls, isChatLockedError, type ChatPrivacyState } from "./chat-privacy";
 
 type Thread = ChatBlockState &
@@ -1061,7 +1061,7 @@ export function KtvChatPage({
                   </button>
                 )}
               </div>
-              <KtvChatPushControl />
+              {(!current || choosing) && <ChatPushControl />}
               <label className="ktv-chat-search">
                 <Search size={17} />
                 <input
@@ -1290,6 +1290,7 @@ export function KtvChatPage({
                     {user.id === current.customer_user_id && (
                       <Link
                         className="ktv-chat-profile"
+                        aria-label="Xem hồ sơ KTV"
                         href={providerProfileHref({
                           id: currentProvider?.publicAlias || current.provider_application_id,
                           publicName: recipient(current),
@@ -1298,6 +1299,7 @@ export function KtvChatPage({
                         Xem hồ sơ <ChevronRight size={15} />
                       </Link>
                     )}
+                    <ChatPushControl compact />
                     <button
                       type="button"
                       className="ktv-chat-icon-button"
