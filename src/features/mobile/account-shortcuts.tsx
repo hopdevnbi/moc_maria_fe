@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import {
@@ -10,6 +10,7 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
+import { PwaInstallShortcut } from "@/shared/pwa/pwa-install-shortcut";
 
 type AccountShortcutsProps = {
   technician: boolean;
@@ -63,6 +64,7 @@ export function AccountShortcuts({ technician, signingOut, onSignOut }: AccountS
             <span>Đổi mật khẩu</span>
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
+          <PwaInstallShortcut />
         </div>
         <div className="mm-account-security-footer">
           <button type="button" disabled={signingOut} onClick={onSignOut}>

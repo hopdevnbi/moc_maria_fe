@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense, type ReactNode } from "react";
 import { Be_Vietnam_Pro, Noto_Serif } from "next/font/google";
 import { AppProviders } from "@/app/providers/AppProviders";
@@ -31,6 +31,19 @@ export const metadata: Metadata = {
   description:
     "Mộc Maria Wellness Lounge — một khoảng lặng để thả lỏng cơ thể, chăm sóc bản thân và tìm lại sự cân bằng.",
   applicationName: "Mộc Maria",
+  appleWebApp: {
+    capable: true,
+    title: "Mộc Maria",
+    statusBarStyle: "default",
+  },
+  icons: {
+    apple: [{ url: "/pwa/apple-touch-icon.png", sizes: "180x180" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#123f2b",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

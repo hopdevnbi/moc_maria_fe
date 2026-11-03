@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { AuthProvider } from "@/features/auth/context/AuthProvider";
 import { GlobalContactActions } from "@/shared/contact/global-contact-actions";
+import { PwaInstallAssistant } from "@/shared/pwa/pwa-install-assistant";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -24,6 +25,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <AuthProvider>
         {children}
         <GlobalContactActions />
+        <PwaInstallAssistant />
       </AuthProvider>
     </QueryClientProvider>
   );
