@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "Mộc Maria",
+    "slug": "moc-maria-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "mocmaria",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "com.mocmaria.mobile",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Mộc Maria cần quyền chọn ảnh khi bạn thay ảnh đại diện hoặc gửi ảnh trò chuyện."
+      }
+    },
+    "android": {
+      "package": "com.mocmaria.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#FBF8F4",
+        "foregroundImage": "./assets/images/icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FBF8F4",
+          "image": "./assets/images/moc-maria-logo.png",
+          "imageWidth": 180
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Mộc Maria sử dụng ảnh bạn chọn để cập nhật hồ sơ hoặc gửi trong cuộc trò chuyện."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

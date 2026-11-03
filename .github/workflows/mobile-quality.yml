@@ -1,0 +1,43 @@
+name: React Native Mobile Quality
+
+on:
+  push:
+    branches:
+      - main-mobile
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile-quality.yml'
+  pull_request:
+    branches:
+      - main-mobile
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile-quality.yml'
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Android JS bundle
+        run: npm run bundle:android
+      - name: iOS JS bundle
+        run: npm run bundle:ios
+      - name: Dependency vulnerability gate
+        run: npm audit --omit=dev --audit-level=high
