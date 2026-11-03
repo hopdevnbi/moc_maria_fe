@@ -1,9 +1,8 @@
 "use client";
 import { DEFAULT_BOOKING_NOTE } from "@/shared/booking/inquiry-status";
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CalendarDays, CheckCircle2, MapPin, Search, ArrowRight, UserRound } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { CalendarDays, CheckCircle2, MapPin, ArrowRight, UserRound } from "lucide-react";
 import { apiRequest, parseApiResponse } from "@/features/auth/auth-api";
 import type { AuthResponse } from "@/features/auth/auth.types";
 import { BookingAccountDialog } from "./booking-account-dialog";
@@ -18,6 +17,12 @@ import { formatPrice } from "@/features/marketplace/format";
 import { officialLegacyCareItem, officialServiceLabel } from "./official-ktv-offers";
 import "./booking-location.css";
 import "./account.css";
+import { BookingProviderPicker } from "./booking-provider-picker";
+import {
+  inquiryServiceOptions,
+  inquiryServiceId,
+  supportsInquiryService,
+} from "./inquiry-service-options";
 export function searchText(value: string) {
   return value
     .toLocaleLowerCase("vi")
@@ -25,14 +30,10 @@ export function searchText(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d");
 }
-function supportsService(provider: Provider, serviceId: string): boolean {
-  return provider.isDemo
-    ? !!provider.demoServices?.some((s) => s.id === serviceId)
-    : !!provider.eligibleServices?.some((s) => s.serviceId === serviceId);
-}
 function defaultService(provider: Provider | undefined, services: ServiceItem[]): string {
   return provider
-    ? services.find((s) => supportsService(provider, s.service.id))?.service.id || ""
+    ? services.find((s) => supportsInquiryService(provider, s.service.id, services))?.service.id ||
+        ""
     : "";
 }
 function hanoiDateTime(timestamp: number): string {
@@ -40,7 +41,7 @@ function hanoiDateTime(timestamp: number): string {
 }
 export function AppointmentRequest({
   providers,
-  services,
+  services: sourceServices,
   initial,
   verifiedAvailable = false,
 }: {
@@ -49,6 +50,7 @@ export function AppointmentRequest({
   initial: { provider?: string; service?: string };
   verifiedAvailable?: boolean;
 }) {
+  const services = useMemo(() => inquiryServiceOptions(sourceServices), [sourceServices]);
   const { user, status, authFetch } = useAuth();
   const available = providers.filter((p) => p.chatEnabled || !p.isDemo);
   const initialProvider = available.find(
@@ -57,8 +59,14 @@ export function AppointmentRequest({
   const [providerId, setProviderId] = useState(() => initialProvider?.id || "");
   const [showProviderPicker, setShowProviderPicker] = useState(!initialProvider);
   const [serviceId, setServiceId] = useState(() =>
-    initial.service && (!initialProvider || supportsService(initialProvider, initial.service))
-      ? initial.service
+    initial.service &&
+    (!initialProvider ||
+      supportsInquiryService(
+        initialProvider,
+        inquiryServiceId(initial.service, services),
+        services,
+      ))
+      ? inquiryServiceId(initial.service, services)
       : defaultService(initialProvider, services),
   );
   const [query, setQuery] = useState("");
@@ -105,7 +113,7 @@ export function AppointmentRequest({
           !initial.service &&
           typeof draft.serviceId === "string" &&
           services.some((s) => s.service.id === draft.serviceId) &&
-          (!initialProvider || supportsService(initialProvider, draft.serviceId))
+          (!initialProvider || supportsInquiryService(initialProvider, draft.serviceId, services))
         )
           setServiceId(draft.serviceId);
         if (draft.location === "AT_HOME" || draft.location === "AT_BRANCH")
@@ -136,16 +144,22 @@ export function AppointmentRequest({
           ).values(),
         ];
   const serviceList = services
-    .filter((s) => !chosen || offers(chosen).some((o) => o.id === s.service.id))
+    .filter((s) => !chosen || supportsInquiryService(chosen, s.service.id, services))
     .map((s) => ({ ...s, service: officialServiceLabel(s.service) }));
   const chosenService = serviceList.find((s) => s.service.id === serviceId);
   const chosenMenuItem = chosenService && officialLegacyCareItem(chosenService.service.id);
   const filtered = available.filter(
     (p) =>
-      (!serviceId || offers(p).some((s) => s.id === serviceId)) &&
-      searchText([p.publicName, p.serviceArea, ...offers(p).map((s) => s.name)].join(" ")).includes(
-        searchText(query),
-      ),
+      (!serviceId || supportsInquiryService(p, serviceId, services)) &&
+      searchText(
+        [
+          p.publicName,
+          p.title,
+          p.serviceArea,
+          chosenService?.service.name,
+          ...offers(p).map((s) => s.name),
+        ].join(" "),
+      ).includes(searchText(query)),
   );
   const canSend =
     !!chosen &&
@@ -266,7 +280,8 @@ export function AppointmentRequest({
                     onChange={(e) => {
                       const id = e.target.value;
                       setServiceId(id);
-                      if (chosen && !offers(chosen).some((s) => s.id === id)) setProviderId("");
+                      if (chosen && !supportsInquiryService(chosen, id, services))
+                        setProviderId("");
                     }}
                   >
                     <option value="">Chọn dịch vụ</option>
@@ -307,47 +322,20 @@ export function AppointmentRequest({
                     </p>
                   </div>
                 </div>
-                {showProviderPicker && (
-                  <label className="mm-searchbar mm-request-search">
-                    <Search size={18} />
-                    <input
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Tìm tên KTV, dịch vụ..."
-                      aria-label="Tìm kỹ thuật viên"
-                    />
-                  </label>
-                )}
-                <div className="mm-request-providers">
-                  {(showProviderPicker ? filtered : chosen ? [chosen] : []).map((p) => (
-                    <button
-                      type="button"
-                      key={p.id}
-                      aria-pressed={providerId === p.id}
-                      className={"mm-request-provider" + (providerId === p.id ? " selected" : "")}
-                      onClick={() => {
-                        setProviderId(p.id);
-                        if (!serviceId || !supportsService(p, serviceId))
-                          setServiceId(defaultService(p, services));
-                        if (initialProvider) setShowProviderPicker(false);
-                      }}
-                    >
-                      {p.avatarUrl?.startsWith("/media/") ? (
-                        <Image src={p.avatarUrl} width={56} height={64} alt="" unoptimized />
-                      ) : (
-                        <UserRound size={30} />
-                      )}
-                      <span>
-                        <strong>{p.publicName}</strong>
-                        <small>
-                          {p.scheduleOpen ? "Đã có lịch làm việc" : "Trao đổi lịch với KTV"} · Hà
-                          Nội
-                        </small>
-                      </span>
-                      {providerId === p.id && <CheckCircle2 size={20} />}
-                    </button>
-                  ))}
-                </div>
+                <BookingProviderPicker
+                  providers={showProviderPicker ? filtered : chosen ? [chosen] : []}
+                  total={available.length}
+                  selectedId={providerId}
+                  query={query}
+                  onQuery={setQuery}
+                  showSearch={showProviderPicker}
+                  onSelect={(provider) => {
+                    setProviderId(provider.id);
+                    if (!serviceId || !supportsInquiryService(provider, serviceId, services))
+                      setServiceId(defaultService(provider, services));
+                    if (initialProvider) setShowProviderPicker(false);
+                  }}
+                />
                 {!showProviderPicker && chosen && (
                   <button
                     type="button"
@@ -356,9 +344,6 @@ export function AppointmentRequest({
                   >
                     Đổi KTV
                   </button>
-                )}
-                {!filtered.length && (
-                  <p role="status">Chưa có KTV phù hợp. Hãy đổi từ khóa hoặc dịch vụ.</p>
                 )}
               </section>
               <section className="mm-booking-section">

@@ -4,6 +4,7 @@ import { AppointmentRequest } from "./appointment-request";
 import demoProviders from "./demo-ktvs.json";
 import demoServices from "./demo-services.json";
 import { careMenu } from "./official-menu";
+import { officialKtvProfiles } from "./official-ktv-roster";
 const state = vi.hoisted(() => ({
   fetch: vi.fn(),
   register: vi.fn(),
@@ -27,8 +28,9 @@ vi.mock("./experience", () => ({ MobileHeader: () => null, MobileNavigation: () 
 vi.mock("next/image", () => ({
   default: ({
     unoptimized: _u,
+    fill: _fill,
     ...props
-  }: React.ComponentProps<"img"> & { unoptimized?: boolean }) => (
+  }: React.ComponentProps<"img"> & { unoptimized?: boolean; fill?: boolean }) => (
     <img {...props} alt={props.alt || ""} />
   ),
 }));
@@ -428,5 +430,107 @@ describe("guest quick booking", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("kiểm tra lại");
     expect(network).not.toHaveBeenCalled();
     expect(screen.queryByText(/Đã gửi yêu cầu đến/)).not.toBeInTheDocument();
+  });
+});
+
+const rosterProviders = officialKtvProfiles(providers);
+const officialCareServices = careMenu.map((care, index) => ({
+  service: {
+    ...demoServices[index].service,
+    id: "11111111-2222-4333-8444-" + String(index + 1).padStart(12, "0"),
+    slug: care.slug,
+    name: care.name,
+    isPublished: true,
+  },
+  variants: [
+    { ...demoServices[index].variants[0], isActive: true, priceVnd: String(care.priceVnd) },
+  ],
+}));
+
+describe("official service to all seven KTV inquiry flow", () => {
+  it("shows seven real portraits, deduplicates legacy services and excludes drinks", () => {
+    const drink = {
+      ...officialCareServices[0],
+      service: {
+        ...officialCareServices[0].service,
+        id: "drink",
+        name: "Trà thảo mộc",
+        slug: "tra-thao-moc",
+      },
+    };
+    render(
+      <AppointmentRequest
+        providers={rosterProviders}
+        services={[...officialCareServices, ...demoServices, drink]}
+        initial={{ service: officialCareServices[0].service.id }}
+      />,
+    );
+    const picker = screen.getByRole("group", { name: "Danh sách kỹ thuật viên" });
+    expect(within(picker).getAllByRole("button")).toHaveLength(7);
+    expect(picker.querySelectorAll("img")).toHaveLength(7);
+    expect(within(screen.getByLabelText("Dịch vụ chăm sóc")).getAllByRole("option")).toHaveLength(
+      11,
+    );
+    expect(screen.queryByRole("option", { name: "Trà thảo mộc" })).not.toBeInTheDocument();
+  });
+  it.each(rosterProviders)(
+    "keeps the official service while selecting and sending to $publicName",
+    async (provider) => {
+      render(
+        <AppointmentRequest
+          providers={rosterProviders}
+          services={[...officialCareServices, ...demoServices]}
+          initial={{ service: officialCareServices[0].service.id }}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: new RegExp(provider.publicName) }));
+      expect(screen.getByLabelText("Dịch vụ chăm sóc")).toHaveValue(
+        officialCareServices[0].service.id,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Gửi yêu cầu đặt lịch" }));
+      await screen.findByText("Đã gửi yêu cầu đến " + provider.publicName);
+      const payload = JSON.parse(state.fetch.mock.calls[0][1].body);
+      expect(payload).toMatchObject({
+        providerId: provider.chatProviderId,
+        serviceId: officialCareServices[0].service.id,
+      });
+    },
+  );
+  it("keeps selected KTV when switching official services and can recover an empty search", () => {
+    render(
+      <AppointmentRequest
+        providers={rosterProviders}
+        services={[...officialCareServices, ...demoServices]}
+        initial={{ service: officialCareServices[0].service.id }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Nguyễn Hoàn/ }));
+    fireEvent.change(screen.getByLabelText("Dịch vụ chăm sóc"), {
+      target: { value: officialCareServices[1].service.id },
+    });
+    expect(screen.getByRole("button", { name: /Nguyễn Hoàn/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    fireEvent.change(screen.getByLabelText("Tìm kỹ thuật viên"), {
+      target: { value: "khongkhop" },
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Chưa tìm thấy KTV");
+    fireEvent.click(screen.getByRole("button", { name: "Xem tất cả KTV" }));
+    expect(
+      within(screen.getByRole("group", { name: "Danh sách kỹ thuật viên" })).getAllByRole("button"),
+    ).toHaveLength(7);
+  });
+  it("resolves existing legacy service links to the published catalog ID", () => {
+    render(
+      <AppointmentRequest
+        providers={rosterProviders}
+        services={[...officialCareServices, ...demoServices]}
+        initial={{ provider: rosterProviders[0].id, service: "demo-relaxation" }}
+      />,
+    );
+    expect(screen.getByLabelText("Dịch vụ chăm sóc")).toHaveValue(
+      officialCareServices[0].service.id,
+    );
   });
 });

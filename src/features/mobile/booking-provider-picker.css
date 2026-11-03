@@ -1,0 +1,210 @@
+.mm-care-picker {
+  margin-top: 20px;
+}
+.mm-care-picker-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #6c7e70;
+  font-size: 12px;
+}
+.mm-care-picker-caption strong {
+  flex-shrink: 0;
+  padding: 6px 11px;
+  border-radius: 30px;
+  background: #eef3e8;
+  color: #365d43;
+  font-size: 11px;
+}
+.mm-care-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  min-height: 48px;
+  border: 1px solid #dbe4d7;
+  border-radius: 13px;
+  background: #fbfcf8;
+  color: #789078;
+  margin-bottom: 16px;
+}
+.mm-care-picker-search:focus-within {
+  border-color: #49785b;
+  box-shadow: 0 0 0 3px #49785b15;
+}
+.mm-care-picker-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #284333;
+  padding: 12px 0;
+}
+.mm-care-picker-search button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: #617a66;
+  cursor: pointer;
+}
+.mm-care-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mm-care-picker-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px 14px;
+  border: 1px solid #dfe6da;
+  border-radius: 17px;
+  background: #fffefa;
+  text-align: left;
+  color: #294b38;
+  cursor: pointer;
+  transition:
+    border-color 0.16s,
+    box-shadow 0.16s,
+    background 0.16s;
+}
+.mm-care-picker-card:hover {
+  border-color: #8eaa8d;
+  box-shadow: 0 5px 18px #284b3810;
+}
+.mm-care-picker-card:focus-visible {
+  outline: 3px solid #7f9d72;
+  outline-offset: 3px;
+}
+.mm-care-picker-card.is-selected {
+  background: #f0f6eb;
+  border-color: #447855;
+  box-shadow: inset 0 0 0 1px #447855;
+}
+.mm-care-picker-portrait {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 88px;
+  height: 110px;
+  border-radius: 13px;
+  overflow: hidden;
+  background: #eaf0e5;
+  color: #82947b;
+}
+.mm-care-picker-portrait img {
+  object-fit: cover;
+  object-position: center 25%;
+}
+.mm-care-picker-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding-right: 8px;
+}
+.mm-care-picker-info strong {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.mm-care-picker-specialty {
+  color: #6a7c6d;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.mm-care-picker-area {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #81917f;
+  font-size: 10px;
+}
+.mm-care-picker-choice {
+  color: #426c4d;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 3px;
+}
+.mm-care-picker-check {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #d3dfcf;
+  border-radius: 50%;
+  color: white;
+}
+.is-selected .mm-care-picker-check {
+  background: #3c6d4d;
+  border-color: #3c6d4d;
+}
+.mm-care-picker-note {
+  margin: 15px 0 0;
+  color: #7a8978;
+  font-size: 11px;
+  line-height: 1.75;
+}
+.mm-care-picker-empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 24px 12px;
+  border: 1px dashed #d6e0cf;
+  border-radius: 14px;
+  color: #718369;
+}
+.mm-care-picker-empty p {
+  margin: 0;
+  font-size: 12px;
+}
+.mm-care-picker-empty button {
+  min-height: 44px;
+  background: transparent;
+  color: #345d43;
+  font-size: 12px;
+  font-weight: 700;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+@media (max-width: 1050px) and (min-width: 701px) {
+  .mm-care-picker-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .mm-care-picker-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .mm-care-picker-card {
+    padding: 13px;
+  }
+  .mm-care-picker-portrait {
+    width: 72px;
+    height: 90px;
+  }
+  .mm-care-picker-caption {
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-care-picker-card {
+    transition: none;
+  }
+}
