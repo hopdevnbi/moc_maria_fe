@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { permanentRedirect } from "next/navigation";
 import {
@@ -26,7 +26,12 @@ async function MessagesContent({
     typeof query.provider === "string" ? internalProviderParam(query.provider) : undefined;
   const service =
     typeof query.service === "string" ? internalServiceParam(query.service) : undefined;
-  return <KtvChatPage provider={provider} service={service} />;
+  const threadId =
+    typeof query.thread === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(query.thread)
+      ? query.thread
+      : undefined;
+  return <KtvChatPage provider={provider} service={service} threadId={threadId} />;
 }
 export default function MessagesPage({
   searchParams,

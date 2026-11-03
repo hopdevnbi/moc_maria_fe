@@ -15,7 +15,7 @@ if (!releaseId) {
 }
 const result = spawnSync(
   process.execPath,
-  [fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url)), "build"],
+  [fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url)), "build", "--webpack"],
   {
     stdio: "inherit",
     env: { ...process.env, NEXT_PUBLIC_RELEASE_ID: releaseId },

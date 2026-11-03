@@ -1,0 +1,90 @@
+.moc-chat-push {
+  padding: 0 18px 9px;
+}
+.moc-chat-push-button {
+  border: 1px solid #d8e3d3;
+  border-radius: 12px;
+  padding: 9px 12px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #f1f6ee;
+  color: #315c42;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+.moc-chat-push-button.is-enabled {
+  background: #e2eddf;
+}
+.moc-chat-push-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.moc-chat-push small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #617467;
+  padding-top: 4px;
+}
+.moc-chat-push-spin {
+  animation: moc-push-spin 1s linear infinite;
+}
+@keyframes moc-push-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.moc-chat-toast {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 990;
+  max-width: min(420px, calc(100vw - 32px));
+  background: #fffefb;
+  border: 1px solid #d9e3d3;
+  box-shadow: 0 14px 38px #1b342a2b;
+  border-radius: 17px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #315c42;
+}
+.moc-chat-toast > div {
+  flex: 1;
+  min-width: 0;
+}
+.moc-chat-toast strong {
+  font-size: 13px;
+}
+.moc-chat-toast p {
+  font-size: 12px;
+  margin-top: 3px;
+  color: #63796b;
+}
+.moc-chat-toast-open {
+  background: #315c42;
+  color: white;
+  border: 0;
+  border-radius: 9px;
+  padding: 9px 11px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.moc-chat-toast-close {
+  border: 0;
+  background: transparent;
+  color: #63796b;
+  cursor: pointer;
+  padding: 4px;
+}
+@media (max-width: 600px) {
+  .moc-chat-toast {
+    bottom: max(74px, calc(env(safe-area-inset-bottom) + 68px));
+  }
+}

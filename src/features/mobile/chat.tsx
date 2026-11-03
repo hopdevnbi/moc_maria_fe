@@ -47,6 +47,7 @@ import { MobileHeader, MobileNavigation } from "./experience";
 import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
 import { IncomingChatTracker, useChatSound } from "./chat-sound";
+import { KtvChatPushControl } from "./chat-notifications";
 import { ChatPrivacyControls, isChatLockedError, type ChatPrivacyState } from "./chat-privacy";
 
 type Thread = ChatBlockState &
@@ -235,7 +236,15 @@ function chatError(error: unknown) {
   return "Chưa kết nối được chat. Vui lòng thử lại sau ít phút.";
 }
 
-export function KtvChatPage({ provider, service }: { provider?: string; service?: string }) {
+export function KtvChatPage({
+  provider,
+  service,
+  threadId,
+}: {
+  provider?: string;
+  service?: string;
+  threadId?: string;
+}) {
   const { status, user, authFetch } = useAuth();
   const client = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -258,6 +267,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
   const messagesRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const openedProvider = useRef("");
+  const openedThread = useRef("");
   const selectionVersion = useRef(0);
   const failedOpening = useRef<{ id: string; name: string } | null>(null);
   const [openingProvider, setOpeningProvider] = useState<{ id: string; name: string } | null>(null);
@@ -297,6 +307,14 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
       : directory.data?.find((item) => item.id === provider || item.publicAlias === provider)?.id
     : undefined;
   const current = threads.data?.find((thread) => thread.id === selectedId) ?? null;
+  useEffect(() => {
+    if (!threadId || !threads.data?.some((thread) => thread.id === threadId)) return;
+    if (openedThread.current === threadId) return;
+    openedThread.current = threadId;
+    setSelectedId(threadId);
+    setChoosing(false);
+    nearBottom.current = true;
+  }, [threadId, threads.data]);
   useEffect(() => {
     const used = new Set([
       attachment?.previewUrl,
@@ -959,6 +977,7 @@ export function KtvChatPage({ provider, service }: { provider?: string; service?
                   </button>
                 )}
               </div>
+              <KtvChatPushControl />
               <label className="ktv-chat-search">
                 <Search size={17} />
                 <input
