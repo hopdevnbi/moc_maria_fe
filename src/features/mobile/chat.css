@@ -462,6 +462,13 @@
   outline: 3px solid #9fbc87;
   outline-offset: 3px;
 }
+.ktv-chat-image-unavailable {
+  display: block;
+  max-width: 260px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 .ktv-chat-image-modal {
   position: fixed;
   inset: 0;

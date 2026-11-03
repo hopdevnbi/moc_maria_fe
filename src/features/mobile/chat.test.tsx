@@ -982,7 +982,7 @@ describe("private KTV chat interactions", () => {
     fireEvent.click(screen.getByRole("button", { name: "Đóng ảnh lớn" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
-  it("lets KTV remove an image preview and rejects non-images or over-5MB photos", async () => {
+  it("lets KTV remove an image preview and rejects non-images or originals over 20 MB", async () => {
     state.user = { id: "provider", permissions: ["provider.portal"] };
     const original = state.fetch.getMockImplementation()!;
     state.fetch.mockImplementation(async (path: string, init?: RequestInit) =>
@@ -1001,15 +1001,17 @@ describe("private KTV chat interactions", () => {
     fireEvent.change(picker, {
       target: { files: [new File(["x"], "note.pdf", { type: "application/pdf" })] },
     });
-    expect(screen.getByRole("alert")).toHaveTextContent("Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Chỉ hỗ trợ ảnh JPG, PNG, WebP hoặc HEIC/HEIF chuyển đổi được.",
+    );
     fireEvent.change(picker, {
       target: {
         files: [
-          new File([new Uint8Array(12 * 1024 * 1024 + 1)], "big.jpg", { type: "image/jpeg" }),
+          new File([new Uint8Array(20 * 1024 * 1024 + 1)], "big.jpg", { type: "image/jpeg" }),
         ],
       },
     });
-    expect(screen.getByRole("alert")).toHaveTextContent("Dung lượng ảnh gốc tối đa là 12 MB.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Dung lượng ảnh gốc tối đa là 20 MB.");
     fireEvent.change(picker, {
       target: { files: [new File(["webp"], "portrait.webp", { type: "image/webp" })] },
     });

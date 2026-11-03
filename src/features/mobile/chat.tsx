@@ -49,7 +49,12 @@ import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
 import { IncomingChatTracker, useChatSound } from "./chat-sound";
 import { ApiError } from "@/features/auth/auth-api";
-import { MAX_CHAT_IMAGE_BYTES, prepareChatImage } from "./chat-image";
+import {
+  MAX_CHAT_IMAGE_BYTES,
+  MAX_CHAT_UPLOAD_BYTES,
+  chatImageMime,
+  prepareChatImage,
+} from "./chat-image";
 import { chatViewportGeometry } from "./chat-viewport";
 import { ChatPushControl } from "./chat-notifications";
 import { ChatPrivacyControls, isChatLockedError, type ChatPrivacyState } from "./chat-privacy";
@@ -89,7 +94,6 @@ type SendInput = {
   imageUrl?: string;
   attachment?: ImageAttachment;
 };
-const CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const json = (body: unknown): RequestInit => ({
   method: "POST",
   cache: "no-store",
@@ -154,6 +158,8 @@ const ChatMessageRow = memo(function ChatMessageRow({
   retry: (item: ChatMessage) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [brokenImageUrl, setBrokenImageUrl] = useState<string | null>(null);
+  const imageBroken = !!item.image_url && brokenImageUrl === item.image_url;
   useEffect(() => {
     if (!expanded) return;
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -169,7 +175,7 @@ const ChatMessageRow = memo(function ChatMessageRow({
         className={`ktv-chat-bubble${own ? " own" : ""}${item.delivery === "sending" ? " is-sending" : ""}`}
       >
         {item.body && <p>{item.body}</p>}
-        {item.image_url && (
+        {item.image_url && !imageBroken && (
           <button
             type="button"
             className="ktv-chat-image-open"
@@ -182,8 +188,15 @@ const ChatMessageRow = memo(function ChatMessageRow({
               unoptimized
               width={320}
               height={320}
+              onError={() => setBrokenImageUrl(item.image_url ?? null)}
             />
           </button>
+        )}
+        {item.image_url && imageBroken && (
+          <span className="ktv-chat-image-unavailable" role="status">
+            Không thể hiển thị ảnh trên thiết bị này.
+            {item.delivery === "failed" ? " Chạm Gửi lại để thử tiếp." : ""}
+          </span>
         )}
         <time dateTime={item.created_at}>{time(item.created_at)}</time>
         {item.delivery && (
@@ -206,7 +219,7 @@ const ChatMessageRow = memo(function ChatMessageRow({
           </span>
         )}
       </div>
-      {expanded && item.image_url && (
+      {expanded && item.image_url && !imageBroken && (
         <div
           className="ktv-chat-image-modal"
           role="dialog"
@@ -233,13 +246,14 @@ const ChatMessageRow = memo(function ChatMessageRow({
 });
 function chatImageError(error: unknown) {
   if (error instanceof ApiError) {
-    if (error.status === 413) return "Ảnh vượt giới hạn tải lên 5 MB. Hãy chọn ảnh nhẹ hơn.";
+    if (error.status === 413)
+      return `Ảnh vượt giới hạn tải lên ${MAX_CHAT_UPLOAD_BYTES / (1024 * 1024)} MB. Hãy thử ảnh nhẹ hơn.`;
     if (error.status === 400) return error.message;
     if (error.status === 502 || error.status === 503)
       return "Kho lưu ảnh tạm thời không phản hồi. Hãy thử gửi lại.";
   }
   if (error instanceof Error && error.message === "CHAT_IMAGE_PREPARATION_FAILED")
-    return "Không thể thu nhỏ ảnh trên thiết bị này. Hãy chọn ảnh JPG hoặc PNG nhẹ hơn.";
+    return "Không thể xử lý ảnh trên thiết bị này. Hãy lưu ảnh thành JPG rồi gửi lại.";
   return "Chưa gửi được ảnh. Hãy thử gửi lại.";
 }
 
@@ -918,12 +932,12 @@ export function KtvChatPage({
   );
   const chooseImage = (file?: File) => {
     if (!file || !selectedId) return;
-    if (!CHAT_IMAGE_TYPES.has(file.type)) {
-      setAttachmentError("Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.");
+    if (!chatImageMime(file)) {
+      setAttachmentError("Chỉ hỗ trợ ảnh JPG, PNG, WebP hoặc HEIC/HEIF chuyển đổi được.");
       return;
     }
     if (file.size > MAX_CHAT_IMAGE_BYTES) {
-      setAttachmentError("Dung lượng ảnh gốc tối đa là 12 MB.");
+      setAttachmentError("Dung lượng ảnh gốc tối đa là 20 MB.");
       return;
     }
     const previewUrl = URL.createObjectURL(file);
@@ -1562,7 +1576,7 @@ export function KtvChatPage({
                           ref={imageInputRef}
                           className="ktv-chat-file-input"
                           type="file"
-                          accept="image/jpeg,image/png,image/webp"
+                          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
                           aria-label="Tệp ảnh đính kèm"
                           disabled={paused}
                           onChange={(event) => {
@@ -1574,7 +1588,7 @@ export function KtvChatPage({
                           type="button"
                           className="ktv-chat-attach-toggle"
                           aria-label="Chọn ảnh đính kèm"
-                          title="Đính kèm ảnh JPG, PNG hoặc WebP (tối đa 5 MB)"
+                          title="Đính kèm JPG, PNG, WebP hoặc HEIC (ảnh gốc đến 20 MB)"
                           disabled={paused}
                           onClick={() => imageInputRef.current?.click()}
                         >
@@ -1684,8 +1698,8 @@ export function KtvChatPage({
                           <Send size={21} />
                         </button>
                         <small>
-                          Ảnh JPG, PNG, WebP tối đa 12 MB. Không chia sẻ mật khẩu hoặc thông tin
-                          thanh toán.
+                          Ảnh JPG, PNG, WebP, HEIC tối đa 20 MB (tự thu nhỏ trước khi gửi). Không
+                          chia sẻ mật khẩu hoặc thông tin thanh toán.
                         </small>
                       </form>
                     </>
