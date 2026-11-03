@@ -747,7 +747,7 @@ describe("private KTV chat interactions", () => {
     );
   });
   it.each(["customer", "provider"])(
-    "shows image and queued text immediately for %s while upload and save are delayed",
+    "sends text independently of an uploading image for %s while upload and save are delayed",
     async (role) => {
       if (role === "provider") state.user = { id: "provider", permissions: ["provider.portal"] };
       let upload!: (value: { url: string }) => void;
@@ -772,7 +772,7 @@ describe("private KTV chat interactions", () => {
         if (path.endsWith("/messages") && init?.method === "POST") {
           const input = JSON.parse(init.body as string);
           posts.push(input);
-          if (posts.length === 1)
+          if (input.imageUrl)
             return new Promise((resolve) => {
               save = resolve;
             });
@@ -812,24 +812,24 @@ describe("private KTV chat interactions", () => {
       expect(screen.getByRole("button", { name: "Gửi tin nhắn" })).toBeEnabled();
       fireEvent.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
       await log.findByText("Tin tiếp theo");
-      expect(log.getAllByText("Đang gửi…")).toHaveLength(2);
+      await waitFor(() => expect(posts[0]?.body).toBe("Tin tiếp theo"));
       expect(screen.getByRole("button", { name: "Chọn ảnh đính kèm" })).toBeEnabled();
       await act(async () => upload({ url }));
-      await waitFor(() => expect(posts).toHaveLength(1));
-      expect(posts[0].imageUrl).toBe(url);
+      await waitFor(() => expect(posts).toHaveLength(2));
+      expect(posts[1].imageUrl).toBe(url);
       fireEvent.change(input, { target: { value: "Bản nháp mới" } });
       await act(async () =>
         save({
           id: "photo-saved",
           thread_id: "a",
           sender_user_id: role,
-          body: posts[0].body,
+          body: posts[1].body,
           image_url: url,
           created_at: first.updated_at,
         }),
       );
       await waitFor(() => expect(posts).toHaveLength(2));
-      expect(posts[1].body).toBe("Tin tiếp theo");
+      expect(posts[0].body).toBe("Tin tiếp theo");
       expect(posts[1].clientMessageId).not.toBe(posts[0].clientMessageId);
       expect(input).toHaveValue("Bản nháp mới");
       expect(log.getAllByText("Ảnh tư vấn")).toHaveLength(1);
@@ -1004,10 +1004,12 @@ describe("private KTV chat interactions", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.");
     fireEvent.change(picker, {
       target: {
-        files: [new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.jpg", { type: "image/jpeg" })],
+        files: [
+          new File([new Uint8Array(12 * 1024 * 1024 + 1)], "big.jpg", { type: "image/jpeg" }),
+        ],
       },
     });
-    expect(screen.getByRole("alert")).toHaveTextContent("Dung lượng ảnh tối đa là 5 MB.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Dung lượng ảnh gốc tối đa là 12 MB.");
     fireEvent.change(picker, {
       target: { files: [new File(["webp"], "portrait.webp", { type: "image/webp" })] },
     });

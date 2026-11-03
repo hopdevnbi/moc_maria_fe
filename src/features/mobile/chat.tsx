@@ -15,6 +15,7 @@ import {
 } from "react";
 import {
   useInfiniteQuery,
+  mutationOptions,
   useMutation,
   useQuery,
   useQueryClient,
@@ -47,6 +48,8 @@ import { MobileHeader, MobileNavigation } from "./experience";
 import "./chat.css";
 import { ChatBlockControls, type ChatBlockState } from "./chat-block-controls";
 import { IncomingChatTracker, useChatSound } from "./chat-sound";
+import { ApiError } from "@/features/auth/auth-api";
+import { MAX_CHAT_IMAGE_BYTES, prepareChatImage } from "./chat-image";
 import { chatViewportGeometry } from "./chat-viewport";
 import { ChatPushControl } from "./chat-notifications";
 import { ChatPrivacyControls, isChatLockedError, type ChatPrivacyState } from "./chat-privacy";
@@ -73,7 +76,12 @@ type ChatMessage = {
   delivery?: "sending" | "failed" | "sent";
   deliveryError?: string;
 };
-type ImageAttachment = { threadId: string; file: File; previewUrl: string };
+type ImageAttachment = {
+  threadId: string;
+  file: File;
+  previewUrl: string;
+  prepared: Promise<File | null>;
+};
 type SendInput = {
   id: string;
   body: string;
@@ -81,7 +89,6 @@ type SendInput = {
   imageUrl?: string;
   attachment?: ImageAttachment;
 };
-const MAX_CHAT_IMAGE_BYTES = 5 * 1024 * 1024;
 const CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const json = (body: unknown): RequestInit => ({
   method: "POST",
@@ -224,6 +231,18 @@ const ChatMessageRow = memo(function ChatMessageRow({
     </div>
   );
 });
+function chatImageError(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.status === 413) return "Ảnh vượt giới hạn tải lên 5 MB. Hãy chọn ảnh nhẹ hơn.";
+    if (error.status === 400) return error.message;
+    if (error.status === 502 || error.status === 503)
+      return "Kho lưu ảnh tạm thời không phản hồi. Hãy thử gửi lại.";
+  }
+  if (error instanceof Error && error.message === "CHAT_IMAGE_PREPARATION_FAILED")
+    return "Không thể thu nhỏ ảnh trên thiết bị này. Hãy chọn ảnh JPG hoặc PNG nhẹ hơn.";
+  return "Chưa gửi được ảnh. Hãy thử gửi lại.";
+}
+
 function chatError(error: unknown) {
   const message = error instanceof Error ? error.message : "";
   if (message === "CHAT_RECEIVER_MISMATCH")
@@ -772,9 +791,7 @@ export function KtvChatPage({
       setShowLatest(false);
     }
   }, [messages, selectedId, choosing]);
-  const send = useMutation({
-    // Keep server order while every queued message is already visible locally.
-    scope: { id: `ktv-chat-send:${user?.id}` },
+  const sendOptions = mutationOptions({
     onMutate: (input: SendInput) => {
       if (pendingSend.current[input.clientMessageId] !== input) return;
       const { id, body, clientMessageId, imageUrl, attachment: image } = input;
@@ -809,7 +826,10 @@ export function KtvChatPage({
       assertVisible();
       if (input.attachment && !input.imageUrl) {
         const data = new FormData();
-        data.append("file", input.attachment.file);
+        const file = await input.attachment.prepared;
+        assertVisible();
+        if (!file) throw new Error("CHAT_IMAGE_PREPARATION_FAILED");
+        data.append("file", file);
         const uploaded = await authFetch<{ url: string }>(`/ktv-chat/threads/${id}/images`, {
           method: "POST",
           body: data,
@@ -857,9 +877,11 @@ export function KtvChatPage({
             ? {
                 ...item,
                 delivery: "failed",
-                deliveryError: chatError(error).startsWith("Chưa kết nối được chat")
-                  ? "Kiểm tra kết nối rồi chạm Gửi lại."
-                  : chatError(error),
+                deliveryError: input.attachment
+                  ? chatImageError(error)
+                  : chatError(error).startsWith("Chưa kết nối được chat")
+                    ? "Kiểm tra kết nối rồi chạm Gửi lại."
+                    : chatError(error),
               }
             : item,
         ),
@@ -869,15 +891,23 @@ export function KtvChatPage({
       inFlight.current.delete(input.clientMessageId);
     },
   });
-  const { mutate: sendMessage } = send;
+  const { mutate: sendMessage } = useMutation({
+    ...sendOptions,
+    scope: { id: `ktv-chat-text:${user?.id}` },
+  });
+  const { mutate: sendImage } = useMutation({
+    ...sendOptions,
+    scope: { id: `ktv-chat-image:${user?.id}` },
+  });
   const enqueue = useCallback(
     (input: SendInput) => {
       if (inFlight.current.has(input.clientMessageId)) return;
       pendingSend.current[input.clientMessageId] = input;
       inFlight.current.add(input.clientMessageId);
-      sendMessage(input);
+      if (input.attachment) sendImage(input);
+      else sendMessage(input);
     },
-    [sendMessage],
+    [sendImage, sendMessage],
   );
   const resend = useCallback(
     (item: ChatMessage) => {
@@ -893,12 +923,13 @@ export function KtvChatPage({
       return;
     }
     if (file.size > MAX_CHAT_IMAGE_BYTES) {
-      setAttachmentError("Dung lượng ảnh tối đa là 5 MB.");
+      setAttachmentError("Dung lượng ảnh gốc tối đa là 12 MB.");
       return;
     }
     const previewUrl = URL.createObjectURL(file);
     previewUrls.current.add(previewUrl);
-    setAttachment({ threadId: selectedId, file, previewUrl });
+    const prepared = prepareChatImage(file).catch(() => null);
+    setAttachment({ threadId: selectedId, file, previewUrl, prepared });
     setAttachmentError("");
   };
   const submitMessage = (id: string, body: string) => {
@@ -1653,7 +1684,7 @@ export function KtvChatPage({
                           <Send size={21} />
                         </button>
                         <small>
-                          Ảnh JPG, PNG, WebP tối đa 5 MB. Không chia sẻ mật khẩu hoặc thông tin
+                          Ảnh JPG, PNG, WebP tối đa 12 MB. Không chia sẻ mật khẩu hoặc thông tin
                           thanh toán.
                         </small>
                       </form>
