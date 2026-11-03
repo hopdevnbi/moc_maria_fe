@@ -5,7 +5,7 @@ Date: 2026-11-03. Frontend-only enhancement on `/quan-tri/lich-hen`.
 ## Using the board
 
 - Tick independent checkboxes beside appointments, or select all eligible records on the current page. Clicking a row still opens its detail without changing the bulk selection.
-- Choose a shared allowed target status and select **Cập nhật N lịch**. The confirmation lists the exact frozen records and the target state, and supplies the existing editable status note.
+- Choose a shared allowed target status and select **Cập nhật N lịch**. The confirmation lists each frozen customer/service/KTV/time and the target state, and supplies the existing editable status note. Times also distinguish multiple bookings by the same customer in failure results.
 - Marking completed still requires explicit confirmation that all affected care sessions actually occurred. This does not record payment, create a verified booking or alter review eligibility.
 - Selection resets on status/search/archive filters and pagination. Readonly and archived rows cannot be selected. A mixed group can target a state only when every record allows it or is already in that state; already-correct records are skipped.
 

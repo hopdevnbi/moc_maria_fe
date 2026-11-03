@@ -23,6 +23,16 @@ import {
 import "./appointment-request-bulk.css";
 
 const statuses = Object.keys(inquiryStatusLabels) as RequestStatus[];
+const dateFormat = new Intl.DateTimeFormat("vi-VN", {
+  timeZone: "Asia/Ho_Chi_Minh",
+  hour: "2-digit",
+  minute: "2-digit",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+const appointmentTime = (value: string) =>
+  Number.isFinite(Date.parse(value)) ? dateFormat.format(new Date(value)) : "Chưa có thời gian";
 type Snapshot = { records: AdminAppointmentRequest[]; status: RequestStatus; scope: string };
 type Selection = {
   records: AdminAppointmentRequest[];
@@ -324,7 +334,8 @@ function BulkConfirmation({
                 <li key={record.id}>
                   <strong>{record.customerName}</strong>
                   <span>
-                    {record.serviceName} · {record.providerName}
+                    {appointmentTime(record.requestedAt)} · {record.serviceName} ·{" "}
+                    {record.providerName}
                   </span>
                   <small>{inquiryStatusLabels[record.status]}</small>
                 </li>
@@ -381,6 +392,9 @@ function BulkConfirmation({
                       <strong>
                         {record.customerName} · {record.serviceName}
                       </strong>
+                      <span>
+                        {appointmentTime(record.requestedAt)} · {record.providerName}
+                      </span>
                       <span>{error}</span>
                     </li>
                   ))}

@@ -116,6 +116,7 @@ describe("appointment bulk selection and confirmation", () => {
     const { refresh, invalidate } = mount();
     begin("COMPLETED");
     const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getAllByText(/15:00.*03\/11\/2026/)).toHaveLength(2);
     const submit = within(dialog).getByRole("button", { name: "Xác nhận cập nhật 2 lịch" });
     expect(submit).toBeDisabled();
     expect(screen.getByLabelText(/Ghi chú chung/)).toHaveValue(DEFAULT_COMPLETION_NOTE);
@@ -163,6 +164,7 @@ describe("appointment bulk selection and confirmation", () => {
     await act(async () => finish());
     await screen.findByText("Đã cập nhật 1/2 lịch.");
     expect(screen.getByRole("alert")).toHaveTextContent("1 lịch chưa xác nhận cập nhật");
+    expect(within(screen.getByRole("dialog")).getByText(/15:00.*03\/11\/2026/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Đóng kết quả" }));
     expect(screen.getByRole("checkbox", { name: /Khách kiểm tra A/ })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: /Khách kiểm tra B/ })).toBeChecked();
