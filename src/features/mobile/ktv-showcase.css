@@ -321,9 +321,6 @@
   height: 100%;
   object-fit: contain;
 }
-.ktv-showcase-gallery-stage > img {
-  object-fit: cover;
-}
 .ktv-showcase-gallery-stage > video {
   background: #10251f;
 }
@@ -1348,7 +1345,7 @@
     font-size: 12px;
   }
   .ktv-showcase-gallery-stage {
-    aspect-ratio: 5 / 3.7;
+    aspect-ratio: 4 / 5;
   }
   .ktv-showcase-services {
     grid-template-columns: minmax(0, 1fr);
