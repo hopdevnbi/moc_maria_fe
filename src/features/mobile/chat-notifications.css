@@ -34,12 +34,42 @@
 .moc-chat-push.is-compact {
   padding: 0;
   flex: 0 0 auto;
+  position: relative;
 }
 .moc-chat-push.is-compact .moc-chat-push-button {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   padding: 0;
+}
+.moc-chat-push .moc-chat-push-help {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(285px, calc(100vw - 28px));
+  border: 1px solid #cfdfcb;
+  border-radius: 12px;
+  box-shadow: 0 10px 27px #223c2b26;
+  background: #fffefb;
+  color: #315c42;
+  padding: 14px 37px 14px 14px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.moc-chat-push-help button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 0;
+  background: #eaf2e7;
+  border-radius: 7px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: #426d4c;
+  cursor: pointer;
 }
 .moc-chat-push-spin {
   animation: moc-push-spin 1s linear infinite;

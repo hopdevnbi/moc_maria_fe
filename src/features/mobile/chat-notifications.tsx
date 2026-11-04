@@ -10,6 +10,8 @@ import "./chat-notifications.css";
 
 type Config = { publicKey: string | null };
 type ChatEvent = { messageId: string; threadId: string };
+type InboxThread = { id: string; unread_count?: number; updated_at: string };
+type UnreadSnapshot = { count: number; updatedAt: string };
 const CHAT_SOCKET_URL = "https://chat.giangxa.com/moc-maria-chat";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -21,6 +23,19 @@ function isChatEvent(input: unknown): input is ChatEvent {
     UUID.test(value.messageId) &&
     typeof value.threadId === "string" &&
     UUID.test(value.threadId)
+  );
+}
+/** An unread bump is not necessarily a new message on initial page load. */
+export function shouldShowChatUnread(
+  previous: UnreadSnapshot | undefined,
+  current: UnreadSnapshot,
+  recentlyNotifiedBySocket: boolean,
+): boolean {
+  return Boolean(
+    previous &&
+      current.count > previous.count &&
+      current.updatedAt !== previous.updatedAt &&
+      !recentlyNotifiedBySocket,
   );
 }
 function pushSupported() {
@@ -37,7 +52,8 @@ function iosOutsideApp() {
   const isApple = /iPad|iPhone|iPod/i.test(navigator.userAgent);
   if (!isApple) return false;
   const standalone =
-    window.matchMedia("(display-mode: standalone)").matches ||
+    (typeof window.matchMedia === "function" &&
+      window.matchMedia("(display-mode: standalone)").matches) ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
   return !standalone;
 }
@@ -77,11 +93,12 @@ function ChatPushControlForUser({ userId, compact }: { userId: string; compact: 
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [active, setActive] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const optInKey = "mocmaria.ktv.push.optin." + userId;
   const supported = pushSupported();
-  const outsideApp = supported && iosOutsideApp();
+  const outsideApp = iosOutsideApp();
   const permission = typeof Notification === "undefined" ? "default" : Notification.permission;
 
   useEffect(() => {
@@ -182,15 +199,16 @@ function ChatPushControlForUser({ userId, compact }: { userId: string; compact: 
     }
   }
 
-  const explanation = !supported
-    ? "Trình duyệt chưa hỗ trợ Push. Tin nhắn vẫn hiển thị khi đang mở trang."
-    : outsideApp
-      ? "iPhone: mở Safari → Chia sẻ → Thêm vào Màn hình chính. Mở Mộc Maria từ biểu tượng rồi bật thông báo."
+  const explanation = outsideApp
+    ? "Trên iPhone/iPad: mở Safari → Chia sẻ → Thêm vào Màn hình chính. Mở ứng dụng Mộc Maria từ biểu tượng, đăng nhập rồi nhấn chuông để bật thông báo."
+    : !supported
+      ? "Trình duyệt hoặc thiết bị chưa hỗ trợ thông báo đẩy. Khi đang mở website, bạn vẫn nhận được tin nhắn mới."
       : configured === false
-        ? "Hệ thống chưa cấu hình Web Push. Bạn vẫn có thể dùng chat như trước."
+        ? "Thông báo đẩy chưa được hệ thống kích hoạt. Tin nhắn vẫn hoạt động khi đang mở trang."
         : permission === "denied"
-          ? "Quyền thông báo đang bị chặn. Hãy bật trong Cài đặt thiết bị."
+          ? "Trình duyệt đang chặn thông báo. Mở Cài đặt trang web → Thông báo → Cho phép, sau đó tải lại trang."
           : message;
+  const canToggle = supported && !outsideApp && configured === true && permission !== "denied";
 
   return (
     <div className={compact ? "moc-chat-push is-compact" : "moc-chat-push"}>
@@ -198,12 +216,16 @@ function ChatPushControlForUser({ userId, compact }: { userId: string; compact: 
         type="button"
         className={active ? "moc-chat-push-button is-enabled" : "moc-chat-push-button"}
         onClick={() => {
-          void (active ? disable() : enable());
+          if (canToggle) {
+            setHelpOpen(false);
+            void (active ? disable() : enable());
+          } else {
+            setHelpOpen((wasOpen) => !wasOpen);
+          }
         }}
-        disabled={
-          busy || !supported || outsideApp || !configured || (!active && permission === "denied")
-        }
+        disabled={busy || configured === null}
         aria-pressed={active}
+        aria-expanded={compact && !canToggle ? helpOpen : undefined}
         title={
           compact ? explanation || (active ? "Tắt thông báo" : "Bật thông báo tin nhắn") : undefined
         }
@@ -220,7 +242,20 @@ function ChatPushControlForUser({ userId, compact }: { userId: string; compact: 
         )}
         {!compact && <span>{active ? "Đã bật thông báo tin nhắn" : "Bật thông báo tin nhắn"}</span>}
       </button>
-      {explanation && !compact && <small role="status">{explanation}</small>}
+      {explanation && (!compact || helpOpen) && (
+        <small className={compact ? "moc-chat-push-help" : undefined} role="status">
+          {explanation}
+          {compact && (
+            <button
+              type="button"
+              onClick={() => setHelpOpen(false)}
+              aria-label="Đóng hướng dẫn thông báo"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </small>
+      )}
     </div>
   );
 }
@@ -241,19 +276,23 @@ export function ChatNotificationListener() {
 }
 
 function ChatNotificationSession({ userId, fromKtv }: { userId: string; fromKtv: boolean }) {
-  const { accessToken, refresh } = useAuth();
+  const { accessToken, refresh, authFetch } = useAuth();
   const client = useQueryClient();
   const router = useRouter();
   const [toast, setToast] = useState<ChatEvent | null>(null);
   const seen = useRef(new Set<string>());
+  const recentSocket = useRef(new Map<string, number>());
+  const unreadBaseline = useRef(new Map<string, UnreadSnapshot>());
   const received = useCallback(
     (input: unknown) => {
       if (!isChatEvent(input) || seen.current.has(input.messageId)) return;
       seen.current.add(input.messageId);
+      recentSocket.current.set(input.threadId, Date.now());
       if (seen.current.size > 200) seen.current.clear();
       void client.invalidateQueries({ queryKey: ["ktv-chat", userId, "threads"] });
       void client.invalidateQueries({ queryKey: ["ktv-chat", userId, "messages", input.threadId] });
-      if (document.visibilityState === "visible") setToast(input);
+      if (document.visibilityState === "visible" && window.location.pathname !== "/tin-nhan")
+        setToast(input);
     },
     [client, userId],
   );
@@ -265,6 +304,74 @@ function ChatNotificationSession({ userId, fromKtv }: { userId: string; fromKtv:
     navigator.serviceWorker?.addEventListener("message", onPush);
     return () => navigator.serviceWorker?.removeEventListener("message", onPush);
   }, [received]);
+
+  // Recover unread changes while a user browses another page. This is a
+  // foreground-only fallback; background delivery still requires Web Push.
+  // No private message body is read or stored by this notification tracker.
+  useEffect(() => {
+    let disposed = false;
+    let checking = false;
+    const checkUnread = async () => {
+      if (
+        disposed ||
+        checking ||
+        document.visibilityState !== "visible" ||
+        window.location.pathname === "/tin-nhan"
+      )
+        return;
+      checking = true;
+      try {
+        const rows = await authFetch<InboxThread[]>("/ktv-chat/threads", {
+          cache: "no-store",
+        });
+        if (disposed || !Array.isArray(rows)) return;
+        let changed = false;
+        let firstNew: string | null = null;
+        for (const thread of rows) {
+          if (!UUID.test(thread.id)) continue;
+          const unread = Math.max(0, Number(thread.unread_count) || 0);
+          const previous = unreadBaseline.current.get(thread.id);
+          if (
+            shouldShowChatUnread(
+              previous,
+              { count: unread, updatedAt: thread.updated_at },
+              Date.now() - (recentSocket.current.get(thread.id) ?? 0) <= 15_000,
+            )
+          )
+            firstNew ??= thread.id;
+          if (!previous || unread !== previous.count || thread.updated_at !== previous.updatedAt)
+            changed = true;
+          unreadBaseline.current.set(thread.id, { count: unread, updatedAt: thread.updated_at });
+        }
+        if (changed) void client.invalidateQueries({ queryKey: ["ktv-chat", userId, "threads"] });
+        if (
+          firstNew &&
+          document.visibilityState === "visible" &&
+          window.location.pathname !== "/tin-nhan"
+        )
+          setToast({ threadId: firstNew, messageId: firstNew });
+      } catch {
+        // Preserve the last known unread baseline and retry when reconnected.
+      } finally {
+        checking = false;
+      }
+    };
+    const poll = window.setInterval(() => {
+      void checkUnread();
+    }, 15_000);
+    const onVisible = () => {
+      void checkUnread();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onVisible);
+    void checkUnread();
+    return () => {
+      disposed = true;
+      window.clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onVisible);
+    };
+  }, [authFetch, client, userId]);
 
   useEffect(() => {
     if (!accessToken) return;

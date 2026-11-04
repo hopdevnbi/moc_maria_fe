@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ChatPushControl } from "./chat-notifications";
+import { ChatPushControl, shouldShowChatUnread } from "./chat-notifications";
 
 const mocks = vi.hoisted(() => ({
   user: { id: "test-ktv", roles: ["THERAPIST"] as string[] },
@@ -36,6 +36,14 @@ afterEach(() => {
 });
 
 describe("two-way chat Web Push opt-in", () => {
+  it("deduplicates foreground unread polling against initial load and Socket events", () => {
+    const previous = { count: 1, updatedAt: "2026-11-04T07:00:00.000Z" };
+    const incoming = { count: 2, updatedAt: "2026-11-04T07:00:08.000Z" };
+    expect(shouldShowChatUnread(undefined, incoming, false)).toBe(false);
+    expect(shouldShowChatUnread(previous, incoming, false)).toBe(true);
+    expect(shouldShowChatUnread(previous, incoming, true)).toBe(false);
+    expect(shouldShowChatUnread(previous, { ...incoming, count: 1 }, false)).toBe(false);
+  });
   it("offers the same notification control to customers as KTVs", async () => {
     mocks.user = { id: "customer", roles: ["CUSTOMER"] };
     render(<ChatPushControl />);
@@ -50,6 +58,41 @@ describe("two-way chat Web Push opt-in", () => {
     render(<ChatPushControl />);
     expect(screen.queryByRole("button", { name: /bật thông báo tin nhắn/i })).toBeNull();
     expect(mocks.authFetch).not.toHaveBeenCalled();
+  });
+
+  it("explains why a compact bell cannot yet activate instead of leaving it inert", async () => {
+    vi.stubGlobal("Notification", { permission: "default" });
+    vi.stubGlobal("PushManager", function PushManager() {});
+    vi.stubGlobal("isSecureContext", true);
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {},
+    });
+    mocks.authFetch.mockResolvedValueOnce({ publicKey: null });
+    render(<ChatPushControl compact />);
+    const button = screen.getByRole("button", { name: /bật thông báo tin nhắn/i });
+    await waitFor(() => expect(button).not.toBeDisabled());
+    fireEvent.click(button);
+    expect(screen.getByRole("status")).toHaveTextContent(/chưa được hệ thống kích hoạt/i);
+    expect(mocks.authFetch).toHaveBeenCalledWith("/ktv-chat/push/config");
+  });
+
+  it("guides iPhone Safari users to install the Home Screen app for Push", async () => {
+    const original = Object.getOwnPropertyDescriptor(navigator, "userAgent");
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15",
+    });
+    try {
+      render(<ChatPushControl compact />);
+      const button = screen.getByRole("button", { name: /bật thông báo tin nhắn/i });
+      await waitFor(() => expect(button).not.toBeDisabled());
+      fireEvent.click(button);
+      expect(screen.getByRole("status")).toHaveTextContent(/Thêm vào Màn hình chính/i);
+    } finally {
+      if (original) Object.defineProperty(navigator, "userAgent", original);
+      else Reflect.deleteProperty(navigator, "userAgent");
+    }
   });
 
   it("does not auto-request notification permission, and subscribes only after a click", async () => {
