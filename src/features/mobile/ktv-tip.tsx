@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { mutationMessage, usePrivateData } from "@/features/marketplace/private-api";
 import { resolveApiBaseUrl } from "@/shared/config/environment";
+import { KtvTipQr } from "./ktv-tip-qr";
 import "./ktv-tip.css";
 
 type TipSettings = {
@@ -481,16 +482,18 @@ export function KtvTipPanel({
                   </div>
                   {settings.qrUrl ? (
                     <div className="ktv-tip-qr-wrap">
-                      <div className="ktv-tip-qr-frame">
-                        <Image
-                          src={settings.qrUrl}
-                          alt={`Mã QR nhận tip do ${name} cung cấp`}
-                          width={290}
-                          height={290}
-                          sizes="(max-width: 390px) 72vw, 290px"
-                          unoptimized
-                        />
-                      </div>
+                      <KtvTipQr
+                        key={`${settings.version}:${settings.qrUrl}`}
+                        providerId={providerId}
+                        version={settings.version}
+                        name={name}
+                        onRefresh={async () => {
+                          const latest = await publicRequest<TipSettings>(
+                            `/provider-tips/${providerId}/config`,
+                          );
+                          setSettings(latest);
+                        }}
+                      />
                       <small>Quét QR bằng ứng dụng ngân hàng của bạn</small>
                     </div>
                   ) : null}
