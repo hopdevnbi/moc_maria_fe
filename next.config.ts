@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "giangxa-media-cdn.b-cdn.net", pathname: "/moc-maria/ktv/**" },
+      {
+        protocol: "https",
+        hostname: "giangxa-media-cdn.b-cdn.net",
+        pathname: "/moc-maria/provider-showcase/**",
+      },
     ],
   },
   cacheComponents: true,
