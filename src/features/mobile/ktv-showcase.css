@@ -339,9 +339,8 @@
   cursor: pointer;
 }
 .ktv-showcase-gallery-navigation {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
+  flex: 0 0 auto;
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -353,8 +352,8 @@
   font-weight: 700;
 }
 .ktv-showcase-gallery-navigation button {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 0;
@@ -370,6 +369,7 @@
 .ktv-showcase-gallery-foot {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 11px 17px;
@@ -379,9 +379,6 @@
 .ktv-showcase-gallery-foot p {
   font-weight: 650;
   overflow-wrap: anywhere;
-}
-.ktv-showcase-gallery-foot span {
-  color: #88998b;
 }
 .ktv-showcase-gallery-thumbs {
   display: flex;
