@@ -19,6 +19,8 @@ function MediaView({
       <video
         key={item.id}
         controls
+        autoPlay
+        muted
         playsInline
         preload="metadata"
         className={"ktv-showcase-media-video" + (expanded ? " ktv-showcase-media-expanded" : "")}
