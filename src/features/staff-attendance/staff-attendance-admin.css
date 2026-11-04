@@ -1,0 +1,35 @@
+﻿.mm-att-admin {
+  display: grid;
+  gap: 20px;
+}
+.mm-att-admin-hero {
+  padding: 24px;
+  background: #315c44;
+  color: white;
+  border-radius: 18px;
+}
+.mm-att-admin-panel {
+  padding: 20px;
+  background: white;
+  border: 1px solid #d8e5d6;
+  border-radius: 18px;
+}
+.mm-att-admin-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.mm-att-admin-metric {
+  padding: 18px;
+  background: white;
+  border-radius: 14px;
+}
+.mm-att-admin-record {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid #dae5d8;
+  border-radius: 14px;
+  padding: 15px;
+}

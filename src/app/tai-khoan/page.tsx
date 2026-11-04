@@ -9,6 +9,7 @@ import {
   Flower2,
   UserRound,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
 import { ProviderDescriptionEditor } from "@/features/mobile/profile-editor";
 import { CustomerAccountProfile } from "@/features/mobile/customer-account-profile";
@@ -16,6 +17,7 @@ import { AppointmentInquiries } from "@/features/mobile/inquiries";
 import { AccountSearch } from "@/features/mobile/account-search";
 import { AccountShortcuts } from "@/features/mobile/account-shortcuts";
 import { TechnicianWorkspace } from "@/features/mobile/ktv-workspace";
+import { StaffAttendanceCard } from "@/features/staff-attendance/staff-attendance-card";
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -44,6 +46,17 @@ function AccountContent() {
   const technician = user.roles.includes("THERAPIST") || user.roles.includes("DOCTOR_CONSULTANT");
   const admin = user.permissions.includes("admin.portal");
   if (technician) return <TechnicianWorkspace />;
+  async function signOut() {
+    setBusy(true);
+    setNotice("");
+    try {
+      await logout();
+    } catch {
+      setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
+    } finally {
+      setBusy(false);
+    }
+  }
   const actions = technician
     ? [
         {
@@ -110,7 +123,7 @@ function AccountContent() {
   return (
     <main className="mm-container mm-account-main">
       <section className="mm-account-welcome">
-        <div>
+        <div className="mm-account-welcome-details">
           <span className="mm-overline">
             {technician ? "KHÔNG GIAN KỸ THUẬT VIÊN" : "TÀI KHOẢN CỦA BẠN"}
           </span>
@@ -121,23 +134,18 @@ function AccountContent() {
               : "Chọn KTV, tìm hiểu dịch vụ và bắt đầu một cuộc trò chuyện riêng."}
           </p>
         </div>
+        <button
+          className="mm-account-hero-logout"
+          type="button"
+          disabled={busy}
+          onClick={() => void signOut()}
+        >
+          <LogOut size={17} aria-hidden="true" /> {busy ? "Đang đăng xuất..." : "Đăng xuất"}
+        </button>
       </section>
+      <StaffAttendanceCard />
       {customer && <CustomerAccountProfile />}
-      <AccountShortcuts
-        technician={technician}
-        signingOut={busy}
-        onSignOut={async () => {
-          setBusy(true);
-          setNotice("");
-          try {
-            await logout();
-          } catch {
-            setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
-          } finally {
-            setBusy(false);
-          }
-        }}
-      />
+      <AccountShortcuts technician={technician} signingOut={busy} onSignOut={signOut} />
       {notice && (
         <p role="alert" className="mm-account-shortcut-notice">
           {notice}

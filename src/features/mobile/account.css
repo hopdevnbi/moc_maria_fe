@@ -8,6 +8,36 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  padding: 27px 30px;
+  border-radius: 24px;
+  background: linear-gradient(122deg, #eff5e9, #fcfaf1);
+  border: 1px solid #dce6d7;
+}
+.mm-account-welcome-details {
+  min-width: 0;
+}
+.mm-account-hero-logout {
+  flex-shrink: 0;
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+  min-height: 47px;
+  padding: 12px 18px;
+  border: 1px solid #edd0c2;
+  border-radius: 13px;
+  color: #8a4a3f;
+  background: #fff6f0;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mm-account-hero-logout:hover {
+  background: #fcebe4;
+}
+.mm-account-hero-logout:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 .mm-account-welcome h1 {
   font:
@@ -138,6 +168,11 @@
   .mm-account-welcome {
     display: grid;
     gap: 16px;
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+  .mm-account-hero-logout {
+    justify-self: start;
   }
   .mm-account-welcome h1 {
     font-size: 29px;

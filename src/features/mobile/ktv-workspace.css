@@ -132,10 +132,20 @@
   margin-top: 18px;
 }
 .ktvw-logout {
-  background: transparent;
-  border-color: #ffffff3b;
-  color: #fff;
-  margin-top: 16px;
+  background: #fffbf3;
+  border-color: #fffbf3;
+  color: #865045;
+  font-weight: 800;
+  margin-top: 0;
+  box-shadow: 0 5px 14px #102c1f24;
+}
+.ktvw-logout:hover {
+  background: #fff1e7;
+}
+@media (max-width: 590px) {
+  .ktvw-hero-actions .ktvw-logout {
+    width: 100%;
+  }
 }
 .ktvw-stats {
   display: grid;
