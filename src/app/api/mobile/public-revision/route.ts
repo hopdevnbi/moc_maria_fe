@@ -3,19 +3,26 @@ import { NextResponse } from "next/server";
 import { publicRead } from "@/features/marketplace/public-api";
 import type { Branch, Provider, ServiceItem } from "@/features/marketplace/types";
 import type { PublicDisplay } from "@/features/provider-display/display-policy";
+import { readPublicRevision } from "@/features/marketplace/public-revision";
 
 function stable<T extends { id: string }>(rows: T[]) {
   return [...rows].sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export async function GET() {
+  const headers = { "Cache-Control": "no-store, max-age=0" };
+  if (process.env.PUBLIC_CONTENT_CACHE_ENABLED === "true") {
+    const current = await readPublicRevision();
+    if (current?.enabled)
+      return NextResponse.json({ revision: current.revision, pollAfterMs: 5000 }, { headers });
+    // Preserve old backend/rollback compatibility without caching its full-catalog hash.
+  }
   const [services, providers, branches, display] = await Promise.all([
     publicRead<ServiceItem[]>("/services"),
     publicRead<Provider[]>("/providers"),
     publicRead<Branch[]>("/branches"),
     publicRead<PublicDisplay>("/provider-display"),
   ]);
-  const headers = { "Cache-Control": "no-store, max-age=0" };
   if (!services.ok || !providers.ok || !branches.ok || !display.ok)
     return NextResponse.json({ error: "Public catalog unavailable" }, { status: 503, headers });
   const normalized = {
@@ -41,5 +48,5 @@ export async function GET() {
     .update(JSON.stringify(normalized))
     .digest("hex")
     .slice(0, 24);
-  return NextResponse.json({ revision }, { headers });
+  return NextResponse.json({ revision, pollAfterMs: 90_000 }, { headers });
 }
