@@ -3,6 +3,7 @@
 export const MAX_CHAT_IMAGE_BYTES = 20 * 1024 * 1024;
 export const MAX_CHAT_UPLOAD_BYTES = 12 * 1024 * 1024;
 const TARGET_BYTES = 1_500 * 1024;
+const DIRECT_UPLOAD_BYTES = 2 * 1024 * 1024;
 const MAX_SOURCE_PIXELS = 24_000_000;
 
 export const CHAT_IMAGE_TYPES = new Set([
@@ -87,7 +88,7 @@ async function decodeImage(file: File): Promise<Decoded> {
       // Request a reduced bitmap for large phone photos before allocating a
       // full 48MP+ decoded surface (often fatal in low-memory Android PWAs).
       const decoding =
-        file.size > 2 * 1024 * 1024
+        file.size > DIRECT_UPLOAD_BYTES
           ? createImageBitmap(file, { resizeWidth: 2048, resizeQuality: "high" })
           : createImageBitmap(file);
       void decoding
@@ -149,24 +150,35 @@ async function canvasBlob(
 export async function prepareChatImage(file: File): Promise<File | null> {
   const mime = chatImageMime(file);
   if (!mime || file.size > MAX_CHAT_IMAGE_BYTES || file.size === 0) return null;
-  // Tiny standard images do not need an expensive bitmap decode.
-  if (file.size <= 64 * 1024 && mime !== "image/heic" && mime !== "image/heif") {
-    return fallback(file);
-  }
+  const original = fallback(file);
+  if (original && file.size <= 64 * 1024) return original;
 
   let decoded: Decoded;
   try {
-    decoded = await decodeImage(file);
+    decoded = await decodeImage(original ?? file);
   } catch {
-    return fallback(file);
+    return original;
+  }
+
+  // The server already resizes and encodes these originals. Avoid drawing
+  // them onto a phone canvas, which can export a valid but blank image.
+  const { width, height } = decoded;
+  if (
+    original &&
+    file.size <= DIRECT_UPLOAD_BYTES &&
+    width > 0 &&
+    height > 0 &&
+    width * height <= MAX_SOURCE_PIXELS
+  ) {
+    decoded.release();
+    return original;
   }
 
   const canvas = document.createElement("canvas");
   try {
-    const { width, height } = decoded;
     if (!width || !height || width * height > MAX_SOURCE_PIXELS) return null;
     const context = canvas.getContext("2d");
-    if (!context) return fallback(file);
+    if (!context) return original;
 
     let best: Blob | null = null;
     for (const [maxEdge, quality] of [
@@ -195,9 +207,9 @@ export async function prepareChatImage(file: File): Promise<File | null> {
         type: best.type,
       });
     }
-    return fallback(file);
+    return original;
   } catch {
-    return fallback(file);
+    return original;
   } finally {
     decoded.release();
     canvas.width = canvas.height = 0;
