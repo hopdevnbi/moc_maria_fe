@@ -69,7 +69,7 @@ describe("mobile camera and PWA chat image preparation", () => {
       cb(new Blob(["encoded"], { type: type === "image/webp" ? "image/png" : "image/jpeg" }));
     });
     const source = new File(["png"], "screenshot.png", { type: "image/png" });
-    Object.defineProperty(source, "size", { configurable: true, value: 250 * 1024 });
+    Object.defineProperty(source, "size", { configurable: true, value: MAX_CHAT_UPLOAD_BYTES + 1 });
     const result = await prepareChatImage(source);
     expect(result?.type).toBe("image/jpeg");
     expect(result?.name).toBe("chat-image.jpg");
@@ -98,7 +98,7 @@ describe("mobile camera and PWA chat image preparation", () => {
       cb(new Blob(["mobile"], { type: "image/webp" }));
     });
     const source = new File(["jpeg"], "camera.jpg", { type: "image/jpeg" });
-    Object.defineProperty(source, "size", { configurable: true, value: 250 * 1024 });
+    Object.defineProperty(source, "size", { configurable: true, value: MAX_CHAT_UPLOAD_BYTES + 1 });
     const result = await prepareChatImage(source);
     expect(result?.type).toBe("image/webp");
     expect(revoke).toHaveBeenCalledWith("blob:android-photo");
@@ -134,10 +134,12 @@ describe("mobile camera and PWA chat image preparation", () => {
     expect(await prepareChatImage(new File(["heic"], "a.heic", { type: "image/heic" }))).toBeNull();
   });
 
-  it("keeps small JPEG as a server-side fallback if the phone lacks a canvas", async () => {
-    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
-    const file = new File(["jpeg"], "photo.jpeg", { type: "image/jpeg" });
+  it("uploads an ordinary screenshot unchanged without drawing on canvas", async () => {
+    const file = new File(["jpeg"], "screenshot.jpg", { type: "image/jpeg" });
+    Object.defineProperty(file, "size", { value: 244_128 });
     expect(await prepareChatImage(file)).toBe(file);
+    expect(drawImage).not.toHaveBeenCalled();
+    expect(bitmap.close).toHaveBeenCalledTimes(1);
   });
 
   it("does not block an upload forever when Android canvas.toBlob never completes", async () => {
@@ -145,7 +147,10 @@ describe("mobile camera and PWA chat image preparation", () => {
     try {
       vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(() => undefined);
       const source = new File(["jpg"], "photo.jpg", { type: "image/jpeg" });
-      Object.defineProperty(source, "size", { configurable: true, value: 250 * 1024 });
+      Object.defineProperty(source, "size", {
+        configurable: true,
+        value: 3 * 1024 * 1024,
+      });
       const task = prepareChatImage(source);
       await vi.runAllTimersAsync();
       expect(await task).toBe(source);
