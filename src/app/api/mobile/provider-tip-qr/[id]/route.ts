@@ -16,7 +16,8 @@ function failure(message: string, status: number) {
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const version = new URL(request.url).searchParams.get("v");
+  const { searchParams } = new URL(request.url);
+  const version = searchParams.get("v");
   if (!uuid.test(id) || !version || !/^\d{1,10}$/.test(version)) {
     return failure("Thông tin ảnh QR không hợp lệ.", 400);
   }
@@ -75,7 +76,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           ...headers,
           "Content-Type": "image/png",
           "Content-Length": String(bytes.length),
-          "Content-Disposition": 'inline; filename="ktv-qr.png"',
+          "Content-Disposition":
+            searchParams.get("download") === "1"
+              ? 'attachment; filename="ktv-qr.png"'
+              : 'inline; filename="ktv-qr.png"',
         },
       });
     } catch {

@@ -14,10 +14,15 @@ const png = Uint8Array.from(
 function imageResponse() {
   return new Response(png.slice().buffer, { headers: { "Content-Type": "image/png" } });
 }
-function request(version = 1) {
-  return GET(new Request(`https://mocmaria.com/api/mobile/provider-tip-qr/${id}?v=${version}`), {
-    params: Promise.resolve({ id }),
-  });
+function request(version = 1, download = false) {
+  return GET(
+    new Request(
+      `https://mocmaria.com/api/mobile/provider-tip-qr/${id}?v=${version}${download ? "&download=1" : ""}`,
+    ),
+    {
+      params: Promise.resolve({ id }),
+    },
+  );
 }
 beforeEach(() => {
   fake.read.mockReset().mockResolvedValue({ ok: true, data: { version: 1, qrUrl } });
@@ -39,6 +44,13 @@ describe("same-origin tip QR delivery", () => {
       qrUrl,
       expect.objectContaining({ cache: "no-store", credentials: "omit", redirect: "error" }),
     );
+  });
+
+  it("delivers the verified PNG as an attachment on request", async () => {
+    const result = await request(1, true);
+    expect(result.status).toBe(200);
+    expect(result.headers.get("Content-Disposition")).toBe('attachment; filename="ktv-qr.png"');
+    expect(new Uint8Array(await result.arrayBuffer())).toEqual(png);
   });
 
   it("rejects stale versions instead of mixing new QR with old account details", async () => {
