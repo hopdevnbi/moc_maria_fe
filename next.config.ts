@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         hostname: "giangxa-media-cdn.b-cdn.net",
         pathname: "/moc-maria/provider-showcase/**",
       },
+      {
+        protocol: "https",
+        hostname: "giangxa-media-cdn.b-cdn.net",
+        pathname: "/moc-maria/provider-tips/qr/**",
+      },
     ],
   },
   cacheComponents: true,

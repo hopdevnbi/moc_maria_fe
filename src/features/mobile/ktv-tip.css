@@ -1,0 +1,876 @@
+/* KTV appreciation & bank QR flow — isolated from booking and profile styles. */
+.ktv-tip-invite {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  margin-top: 20px;
+  padding: 19px 22px;
+  border: 1px solid #eddacc;
+  border-radius: 22px;
+  background: linear-gradient(112deg, #fff9f4 0%, #fffbf8 55%, #fbf5ee 100%);
+  box-shadow: 0 8px 32px rgba(96, 58, 44, 0.045);
+  overflow: hidden;
+  isolation: isolate;
+}
+.ktv-tip-invite::after {
+  position: absolute;
+  top: -80px;
+  right: 8%;
+  content: "";
+  z-index: -1;
+  height: 195px;
+  width: 195px;
+  border-radius: 50%;
+  border: 1px solid #f1dfd1;
+  box-shadow:
+    0 0 0 27px rgba(248, 226, 213, 0.27),
+    0 0 0 60px rgba(248, 226, 213, 0.14);
+  pointer-events: none;
+}
+.ktv-tip-invite-icon {
+  flex: 0 0 57px;
+  width: 57px;
+  height: 57px;
+  display: grid;
+  place-items: center;
+  border-radius: 19px;
+  color: #9e4a58;
+  background: #fce9e6;
+  box-shadow: inset 0 0 0 1px #f5d9d2;
+}
+.ktv-tip-invite-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ktv-tip-invite-copy > span {
+  color: #aa8575;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+.ktv-tip-invite-copy h2 {
+  margin: 4px 0 3px;
+  font:
+    650 clamp(19px, 2.2vw, 25px) / 1.26 var(--font-wellness-serif),
+    Georgia,
+    serif;
+  color: #604339;
+  overflow-wrap: anywhere;
+}
+.ktv-tip-invite-copy p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #96796d;
+}
+.ktv-tip-invite-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+.ktv-tip-invite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 49px;
+  padding: 10px 17px;
+  border: 1px solid #a44555;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #aa4a5b, #953e50);
+  color: #fff;
+  box-shadow: 0 7px 18px rgba(150, 58, 77, 0.18);
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.ktv-tip-invite-button:hover {
+  background: #883448;
+}
+.ktv-tip-manage-button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #edd4c8;
+  background: #fff;
+  color: #99636a;
+  cursor: pointer;
+}
+.ktv-tip-manage-button:hover {
+  background: #fbece7;
+}
+.ktv-tip-overlay {
+  position: fixed;
+  z-index: 12000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(20, 41, 32, 0.57);
+  backdrop-filter: blur(4px);
+}
+.ktv-tip-dialog {
+  width: min(540px, 100%);
+  min-height: 0;
+  max-height: min(92dvh, 940px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5ded5;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #fffdf9;
+  box-shadow: 0 24px 80px rgba(19, 41, 29, 0.27);
+  color: #254a37;
+}
+.ktv-tip-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 0 0 auto;
+  padding: 18px 20px 15px;
+  border-bottom: 1px solid #efeae3;
+}
+.ktv-tip-dialog-header-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 16px;
+  background: #fbeae8;
+  color: #a14e5c;
+}
+.ktv-tip-dialog-header > div {
+  min-width: 0;
+  flex: 1;
+}
+.ktv-tip-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: #ad8976;
+}
+.ktv-tip-dialog-header h2 {
+  margin-top: 2px;
+  color: #4b4c38;
+  font:
+    650 23px/1.27 var(--font-wellness-serif),
+    Georgia,
+    serif;
+  overflow-wrap: anywhere;
+}
+.ktv-tip-dialog-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 43px;
+  width: 43px;
+  height: 43px;
+  border: 1px solid #e7e6de;
+  border-radius: 13px;
+  background: #f7f8f2;
+  color: #607364;
+  cursor: pointer;
+}
+.ktv-tip-dialog-close:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.ktv-tip-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.ktv-tip-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px 24px;
+}
+.ktv-tip-subtext {
+  color: #667a6b;
+  line-height: 1.7;
+  font-size: 13px;
+}
+.ktv-tip-field-caption {
+  display: inline-flex;
+  color: #a78c6d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.ktv-tip-presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.ktv-tip-presets button {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 55px;
+  border: 1px solid #e4e8dd;
+  border-radius: 14px;
+  background: #f9faf5;
+  color: #2e5844;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 800;
+}
+.ktv-tip-presets button.is-selected {
+  border-color: #bf8b80;
+  background: #faeee8;
+  box-shadow: inset 0 0 0 1px #caada1;
+  color: #965063;
+}
+.ktv-tip-amount-label {
+  color: #3d604a;
+  font-size: 13px;
+  font-weight: 750;
+}
+.ktv-tip-amount-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d3e0d2;
+  border-radius: 14px;
+  background: #fff;
+  padding-right: 15px;
+  overflow: hidden;
+}
+.ktv-tip-amount-input input {
+  flex: 1;
+  min-width: 0;
+  height: 58px;
+  outline: none;
+  background: transparent;
+  padding: 12px 15px;
+  border: 0;
+  color: #1b513a;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+}
+.ktv-tip-amount-input span {
+  font-weight: 750;
+  font-size: 12px;
+  color: #899b8c;
+}
+.ktv-tip-amount-preview {
+  color: #67856f;
+  font-size: 12px;
+  margin-top: -9px;
+}
+.ktv-tip-primary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 51px;
+  padding: 11px 15px;
+  border: 0;
+  border-radius: 14px;
+  background: #1f6648;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.ktv-tip-primary:hover {
+  background: #175339;
+}
+.ktv-tip-primary:disabled {
+  opacity: 0.53;
+  cursor: not-allowed;
+}
+.ktv-tip-secondary {
+  display: grid;
+  place-items: center;
+  border: none;
+  padding: 10px;
+  min-height: 42px;
+  color: #768777;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+}
+.ktv-tip-missing {
+  display: flex;
+  gap: 13px;
+  border: 1px dashed #d6dfd2;
+  border-radius: 16px;
+  background: #f4f8f0;
+  padding: 16px;
+  color: #4d7757;
+}
+.ktv-tip-missing > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.ktv-tip-missing strong {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.ktv-tip-missing p {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.ktv-tip-missing a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  margin-top: 10px;
+  padding: 8px 11px;
+  border-radius: 11px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  background: #285f45;
+}
+.ktv-tip-amount-card {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 18px;
+  border: 1px solid #e5e9df;
+  background: #f5f8f0;
+  border-radius: 18px;
+}
+.ktv-tip-amount-card > span {
+  color: #7c957f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.ktv-tip-amount-card strong {
+  font-size: clamp(27px, 7vw, 36px);
+  font-weight: 800;
+  color: #275f45;
+}
+.ktv-tip-amount-card button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: #5b8164;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 7px;
+}
+.ktv-tip-qr-wrap {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+}
+.ktv-tip-qr-frame {
+  display: grid;
+  place-items: center;
+  width: min(312px, 100%);
+  padding: 10px;
+  aspect-ratio: 1;
+  border: 1px solid #e2e6db;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(33, 69, 49, 0.07);
+}
+.ktv-tip-qr-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.ktv-tip-qr-wrap small {
+  color: #708575;
+  font-size: 12px;
+}
+.ktv-tip-bank-card {
+  display: grid;
+  gap: 12px;
+  padding: 17px;
+  border: 1px solid #e1e8dc;
+  border-radius: 16px;
+  background: #fff;
+}
+.ktv-tip-bank-card > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4e7c5b;
+  font-weight: 750;
+  font-size: 11px;
+  letter-spacing: 0.07em;
+}
+.ktv-tip-bank-card p {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.75fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.ktv-tip-bank-card p small {
+  color: #7d9182;
+  font-size: 12px;
+}
+.ktv-tip-bank-card p strong {
+  text-align: right;
+  color: #24523f;
+  font-size: 14px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.ktv-tip-bank-card p button {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: #33704f;
+  background: #eff6ed;
+  border: 1px solid #d8e7d6;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.ktv-tip-bank-card p:has(button) strong {
+  font-size: 18px;
+  letter-spacing: 0.025em;
+}
+.ktv-tip-note,
+.ktv-tip-editor-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #697d6c;
+  background: #f5f6f0;
+  border-radius: 13px;
+  padding: 12px 13px;
+}
+.ktv-tip-note svg,
+.ktv-tip-editor-hint svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+.ktv-tip-thanks {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 18px 6px;
+}
+.ktv-tip-thanks > span {
+  width: 67px;
+  height: 67px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: #f6e6e3;
+  color: #a64e60;
+}
+.ktv-tip-thanks h3 {
+  font:
+    650 27px/1.25 var(--font-wellness-serif),
+    Georgia,
+    serif;
+  color: #2d5842;
+}
+.ktv-tip-thanks p {
+  color: #758776;
+  font-size: 12px;
+  line-height: 1.8;
+  max-width: 360px;
+}
+.ktv-tip-keepsake {
+  display: grid;
+  gap: 12px;
+  background: #f7f8f2;
+  padding: 17px;
+  border-radius: 17px;
+  border: 1px solid #e6ece1;
+}
+.ktv-tip-keepsake h4 {
+  font:
+    650 21px/1.3 var(--font-wellness-serif),
+    Georgia,
+    serif;
+  color: #26553c;
+}
+.ktv-tip-keepsake p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #68816e;
+}
+.ktv-tip-add-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 10px;
+  width: 100%;
+  background: #fff;
+  color: #426d52;
+  border: 1px dashed #a3bea5;
+  border-radius: 13px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+.ktv-tip-remove-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  color: #a95555;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ktv-tip-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #54745c;
+  cursor: pointer;
+}
+.ktv-tip-consent input {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  accent-color: #2e6b4b;
+}
+.ktv-tip-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #267248 !important;
+}
+.ktv-tip-finish {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 49px;
+  padding: 12px;
+  width: 100%;
+  color: #fff;
+  background: #266649;
+  border: 0;
+  border-radius: 13px;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.ktv-tip-notice {
+  margin: 2px 22px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #eaf6e9;
+  color: #326e4c;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ktv-tip-error {
+  margin: 2px 22px 14px;
+  color: #8d3345;
+  background: #fff0f0;
+  border: 1px solid #f3d2d6;
+  padding: 12px;
+  border-radius: 12px;
+  line-height: 1.6;
+  font-size: 12px;
+}
+.ktv-tip-dialog-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  flex: 0 0 auto;
+  padding: 13px 21px max(13px, env(safe-area-inset-bottom, 0px));
+  background: #f8f8f3;
+  border-top: 1px solid #ecece5;
+  font-size: 10px;
+  line-height: 1.65;
+  color: #7f8e81;
+}
+.ktv-tip-dialog-footer svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+.ktv-tip-spin {
+  animation: ktv-tip-spin 0.9s linear infinite;
+}
+@keyframes ktv-tip-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ktv-tip-hidden-file {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.ktv-tip-editor form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.ktv-tip-editor-fields {
+  display: grid;
+  gap: 17px;
+  padding: 19px 22px;
+}
+.ktv-tip-editor-fields > label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  color: #47674f;
+  font-weight: 700;
+}
+.ktv-tip-editor-fields > label > input {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 12px;
+  border: 1px solid #dce7d8;
+  border-radius: 12px;
+  outline-offset: 2px;
+  background: #fff;
+  font: 400 16px/1.4 inherit;
+  color: #284c39;
+}
+.ktv-tip-editor-qr {
+  display: grid;
+  gap: 11px;
+  padding: 15px;
+  background: #f4f8f0;
+  border: 1px dashed #cadcc8;
+  border-radius: 16px;
+}
+.ktv-tip-editor-qr-preview {
+  display: grid;
+  place-items: center;
+  max-width: 230px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e6e7df;
+}
+.ktv-tip-editor-qr-preview img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.ktv-tip-editor-qr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ktv-tip-editor-qr-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 45px;
+  padding: 9px 13px;
+  background: #fff;
+  color: #2a6c48;
+  border: 1px solid #d4e5d1;
+  border-radius: 11px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 750;
+}
+.ktv-tip-editor-qr-actions button:last-child:not(:first-child) {
+  color: #a34d56;
+  border-color: #f0d3d4;
+}
+.ktv-tip-editor-qr-actions button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.ktv-tip-editor-qr > p {
+  line-height: 1.6;
+  font-size: 11px;
+  color: #708674;
+}
+.ktv-tip-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 25px 5px;
+  font-size: 13px;
+  color: #688e71;
+}
+.ktv-tip-editor-footer {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 14px 19px max(14px, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #e5e9dd;
+}
+.ktv-tip-editor-footer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 11px 17px;
+  border: 1px solid #e3e7df;
+  border-radius: 12px;
+  background: #f7f8f2;
+  color: #55725b;
+  cursor: pointer;
+  font-weight: 750;
+  font-size: 12px;
+}
+.ktv-tip-editor-footer button:last-child {
+  background: #236348;
+  color: #fff;
+  border-color: #236348;
+}
+.ktv-tip-editor-footer button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.ktv-tip-overlay button:focus-visible,
+.ktv-tip-overlay a:focus-visible,
+.ktv-tip-overlay input:focus-visible,
+.ktv-tip-invite button:focus-visible {
+  outline: 3px solid #d2ad78;
+  outline-offset: 3px;
+}
+@media (max-width: 680px) {
+  .ktv-tip-invite {
+    padding: 17px;
+    gap: 12px;
+    border-radius: 19px;
+    flex-wrap: wrap;
+  }
+  .ktv-tip-invite-icon {
+    width: 49px;
+    height: 49px;
+    flex-basis: 49px;
+    border-radius: 15px;
+  }
+  .ktv-tip-invite-icon svg {
+    width: 25px;
+  }
+  .ktv-tip-invite-copy {
+    flex-basis: calc(100% - 68px);
+  }
+  .ktv-tip-invite-copy h2 {
+    font-size: 21px;
+  }
+  .ktv-tip-invite-copy > span {
+    font-size: 8px;
+  }
+  .ktv-tip-invite-copy p {
+    font-size: 11px;
+  }
+  .ktv-tip-invite-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .ktv-tip-invite-button {
+    flex: 0 1 235px;
+    max-width: calc(100% - 82px);
+    min-height: 47px;
+  }
+  /* Floating support shortcuts live at the lower-right edge on small screens.
+     Keep both public CTA and the owner pencil safely outside their tap targets. */
+  .ktv-tip-invite-actions:has(.ktv-tip-manage-button) .ktv-tip-invite-button {
+    max-width: calc(100% - 143px);
+  }
+  .ktv-tip-manage-button {
+    flex: 0 0 45px;
+    width: 45px;
+    height: 47px;
+    order: -1;
+  }
+  .ktv-tip-overlay {
+    align-items: end;
+    padding: 0;
+  }
+  .ktv-tip-dialog {
+    width: 100%;
+    max-height: min(96dvh, 1000px);
+    border-radius: 24px 24px 0 0;
+    border-bottom: 0;
+  }
+  .ktv-tip-dialog-header {
+    padding: 13px 16px;
+  }
+  .ktv-tip-dialog-header h2 {
+    font-size: 22px;
+  }
+  .ktv-tip-step {
+    padding: 17px 16px 21px;
+    gap: 14px;
+  }
+  .ktv-tip-qr-frame {
+    width: min(282px, 85%);
+  }
+  .ktv-tip-editor-fields {
+    padding: 17px 16px;
+    gap: 15px;
+  }
+  .ktv-tip-dialog-footer {
+    padding: 11px 16px max(14px, env(safe-area-inset-bottom, 0px));
+  }
+  .ktv-tip-editor-footer {
+    padding: 12px 14px max(14px, env(safe-area-inset-bottom, 0px));
+  }
+  .ktv-tip-editor-footer button {
+    flex: 1;
+    padding-inline: 9px;
+  }
+  .ktv-tip-notice,
+  .ktv-tip-error {
+    margin-inline: 16px;
+  }
+}
+@media (max-width: 360px) {
+  .ktv-tip-invite {
+    padding: 13px;
+  }
+  .ktv-tip-invite-actions:has(.ktv-tip-manage-button) .ktv-tip-invite-button > svg:last-child {
+    display: none;
+  }
+  .ktv-tip-presets button {
+    font-size: 14px;
+  }
+  .ktv-tip-bank-card p {
+    grid-template-columns: minmax(75px, 0.9fr) minmax(0, 1fr) auto;
+  }
+  .ktv-tip-bank-card p strong {
+    font-size: 12px;
+  }
+  .ktv-tip-bank-card p:has(button) strong {
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ktv-tip-spin {
+    animation: none;
+  }
+}

@@ -22,6 +22,7 @@ import { MobileHeader, MobileNavigation } from "./experience";
 import { bookingHref, chatHref } from "./links";
 import { KtvShowcaseGallery } from "./ktv-showcase-gallery";
 import { KtvShowcaseEditorLauncher } from "./ktv-showcase-editor";
+import { KtvTipPanel } from "./ktv-tip";
 import { EMPTY_KTV_SHOWCASE, KTV_WEEKDAYS, type KtvShowcase } from "./ktv-showcase-types";
 import "./mobile.css";
 import "./ktv-showcase.css";
@@ -221,6 +222,13 @@ export function KtvPublicDetail({
             </p>
           </div>
         </section>
+
+        <KtvTipPanel
+          key={profileId}
+          providerId={profileId}
+          name={name}
+          chatHref={canChat ? chatHref(reviewId) : null}
+        />
 
         {showcase.media.length > 0 && (
           <section className="ktv-showcase-section" id="hinh-anh-video">
