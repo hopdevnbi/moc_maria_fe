@@ -443,7 +443,11 @@ export function KtvChatPage({
       (current.provider_application_id === receiverId ? (service ?? "") : ""))
     : "";
   const consultationService = currentProvider?.services?.find((s) => s.id === selectedService);
-  const returnTo = provider ? chatHref(provider, service) : "/tin-nhan";
+  const returnTo = threadId
+    ? "/tin-nhan?thread=" + encodeURIComponent(threadId)
+    : provider
+      ? chatHref(provider, service)
+      : "/tin-nhan";
   const paused =
     current?.can_send === false || !!current?.blocked_by_me || !!current?.blocked_by_other;
   const recipient = (thread: Thread) =>

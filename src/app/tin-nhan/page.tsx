@@ -7,6 +7,7 @@ import {
   internalServiceParam,
 } from "@/features/mobile/public-route-ids";
 import { KtvChatPage } from "@/features/mobile/chat";
+import { InquiryChatEntry } from "@/features/mobile/inquiry-chat-entry";
 import { PublicPageLoading } from "@/shared/loading/public-page-loading";
 
 export const metadata: Metadata = {
@@ -22,6 +23,8 @@ async function MessagesContent({
   const query = await searchParams;
   const clean = cleanPublicQuery(query);
   if (clean !== null) permanentRedirect("/tin-nhan?" + clean);
+  if (typeof query.inquiry === "string" && /^[a-f0-9]{64}$/.test(query.inquiry))
+    return <InquiryChatEntry inquiryId={query.inquiry} />;
   const provider =
     typeof query.provider === "string" ? internalProviderParam(query.provider) : undefined;
   const service =
