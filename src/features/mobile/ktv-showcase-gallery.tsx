@@ -80,32 +80,31 @@ export function KtvShowcaseGallery({ media, name }: { media: KtvShowcaseMedia[];
             <Expand size={18} />
           </button>
         )}
-        {media.length > 1 && (
-          <div className="ktv-showcase-gallery-navigation">
-            <button
-              type="button"
-              aria-label="Ảnh hoặc video trước"
-              onClick={() => setActive((old) => (old - 1 + media.length) % media.length)}
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <span>
-              {active + 1} / {media.length}
-            </span>
-            <button
-              type="button"
-              aria-label="Ảnh hoặc video tiếp theo"
-              onClick={() => setActive((old) => (old + 1) % media.length)}
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        )}
       </div>
       {(current.caption || media.length > 1) && (
         <div className="ktv-showcase-gallery-foot">
           <p>{current.caption || "Hình ảnh và video tại Mộc Maria"}</p>
-          {media.length > 1 && <span>Chọn ảnh bên dưới để xem</span>}
+          {media.length > 1 && (
+            <div className="ktv-showcase-gallery-navigation">
+              <button
+                type="button"
+                aria-label="Ảnh hoặc video trước"
+                onClick={() => setActive((old) => (old - 1 + media.length) % media.length)}
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <span>
+                {active + 1} / {media.length}
+              </span>
+              <button
+                type="button"
+                aria-label="Ảnh hoặc video tiếp theo"
+                onClick={() => setActive((old) => (old + 1) % media.length)}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </div>
       )}
       {media.length > 1 && (

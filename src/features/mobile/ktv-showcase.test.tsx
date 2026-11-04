@@ -67,6 +67,10 @@ describe("KTV gallery", () => {
     expect(video).toHaveAttribute("autoplay");
     expect(video).toHaveAttribute("controls");
     expect(video).toHaveProperty("muted", true);
+    const next = screen.getByRole("button", { name: "Ảnh hoặc video tiếp theo" });
+    expect(next.closest(".ktv-showcase-gallery-stage")).toBeNull();
+    fireEvent.click(next);
+    expect(screen.getByRole("img", { name: "Chăm sóc" })).toBeInTheDocument();
   });
 });
 
