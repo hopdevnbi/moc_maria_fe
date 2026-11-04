@@ -62,7 +62,11 @@ describe("KTV gallery", () => {
     );
     expect(screen.getByRole("img", { name: "Chăm sóc" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Video 2/ }));
-    expect(screen.getByLabelText("Video giới thiệu Nguyễn Hoàn")).toHaveAttribute("playsinline");
+    const video = screen.getByLabelText("Video giới thiệu Nguyễn Hoàn");
+    expect(video).toHaveAttribute("playsinline");
+    expect(video).toHaveAttribute("autoplay");
+    expect(video).toHaveAttribute("controls");
+    expect(video).toHaveProperty("muted", true);
   });
 });
 
