@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { StaffAttendanceCard } from "@/features/staff-attendance/staff-attendance-card";
 import { OwnProviderPlanning } from "@/features/marketplace/provider-planning";
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { ProviderDescriptionEditor } from "./profile-editor";
@@ -297,6 +298,14 @@ export function TechnicianWorkspace() {
             <Link href="/ktv/an-toan" className="ktvw-light">
               <ShieldCheck size={18} /> An toàn khi phục vụ
             </Link>
+            <button
+              type="button"
+              className="ktvw-logout"
+              disabled={signingOut}
+              onClick={() => void signOut()}
+            >
+              <LogOut size={18} /> {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+            </button>
           </div>
         </div>
         <div className="ktvw-hero-aside">
@@ -314,17 +323,9 @@ export function TechnicianWorkspace() {
               ? next.customerName + " · " + workTime(when(next))
               : "Theo dõi yêu cầu mới và dành thời gian chăm sóc khách hàng."}
           </p>
-          <button
-            type="button"
-            className="ktvw-logout"
-            disabled={signingOut}
-            onClick={() => void signOut()}
-          >
-            <LogOut size={16} />
-            {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}
-          </button>
         </div>
       </header>
+      <StaffAttendanceCard />
       <section className="ktvw-stats" aria-label="Tổng quan công việc">
         {counts.map(({ label, value, Icon }, i) => (
           <article key={label}>
