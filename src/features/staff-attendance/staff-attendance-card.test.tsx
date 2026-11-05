@@ -106,6 +106,28 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("attendance client boundaries", () => {
+  it("displays exactly one inline selfie for the check-in day on mobile and desktop", async () => {
+    const date = hcmDate();
+    current.today = {
+      id: "attendance-1",
+      localDate: date,
+      branchId: "branch-1",
+      status: "IN_RANGE",
+      coinsEarned: 5,
+      selfieUrl:
+        "https://giangxa-media-cdn.b-cdn.net/moc-maria/staff-attendance/2026-11-05/a/selfie.webp",
+    };
+    draw();
+    const photo = await screen.findByRole("img", {
+      name: `Ảnh selfie điểm danh ngày ${date.split("-").reverse().join("/")}`,
+    });
+    expect(photo).toHaveAttribute("src", current.today.selfieUrl);
+    expect(screen.getAllByRole("img", { name: /Ảnh selfie điểm danh ngày/ })).toHaveLength(1);
+    expect(screen.getByText(/Một ảnh xác nhận/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Chụp selfie bằng camera trước")).not.toBeInTheDocument();
+    expect(posts()).toHaveLength(0);
+  });
+
   it("offers separate front camera and gallery on mobile and confirms the CDN link after upload", async () => {
     current.today = {
       id: "attendance-1",
@@ -125,6 +147,11 @@ describe("attendance client boundaries", () => {
       "href",
       expect.stringContaining("/moc-maria/staff-attendance/selfie.webp"),
     );
+    expect(await screen.findByRole("img", { name: /Ảnh selfie điểm danh ngày/ })).toHaveAttribute(
+      "src",
+      expect.stringContaining("/moc-maria/staff-attendance/selfie.webp"),
+    );
+    expect(screen.getAllByRole("img", { name: /Ảnh selfie điểm danh ngày/ })).toHaveLength(1);
     const selfiePost = posts().filter((call) => String(call[0]).endsWith("/selfie"));
     expect(selfiePost).toHaveLength(1);
     expect(selfiePost[0][1].body).toBeInstanceOf(FormData);

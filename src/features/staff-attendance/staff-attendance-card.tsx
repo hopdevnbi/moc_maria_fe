@@ -16,6 +16,8 @@ import { ApiError } from "@/features/auth/auth-api";
 import { prepareAttendanceSelfie } from "./selfie-image";
 import {
   attendanceLabel,
+  attendanceSelfieUrl,
+  displayAttendanceDate,
   formattedCheckInTime,
   hcmDate,
   isConfigured,
@@ -571,22 +573,48 @@ function AttendanceSession({ standalone }: { standalone: boolean }) {
             </>
           )}
           {today && (
-            <div className="mm-att-selfie">
+            <div
+              className={
+                "mm-att-selfie" + (attendanceSelfieUrl(today.selfieUrl) ? " has-photo" : "")
+              }
+            >
               <div>
                 <h3>
                   <Camera size={18} /> Ảnh selfie xác nhận
                 </h3>
                 <p>
                   {today.selfieUrl
-                    ? "Ảnh đã được lưu tại hệ thống."
+                    ? `Ảnh điểm danh ngày ${displayAttendanceDate(today.localDate ?? day)} đã lưu trên CDN.`
                     : "Chụp ảnh selfie sau check-in để bổ sung minh chứng."}
                 </p>
-                {today.selfieUrl && (
-                  <a href={today.selfieUrl} target="_blank" rel="noopener noreferrer">
+                {attendanceSelfieUrl(today.selfieUrl) && (
+                  <a
+                    href={attendanceSelfieUrl(today.selfieUrl)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Xem selfie đã gửi
                   </a>
                 )}
               </div>
+              {attendanceSelfieUrl(today.selfieUrl) && (
+                <figure className="mm-att-selfie-photo">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Render a private dated CDN selfie directly without the public Next image optimizer. */}
+                  <img
+                    src={attendanceSelfieUrl(today.selfieUrl)!}
+                    alt={`Ảnh selfie điểm danh ngày ${displayAttendanceDate(today.localDate ?? day)}`}
+                    width="720"
+                    height="960"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
+                  <figcaption>
+                    <CheckCircle2 size={15} aria-hidden="true" />
+                    Một ảnh xác nhận · {displayAttendanceDate(today.localDate ?? day)}
+                  </figcaption>
+                </figure>
+              )}
               {!today.selfieUrl && (
                 <div className="mm-att-upload-actions">
                   <label className="mm-att-upload">

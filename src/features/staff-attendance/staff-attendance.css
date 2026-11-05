@@ -270,6 +270,45 @@
   line-height: 1.6;
   color: #768a77;
 }
+.mm-att-selfie.has-photo {
+  display: grid;
+  justify-items: stretch;
+  align-items: start;
+  gap: 16px;
+  border-style: solid;
+  border-color: #d2e4d0;
+  background: linear-gradient(160deg, #fcfffa 0%, #f4f9f0 100%);
+}
+.mm-att-selfie-photo {
+  width: min(100%, 470px);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid #e0e9d9;
+  border-radius: 16px;
+  background: #e9eee6;
+  box-shadow: 0 9px 28px #193e2f12;
+}
+.mm-att-selfie-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 480px;
+  min-height: 200px;
+  object-fit: contain;
+  background: #edf0e9;
+}
+.mm-att-selfie-photo figcaption {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 12px;
+  color: #42664e;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: center;
+  background: white;
+}
 .mm-att-selfie a {
   display: inline-flex;
   font-size: 12px;

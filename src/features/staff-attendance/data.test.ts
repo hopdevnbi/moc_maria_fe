@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   attendanceLabel,
   attendanceRows,
+  attendanceSelfieUrl,
+  displayAttendanceDate,
   hcmDate,
   isConfigured,
   mayAutoCheckIn,
@@ -12,6 +14,20 @@ import {
 const branch = { id: "branch-1", name: "Mộc Maria", latitude: 21.03, longitude: 105.75 };
 
 describe("staff attendance source data", () => {
+  it("binds a selfie to its attendance day and only accepts the expected CDN path", () => {
+    expect(displayAttendanceDate("2026-11-05")).toBe("05/11/2026");
+    expect(displayAttendanceDate("invalid")).toBe("hôm nay");
+    const url =
+      "https://giangxa-media-cdn.b-cdn.net/moc-maria/staff-attendance/2026-11-05/record/photo.webp";
+    expect(attendanceSelfieUrl(url)).toBe(url);
+    expect(attendanceSelfieUrl("javascript:alert(1)")).toBeNull();
+    expect(
+      attendanceSelfieUrl("https://example.com/moc-maria/staff-attendance/photo.webp"),
+    ).toBeNull();
+    expect(
+      attendanceSelfieUrl("https://giangxa-media-cdn.b-cdn.net/moc-maria/ktv/photo.webp"),
+    ).toBeNull();
+  });
   it("uses the Vietnam calendar for daily attendance", () => {
     expect(hcmDate(new Date("2026-11-04T17:30:00Z"))).toBe("2026-11-05");
   });

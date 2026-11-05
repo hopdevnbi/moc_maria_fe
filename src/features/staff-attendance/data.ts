@@ -181,6 +181,27 @@ export function formattedCheckInTime(value: string | undefined): string {
   }).format(date);
 }
 
+export function displayAttendanceDate(value: string | undefined | null): string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "hôm nay";
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+/** The selfie belongs to the dated check-in record, not to the current profile. */
+export function attendanceSelfieUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" &&
+      url.hostname === "giangxa-media-cdn.b-cdn.net" &&
+      url.pathname.startsWith("/moc-maria/staff-attendance/")
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export function attendanceLabel(status: AttendanceStatus): string {
   switch (status) {
     case "IN_RANGE":

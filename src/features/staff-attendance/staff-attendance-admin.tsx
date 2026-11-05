@@ -3,19 +3,27 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  CalendarDays,
   Camera,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
   Coins,
+  LocateFixed,
   MapPin,
   RefreshCw,
   Search,
   ShieldAlert,
+  ShieldCheck,
   UsersRound,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   attendanceLabel,
   attendanceRows,
+  attendanceSelfieUrl,
+  displayAttendanceDate,
   formattedCheckInTime,
   hcmDate,
   isConfigured,
@@ -35,15 +43,6 @@ function recordName(row: AttendanceRecord) {
     row.employeeName ||
     "Nhân viên " + (row.userId ?? "")
   );
-}
-function selfieUrl(value: string | null | undefined) {
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
 }
 export function StaffAttendanceAdmin() {
   const { user, authFetch } = useAuth();
@@ -158,11 +157,13 @@ export function StaffAttendanceAdmin() {
       label: "Tổng lượt",
       value: summary.data?.totalCheckIns ?? summary.data?.total ?? rows.length,
       Icon: UsersRound,
+      tone: "total",
     },
     {
       label: "Trong 200m",
       value: summary.data?.statuses?.IN_RANGE ?? rows.filter((r) => r.status === "IN_RANGE").length,
       Icon: CheckCircle2,
+      tone: "valid",
     },
     {
       label: "Ngoài 200m",
@@ -170,11 +171,13 @@ export function StaffAttendanceAdmin() {
         summary.data?.statuses?.OUT_OF_RANGE ??
         rows.filter((r) => r.status === "OUT_OF_RANGE").length,
       Icon: ShieldAlert,
+      tone: "review",
     },
     {
       label: "Coin đã cộng",
       value: summary.data?.totalCoinsAwarded ?? rows.reduce((n, r) => n + r.coinsEarned, 0),
       Icon: Coins,
+      tone: "coin",
     },
   ];
   if (!allowed)
@@ -182,10 +185,12 @@ export function StaffAttendanceAdmin() {
   return (
     <div className="mm-att-admin">
       <section className="mm-att-admin-hero">
-        <div>
-          <span>NHÂN SỰ · CHẤM CÔNG</span>
+        <div className="mm-att-admin-hero-content">
+          <span className="mm-att-admin-eyebrow">
+            <ShieldCheck size={15} /> NHÂN SỰ · CHẤM CÔNG
+          </span>
           <h2>Chấm công & ví coin</h2>
-          <p>Theo dõi điểm danh, khoảng cách GPS, selfie và cấu hình tọa độ Mộc Maria.</p>
+          <p>Quản lý điểm danh nhân viên, xác thực GPS và số coin được cộng theo ngày.</p>
         </div>
         <button
           type="button"
@@ -196,14 +201,18 @@ export function StaffAttendanceAdmin() {
             void branches.refetch();
           }}
         >
-          <RefreshCw size={18} /> Tải lại
+          <RefreshCw size={16} aria-hidden="true" /> Tải dữ liệu
         </button>
       </section>
       <div className="mm-att-admin-summary" aria-label="Thống kê điểm danh">
-        {metrics.map(({ label, value, Icon }) => (
-          <div key={label} className="mm-att-admin-metric">
-            <Icon size={21} aria-hidden="true" />
-            <span>{label}</span>
+        {metrics.map(({ label, value, Icon, tone }) => (
+          <div key={label} className={`mm-att-admin-metric is-${tone}`}>
+            <div className="mm-att-admin-metric-top">
+              <span>{label}</span>
+              <span className="mm-att-admin-metric-icon">
+                <Icon size={19} aria-hidden="true" />
+              </span>
+            </div>
             <strong>{summary.isPending ? "—" : value.toLocaleString("vi-VN")}</strong>
           </div>
         ))}
@@ -211,12 +220,16 @@ export function StaffAttendanceAdmin() {
       <section className="mm-att-admin-panel" aria-labelledby="mm-att-list-heading">
         <div className="mm-att-admin-head">
           <div>
-            <span>DANH SÁCH CHẤM CÔNG</span>
+            <span className="mm-att-admin-eyebrow">DANH SÁCH CHẤM CÔNG</span>
             <h3 id="mm-att-list-heading">Lượt check-in theo ngày</h3>
+            <p>Mỗi nhân viên tối đa một lượt/ngày · Ảnh selfie có thể xem riêng.</p>
           </div>
-          <label>
-            Ngày cần xem{" "}
+          <label className="mm-att-admin-date-label">
+            <span>
+              <CalendarDays size={15} /> Ngày cần xem
+            </span>
             <input
+              aria-label="Ngày cần xem"
               type="date"
               value={date}
               onChange={(event) => {
@@ -236,9 +249,10 @@ export function StaffAttendanceAdmin() {
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
-          <label>
-            Trạng thái
+          <label className="mm-att-admin-status-filter">
+            <span>Trạng thái</span>
             <select
+              aria-label="Lọc trạng thái điểm danh"
               value={status}
               onChange={(event) => setStatus(event.target.value as AttendanceStatus | "ALL")}
             >
@@ -249,6 +263,9 @@ export function StaffAttendanceAdmin() {
               <option value="LOCATION_NOT_CONFIGURED">Chưa cấu hình tọa độ</option>
             </select>
           </label>
+          <span className="mm-att-admin-showing" role="status">
+            Hiển thị <strong>{filtered.length}</strong> lượt · {displayAttendanceDate(date)}
+          </span>
         </div>
         {checkIns.isPending ? (
           <p role="status" className="mm-att-admin-empty">
@@ -264,60 +281,75 @@ export function StaffAttendanceAdmin() {
           <div className="mm-att-admin-records">
             {filtered.map((record) => (
               <article key={record.id} className="mm-att-admin-record">
-                <div className="mm-att-admin-person">
-                  <span className="mm-att-admin-avatar" aria-hidden="true">
-                    {recordName(record).slice(0, 1).toUpperCase()}
-                  </span>
-                  <div>
-                    <strong>{recordName(record)}</strong>
-                    <small>{formattedCheckInTime(record.checkedInAt ?? record.createdAt)}</small>
+                <div className="mm-att-admin-record-header">
+                  <div className="mm-att-admin-person">
+                    <span className="mm-att-admin-avatar" aria-hidden="true">
+                      {recordName(record).trim().slice(0, 1).toLocaleUpperCase("vi-VN")}
+                    </span>
+                    <div>
+                      <strong>{recordName(record)}</strong>
+                      <small>
+                        <Clock3 size={13} aria-hidden="true" />{" "}
+                        {formattedCheckInTime(record.checkedInAt ?? record.createdAt)}
+                      </small>
+                    </div>
                   </div>
-                </div>
-                <div className="mm-att-admin-record-details">
-                  <p>
-                    <MapPin size={16} />{" "}
-                    {record.branchName ?? record.branch?.name ?? "Cơ sở Mộc Maria"}
-                  </p>
                   <span
                     className={
                       "mm-att-admin-status " +
                       (record.status === "IN_RANGE" ? "is-valid" : "is-review")
                     }
                   >
+                    {record.status === "IN_RANGE" ? (
+                      <CheckCircle2 size={15} />
+                    ) : (
+                      <ShieldAlert size={15} />
+                    )}
                     {attendanceLabel(record.status)}
                   </span>
-                  <p>
-                    Khoảng cách:{" "}
+                </div>
+                <div className="mm-att-admin-record-details">
+                  <div className="mm-att-admin-info">
+                    <span>
+                      <MapPin size={15} aria-hidden="true" /> Cơ sở
+                    </span>
+                    <strong>{record.branchName ?? record.branch?.name ?? "Mộc Maria"}</strong>
+                  </div>
+                  <div className="mm-att-admin-info">
+                    <span>
+                      <LocateFixed size={15} aria-hidden="true" /> Khoảng cách GPS
+                    </span>
                     <strong>
                       {typeof record.distanceMeters === "number"
-                        ? Math.round(record.distanceMeters) + "m"
+                        ? Math.round(record.distanceMeters) + " m"
                         : "Chưa xác định"}
                     </strong>
-                  </p>
-                  <p>
-                    Độ chính xác GPS:{" "}
-                    <strong>
+                    <small>
+                      Độ chính xác:{" "}
                       {typeof record.accuracyMeters === "number"
-                        ? Math.round(record.accuracyMeters) + "m"
-                        : "Chưa có"}
-                    </strong>
-                  </p>
-                  <p className="mm-att-admin-coins">
-                    <Coins size={16} /> +{record.coinsEarned} coin
-                  </p>
+                        ? Math.round(record.accuracyMeters) + " m"
+                        : "Không có"}
+                    </small>
+                  </div>
+                  <div className="mm-att-admin-info mm-att-admin-coins">
+                    <span>
+                      <Coins size={15} aria-hidden="true" /> Coin được cộng
+                    </span>
+                    <strong>+{record.coinsEarned} coin</strong>
+                  </div>
                 </div>
-                {selfieUrl(record.selfieUrl) ? (
+                {attendanceSelfieUrl(record.selfieUrl) ? (
                   <a
-                    href={selfieUrl(record.selfieUrl)!}
+                    href={attendanceSelfieUrl(record.selfieUrl)!}
                     rel="noopener noreferrer"
                     target="_blank"
                     className="mm-att-admin-selfie"
                   >
-                    <Camera size={16} /> Xem ảnh selfie
+                    <Camera size={16} aria-hidden="true" /> Xem ảnh selfie
                   </a>
                 ) : (
                   <span className="mm-att-admin-no-selfie">
-                    <Camera size={16} /> Chưa gửi selfie
+                    <Camera size={16} aria-hidden="true" /> Chưa gửi selfie
                   </span>
                 )}
               </article>
@@ -326,27 +358,38 @@ export function StaffAttendanceAdmin() {
         )}
         <div className="mm-att-admin-pagination">
           <span>
-            Trang {page} / {Math.max(1, Math.ceil(total / 30))} · {total} lượt. Bộ lọc áp dụng trong
-            trang.
+            Trang {page}/{Math.max(1, Math.ceil(total / 30))} · Tổng {total} lượt
+            <small>Bộ lọc tìm kiếm áp dụng trên trang hiện tại.</small>
           </span>
-          <button
-            type="button"
-            disabled={page <= 1 || checkIns.isFetching}
-            onClick={() => setPage(page - 1)}
-          >
-            Trước
-          </button>
-          <button
-            type="button"
-            disabled={page * 30 >= total || checkIns.isFetching}
-            onClick={() => setPage(page + 1)}
-          >
-            Sau
-          </button>
-        </div>{" "}
+          <div className="mm-att-admin-page-actions">
+            <button
+              type="button"
+              disabled={page <= 1 || checkIns.isFetching}
+              onClick={() => setPage(page - 1)}
+            >
+              <ChevronLeft size={16} /> Trước
+            </button>
+            <button
+              type="button"
+              disabled={page * 30 >= total || checkIns.isFetching}
+              onClick={() => setPage(page + 1)}
+            >
+              Sau <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
       </section>
       <section className="mm-att-admin-panel" aria-labelledby="mm-att-center">
-        <h3 id="mm-att-center">Cấu hình tọa độ cơ sở · Bán kính 200m</h3>
+        <div className="mm-att-admin-config-head">
+          <span className="mm-att-admin-config-icon">
+            <MapPin size={20} />
+          </span>
+          <div>
+            <span className="mm-att-admin-eyebrow">THIẾT LẬP CƠ SỞ</span>
+            <h3 id="mm-att-center">Cấu hình tọa độ GPS</h3>
+            <p>Phạm vi hợp lệ 200m, áp dụng cho lượt check-in mới.</p>
+          </div>
+        </div>
         {branches.isPending ? (
           <p role="status">Đang tải cơ sở...</p>
         ) : branches.isError ? (
@@ -355,7 +398,7 @@ export function StaffAttendanceAdmin() {
           <p>Chưa có cơ sở.</p>
         ) : (
           <>
-            <label>
+            <label className="mm-att-admin-branch-label">
               Chọn cơ sở
               <select
                 value={selectedBranch.id}
