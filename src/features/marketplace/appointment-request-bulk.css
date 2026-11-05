@@ -41,7 +41,8 @@
   font: inherit;
 }
 .mm-request-bulk-apply,
-.mm-request-bulk-clear {
+.mm-request-bulk-clear,
+.mm-request-bulk-cancel {
   min-height: 44px;
   border-radius: 10px;
   padding: 10px 14px;
@@ -60,6 +61,11 @@
   background: #315f43;
   border-color: #315f43;
   color: white;
+}
+.mm-request-bulk-cancel {
+  background: #fff0ed;
+  border-color: #dfb0a9;
+  color: #912f28;
 }
 .mm-request-bulk-toolbar small {
   width: 100%;

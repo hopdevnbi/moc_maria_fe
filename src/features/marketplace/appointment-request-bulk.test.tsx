@@ -6,10 +6,12 @@ import {
   AppointmentBulkSelection,
   AppointmentBulkCheckbox,
   AppointmentBulkToolbar,
+  AppointmentBulkStatusAction,
+  AppointmentBulkSingleOnlyAction,
 } from "./appointment-request-bulk";
 import { DEFAULT_COMPLETION_NOTE } from "@/shared/booking/inquiry-status";
 
-const state = vi.hoisted(() => ({ fetch: vi.fn() }));
+const state = vi.hoisted(() => ({ fetch: vi.fn(), onSingle: vi.fn() }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({ user: { id: "admin" }, authFetch: state.fetch }),
 }));
@@ -31,7 +33,7 @@ const first: AdminAppointmentRequest = {
   notes: "",
 };
 const second = { ...first, id: "b", customerName: "Khách kiểm tra B", appointmentVersion: 8 };
-function mount(records = [first, second]) {
+function mount(records = [first, second], withDetailAction = false) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -40,6 +42,20 @@ function mount(records = [first, second]) {
     <QueryClientProvider client={client}>
       <AppointmentBulkSelection records={rows} scope={scope} disabled={disabled}>
         <AppointmentBulkToolbar />
+        {withDetailAction && (
+          <>
+            <AppointmentBulkStatusAction
+              status="CANCELLED"
+              className="mm-request-action subtle"
+              onSingle={state.onSingle}
+            >
+              Hủy yêu cầu
+            </AppointmentBulkStatusAction>
+            <AppointmentBulkSingleOnlyAction onClick={state.onSingle} className="mm-request-action">
+              Đổi trạng thái lịch hẹn
+            </AppointmentBulkSingleOnlyAction>
+          </>
+        )}
         {rows.map((record) => (
           <AppointmentBulkCheckbox key={record.id} record={record} />
         ))}
@@ -65,6 +81,7 @@ function begin(status = "CONTACTED") {
 }
 beforeEach(() => {
   state.fetch.mockReset().mockResolvedValue(undefined);
+  state.onSingle.mockReset();
   Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
     configurable: true,
     value: function (this: HTMLDialogElement) {
@@ -84,6 +101,59 @@ afterEach(() => {
 });
 
 describe("appointment bulk selection and confirmation", () => {
+  it("routes detail-panel cancel through all checked bookings, not only the newest focused booking", async () => {
+    mount(
+      [
+        { ...first, allowedActions: ["CONTACTED", "CANCELLED"], status: "PENDING" },
+        { ...second, allowedActions: ["CANCELLED", "COMPLETED"], status: "CONTACTED" },
+      ],
+      true,
+    );
+    // Without a checkbox, the detail action still acts on just the focused booking.
+    fireEvent.click(screen.getByRole("button", { name: "Hủy yêu cầu" }));
+    expect(state.onSingle).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Chọn tất cả lịch trên trang" }));
+    expect(screen.getByText("Đã chọn 2 lịch")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Đổi trạng thái lịch hẹn" })).toBeDisabled();
+    fireEvent.click(
+      screen
+        .getAllByRole("button", { name: "Hủy 2 lịch đã chọn" })
+        .find((button) => button.classList.contains("mm-request-action"))!,
+    );
+    expect(state.onSingle).toHaveBeenCalledTimes(1);
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Cập nhật 2 lịch")).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Xác nhận cập nhật 2 lịch" }));
+    await within(dialog).findByText("Đã cập nhật 2/2 lịch.");
+    const calls = state.fetch.mock.calls.map(([path, init]) => ({
+      path,
+      body: JSON.parse(init.body) as { status: string; expectedStatus: string },
+    }));
+    expect(calls).toEqual([
+      expect.objectContaining({
+        path: "/admin/appointment-inquiries/a",
+        body: expect.objectContaining({ status: "CANCELLED", expectedStatus: "PENDING" }),
+      }),
+      expect.objectContaining({
+        path: "/admin/appointment-inquiries/b",
+        body: expect.objectContaining({ status: "CANCELLED", expectedStatus: "CONTACTED" }),
+      }),
+    ]);
+  });
+
+  it("provides an explicit bulk cancel action that only updates individually selected rows", async () => {
+    mount([
+      { ...first, allowedActions: ["CANCELLED"], status: "PENDING" },
+      { ...second, allowedActions: ["CANCELLED"], status: "CONTACTED" },
+    ]);
+    fireEvent.click(screen.getByRole("checkbox", { name: /Khách kiểm tra B/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Hủy 1 lịch đã chọn" }));
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận cập nhật 1 lịch" }));
+    await screen.findByText("Đã cập nhật 1/1 lịch.");
+    expect(state.fetch).toHaveBeenCalledTimes(1);
+    expect(state.fetch.mock.calls[0][0]).toBe("/admin/appointment-inquiries/b");
+  });
+
   it("selects individual rows, shows partial selection, and clears selection when changing filters or pages", () => {
     const { refresh } = mount();
     const all = screen.getByRole("checkbox", { name: "Chọn tất cả lịch trên trang" });

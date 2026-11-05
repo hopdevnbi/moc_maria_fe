@@ -141,6 +141,69 @@ export function AppointmentBulkCheckbox({ record }: { record: AdminAppointmentRe
   );
 }
 
+/** Detail actions must respect the checkbox selection, not silently update only the focused row. */
+export function AppointmentBulkStatusAction({
+  status,
+  onSingle,
+  className,
+  ariaLabel,
+  children,
+}: {
+  status: RequestStatus;
+  onSingle: () => void;
+  className: string;
+  ariaLabel?: string;
+  children: ReactNode;
+}) {
+  const selection = useContext(BulkContext)!;
+  const count = selection.chosen.length;
+  const allowed = count === 0 || bulkTargetAllowed(selection.chosen, status);
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-label={
+        count
+          ? status === "CANCELLED"
+            ? `Hủy ${count} lịch đã chọn`
+            : `Chuyển ${count} lịch sang ${inquiryStatusLabels[status]}`
+          : ariaLabel
+      }
+      title={
+        count && !allowed ? "Không thể chuyển tất cả lịch đã chọn sang trạng thái này." : undefined
+      }
+      disabled={selection.busy || !allowed}
+      onClick={() => (count ? selection.begin(status) : onSingle())}
+    >
+      {children}
+      {count > 0 && <span> ({count} lịch đã chọn)</span>}
+    </button>
+  );
+}
+
+export function AppointmentBulkSingleOnlyAction({
+  onClick,
+  className,
+  children,
+}: {
+  onClick: () => void;
+  className: string;
+  children: ReactNode;
+}) {
+  const selection = useContext(BulkContext)!;
+  return (
+    <button
+      type="button"
+      className={className}
+      disabled={selection.busy || selection.chosen.length > 0}
+      title={selection.chosen.length ? "Bỏ chọn lịch để thao tác riêng từng lịch." : undefined}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function AppointmentBulkToolbar() {
   const state = useContext(BulkContext)!;
   const [target, setTarget] = useState<RequestStatus | "">("");
@@ -192,6 +255,16 @@ export function AppointmentBulkToolbar() {
           >
             <CheckCheck size={17} /> Cập nhật {state.chosen.length} lịch
           </button>
+          {bulkTargetAllowed(state.chosen, "CANCELLED") && (
+            <button
+              type="button"
+              className="mm-request-bulk-cancel"
+              disabled={state.busy}
+              onClick={() => state.begin("CANCELLED")}
+            >
+              <X size={16} /> Hủy {state.chosen.length} lịch đã chọn
+            </button>
+          )}
           <button
             type="button"
             className="mm-request-bulk-clear"

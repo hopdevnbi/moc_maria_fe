@@ -29,6 +29,8 @@ import {
   AppointmentBulkSelection,
   AppointmentBulkCheckbox,
   AppointmentBulkToolbar,
+  AppointmentBulkStatusAction,
+  AppointmentBulkSingleOnlyAction,
 } from "./appointment-request-bulk";
 
 export type RequestStatus = InquiryStatus;
@@ -522,70 +524,68 @@ export function AppointmentRequestsAdmin() {
                     sửa.
                   </p>
                   {selected.allowedActions?.includes("COMPLETED") && (
-                    <button
-                      type="button"
-                      aria-label="Đánh dấu đã hoàn thành lịch hẹn"
+                    <AppointmentBulkStatusAction
+                      status="COMPLETED"
+                      ariaLabel="Đánh dấu đã hoàn thành lịch hẹn"
                       className="mm-request-action primary"
-                      onClick={() => beginAction("COMPLETED")}
+                      onSingle={() => beginAction("COMPLETED")}
                     >
                       <CheckCircle2 size={16} /> Đã hoàn thành
-                    </button>
+                    </AppointmentBulkStatusAction>
                   )}
                   {selected.canManageStatus && (
-                    <button
-                      type="button"
+                    <AppointmentBulkSingleOnlyAction
                       className="mm-request-action subtle"
                       onClick={() => beginAction(selected.allowedActions?.[0] ?? "PENDING")}
                     >
                       Đổi trạng thái lịch hẹn
-                    </button>
+                    </AppointmentBulkSingleOnlyAction>
                   )}
                   {selected.allowedActions?.includes("CONTACTED") && (
-                    <button
+                    <AppointmentBulkStatusAction
                       className="mm-request-action primary"
-                      type="button"
-                      onClick={() => beginAction("CONTACTED")}
+                      status="CONTACTED"
+                      onSingle={() => beginAction("CONTACTED")}
                     >
                       <Check size={16} /> Đã liên hệ
-                    </button>
+                    </AppointmentBulkStatusAction>
                   )}
                   {selected.allowedActions?.includes("DECLINED") && (
-                    <button
+                    <AppointmentBulkStatusAction
                       className="mm-request-action subtle"
-                      type="button"
-                      onClick={() => beginAction("DECLINED")}
+                      status="DECLINED"
+                      onSingle={() => beginAction("DECLINED")}
                     >
                       <X size={16} /> Không thể tiếp nhận
-                    </button>
+                    </AppointmentBulkStatusAction>
                   )}
                   {selected.allowedActions?.includes("PENDING") && (
-                    <button
-                      type="button"
+                    <AppointmentBulkStatusAction
                       className="mm-request-action subtle"
-                      onClick={() => beginAction("PENDING")}
+                      status="PENDING"
+                      onSingle={() => beginAction("PENDING")}
                     >
                       Chuyển về chờ phản hồi
-                    </button>
+                    </AppointmentBulkStatusAction>
                   )}
                   {selected.allowedActions?.includes("CANCELLED") && (
-                    <button
-                      type="button"
+                    <AppointmentBulkStatusAction
                       className="mm-request-action subtle"
-                      onClick={() => beginAction("CANCELLED")}
+                      status="CANCELLED"
+                      onSingle={() => beginAction("CANCELLED")}
                     >
                       Hủy yêu cầu
-                    </button>
+                    </AppointmentBulkStatusAction>
                   )}
                   {!selected.appointmentId &&
                     (selected.allowedActions?.includes("CANCELLED") ||
                       selected.allowedActions?.includes("PENDING")) && (
-                      <button
-                        type="button"
+                      <AppointmentBulkSingleOnlyAction
                         className="mm-request-action subtle"
                         onClick={() => beginAction(archived ? "RESTORE" : "ARCHIVE")}
                       >
                         {archived ? "Khôi phục yêu cầu" : "Lưu trữ (không xóa lịch sử)"}
-                      </button>
+                      </AppointmentBulkSingleOnlyAction>
                     )}
                 </div>
               </article>
