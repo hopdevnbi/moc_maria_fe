@@ -50,10 +50,20 @@ export const isActiveVip = (profile: CustomerSelfProfile | null | undefined): bo
 
 export function useCustomerSelfProfile() {
   const { user, authFetch } = useAuth();
+  const hasPosition = user?.roles.some((role) =>
+    [
+      "SUPER_ADMIN",
+      "ADMIN",
+      "BRANCH_MANAGER",
+      "RECEPTIONIST",
+      "THERAPIST",
+      "DOCTOR_CONSULTANT",
+    ].includes(role),
+  );
   return useQuery({
     queryKey: ["customer", "self", user?.id],
     queryFn: () => authFetch<CustomerSelfProfile>("/customers/me", { cache: "no-store" }),
-    enabled: !!user?.permissions.includes("customer.portal"),
+    enabled: !!user?.isActive && (user.permissions.includes("customer.portal") || !hasPosition),
     retry: false,
     staleTime: 30_000,
   });
@@ -159,7 +169,7 @@ export function CustomerPhoto({
           </span>
         )}
       </div>
-      {profile.avatarUploadEnabled && isActiveVip(profile) ? (
+      {profile.avatarUploadEnabled ? (
         <>
           <label className="mm-customer-photo-upload" htmlFor="customer-avatar-input">
             <Camera size={16} />
@@ -195,11 +205,7 @@ export function CustomerPhoto({
           <small>JPG, PNG hoặc WebP · tối đa 5 MB. Xem trước ảnh rồi nhấn lưu.</small>
         </>
       ) : (
-        <small>
-          {isActiveVip(profile)
-            ? "Tính năng tải ảnh đang tạm bảo trì. Bạn vẫn có thể chỉnh thông tin cá nhân."
-            : "Đổi ảnh đại diện là quyền lợi của hội viên VIP còn hiệu lực."}
-        </small>
+        <small>Tính năng tải ảnh đang tạm bảo trì. Bạn vẫn có thể chỉnh thông tin cá nhân.</small>
       )}
       {done && (
         <p className="mm-customer-photo-ok" role="status">

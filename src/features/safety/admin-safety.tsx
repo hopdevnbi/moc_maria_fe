@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Bell, MapPin, Route, ShieldCheck, Siren } from "lucide-react";
+import { Bell, MapPin, RefreshCw, Route, ShieldCheck, Siren, UserRound } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   attendanceRows,
@@ -190,7 +190,7 @@ function AdminSafetyContent({ initialMapOpen }: { initialMapOpen: boolean }) {
           }}
           disabled={loading}
         >
-          Tải lại
+          <RefreshCw size={17} aria-hidden="true" /> Tải lại
         </button>
         <button
           className="mm-outline-cta"
@@ -215,7 +215,7 @@ function AdminSafetyContent({ initialMapOpen }: { initialMapOpen: boolean }) {
           {sound ? "Tắt âm báo SOS" : "Bật âm báo SOS"}
         </button>
         <Link className="mm-outline-cta" href="/tai-khoan">
-          Tài khoản
+          <UserRound size={17} aria-hidden="true" /> Tài khoản
         </Link>
       </div>
       {error && (

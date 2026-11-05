@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { ProviderDescriptionEditor } from "@/features/mobile/profile-editor";
 import { CustomerAccountProfile } from "@/features/mobile/customer-account-profile";
+import { CustomerAttendanceCard } from "@/features/staff-attendance/customer-attendance-card";
 import { AppointmentInquiries } from "@/features/mobile/inquiries";
 import { AccountSearch } from "@/features/mobile/account-search";
 import { AccountShortcuts } from "@/features/mobile/account-shortcuts";
@@ -42,7 +43,18 @@ function AccountContent() {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   if (!user) return null;
-  const customer = user.permissions.includes("customer.portal");
+  const customer =
+    user.permissions.includes("customer.portal") ||
+    !user.roles.some((role) =>
+      [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "BRANCH_MANAGER",
+        "RECEPTIONIST",
+        "THERAPIST",
+        "DOCTOR_CONSULTANT",
+      ].includes(role),
+    );
   const technician = user.roles.includes("THERAPIST") || user.roles.includes("DOCTOR_CONSULTANT");
   const admin = user.permissions.includes("admin.portal");
   if (technician) return <TechnicianWorkspace />;
@@ -143,7 +155,21 @@ function AccountContent() {
           <LogOut size={17} aria-hidden="true" /> {busy ? "Đang đăng xuất..." : "Đăng xuất"}
         </button>
       </section>
-      <StaffAttendanceCard />
+      {customer &&
+      !user.roles.some((role) =>
+        [
+          "SUPER_ADMIN",
+          "ADMIN",
+          "BRANCH_MANAGER",
+          "RECEPTIONIST",
+          "THERAPIST",
+          "DOCTOR_CONSULTANT",
+        ].includes(role),
+      ) ? (
+        <CustomerAttendanceCard />
+      ) : (
+        <StaffAttendanceCard />
+      )}
       {customer && <CustomerAccountProfile />}
       <AccountShortcuts technician={technician} signingOut={busy} onSignOut={signOut} />
       {notice && (

@@ -70,8 +70,46 @@
 .safety-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin: 18px 0;
+  gap: 10px;
+  margin: 13px 0 4px;
+}
+.mm-safety .mm-outline-cta,
+.mm-safety .mm-primary-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid #cbdccf;
+  border-radius: 12px;
+  color: #2b6047;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: normal;
+}
+.mm-safety .mm-primary-cta {
+  border-color: #246847;
+  background: #246847;
+  color: #fff;
+}
+.mm-safety .mm-outline-cta:hover {
+  background: #eaf4ec;
+  border-color: #97b5a0;
+}
+.mm-safety .mm-primary-cta:hover {
+  background: #1d5339;
+}
+.safety-actions .mm-outline-cta[aria-pressed="true"] {
+  background: #e4f3e5;
+  border-color: #9cc9a4;
 }
 .safety-route-summary {
   display: flex;
@@ -201,7 +239,8 @@
   gap: 6px;
   padding: 18px;
   border-radius: 16px;
-  background: #eaf1e5;
+  background: #edf5e9;
+  border: 1px solid #e3ece0;
 }
 .safety-stats strong {
   font-size: 30px;
@@ -234,7 +273,8 @@
     border-radius: 18px;
   }
   .safety-intro {
-    padding: 18px;
+    padding: 15px;
+    gap: 10px;
   }
   .mm-safety h2 {
     font-size: 21px;
@@ -242,14 +282,32 @@
   .safety-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .safety-stats > div {
+    padding: 12px;
+  }
+  .safety-stats strong {
+    font-size: 25px;
+  }
+  .safety-stats span {
+    font-size: 12px;
+  }
   .safety-monitor-list {
     grid-template-columns: 1fr;
   }
   .safety-map {
-    height: 320px;
+    height: min(58vh, 380px);
   }
-  .safety-actions > * {
-    flex: 1 1 180px;
+  .safety-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .safety-actions > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .safety-actions .mm-outline-cta {
+    font-size: 12px;
+    padding: 9px 8px;
   }
   .mm-safety .mm-primary-cta {
     white-space: normal;

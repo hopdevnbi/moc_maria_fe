@@ -24,18 +24,15 @@ beforeEach(() => {
     customer: { ...profile.customer, avatarUrl: "https://cdn.example.test/avatar.webp" },
   });
 });
-describe("Active VIP avatar controls", () => {
-  it("does not show upload controls for standard or expired customers even if an old server flag is true", () => {
+describe("Customer avatar controls", () => {
+  it("allows every active customer, including standard and expired VIP customers, to choose an avatar", () => {
     const view = render(
       <CustomerPhoto
         profile={{ ...profile, membership: { ...profile.membership, tier: "STANDARD" } }}
         onUpdate={vi.fn()}
       />,
     );
-    expect(screen.queryByLabelText("Thay ảnh đại diện")).not.toBeInTheDocument();
-    expect(
-      screen.getByText("Đổi ảnh đại diện là quyền lợi của hội viên VIP còn hiệu lực."),
-    ).toBeVisible();
+    expect(screen.getByLabelText("Thay ảnh đại diện")).toBeInTheDocument();
     view.rerender(
       <CustomerPhoto
         profile={{
@@ -45,7 +42,14 @@ describe("Active VIP avatar controls", () => {
         onUpdate={vi.fn()}
       />,
     );
+    expect(screen.getByLabelText("Thay ảnh đại diện")).toBeInTheDocument();
+  });
+  it("does not offer a broken upload button if CDN upload is not configured", () => {
+    render(
+      <CustomerPhoto profile={{ ...profile, avatarUploadEnabled: false }} onUpdate={vi.fn()} />,
+    );
     expect(screen.queryByLabelText("Thay ảnh đại diện")).not.toBeInTheDocument();
+    expect(screen.getByText(/Tính năng tải ảnh đang tạm bảo trì/)).toBeInTheDocument();
   });
   it("lets active VIP preview, explicitly save a file and refresh the displayed profile", async () => {
     const update = vi.fn();
