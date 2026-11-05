@@ -3,6 +3,13 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import Link from "next/link";
 import { Bell, MapPin, Route, ShieldCheck, Siren } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import {
+  attendanceRows,
+  hcmDate,
+  isConfigured,
+  type AttendanceAdminList,
+  type AttendanceRecord,
+} from "@/features/staff-attendance/data";
 import { SafetyMap } from "./safety-map";
 import { ongoing, time, pointState, stateLabels, type SafetySession } from "./types";
 interface Monitor {
@@ -23,6 +30,10 @@ function AdminSafetyContent() {
     [busy, setBusy] = useState(""),
     [selectedId, setSelectedId] = useState(""),
     [mapOpen, setMapOpen] = useState(false),
+    [attendanceDate, setAttendanceDate] = useState(() => hcmDate()),
+    [attendance, setAttendance] = useState<AttendanceRecord[]>([]),
+    [attendanceTotal, setAttendanceTotal] = useState(0),
+    [attendanceError, setAttendanceError] = useState(""),
     [sound, setSound] = useState(false),
     [now, setNow] = useState(0);
   const audio = useRef<HTMLAudioElement | null>(null),
@@ -46,6 +57,23 @@ function AdminSafetyContent() {
       setLoading(false);
     }
   }, [allowed, authFetch]);
+  const loadAttendance = useCallback(async () => {
+    if (!allowed) return;
+    try {
+      const result = await authFetch<AttendanceAdminList>(
+        "/admin/staff-attendance/check-ins?date=" +
+          encodeURIComponent(attendanceDate) +
+          "&page=1&limit=100",
+        { cache: "no-store" },
+      );
+      const rows = attendanceRows(result);
+      setAttendance(rows);
+      setAttendanceTotal(Array.isArray(result) ? rows.length : (result.total ?? rows.length));
+      setAttendanceError("");
+    } catch (e) {
+      setAttendanceError(e instanceof Error ? e.message : "Không tải được vị trí check-in.");
+    }
+  }, [allowed, authFetch, attendanceDate]);
   useEffect(() => {
     let active = true;
     queueMicrotask(() => {
@@ -60,6 +88,20 @@ function AdminSafetyContent() {
       clearInterval(timer);
     };
   }, [load]);
+  useEffect(() => {
+    if (!allowed) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) void loadAttendance();
+    });
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") void loadAttendance();
+    }, 60_000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [allowed, loadAttendance]);
   useEffect(() => {
     const ids = data.filter((s) => s.sos?.status === "OPEN").map((s) => s.sos!.id);
     if (sound && ids.some((id) => !seen.current.has(id)))
@@ -102,6 +144,8 @@ function AdminSafetyContent() {
     running = data.filter((s) => ongoing(s) && Date.parse(s.expiresAt) > now),
     stale = running.filter((s) => pointState(s, now) === "STALE"),
     overdue = running.filter((s) => Date.parse(s.expectedCheckAt) < now);
+  const checkInsWithGps = attendance.filter((item) => isConfigured(item)).length;
+  const checkInsWithoutGps = attendance.length - checkInsWithGps;
   return (
     <section className="mm-safety">
       <div className="safety-intro">
@@ -138,7 +182,14 @@ function AdminSafetyContent() {
         </div>
       </div>
       <div className="safety-actions">
-        <button className="mm-outline-cta" onClick={() => void load()} disabled={loading}>
+        <button
+          className="mm-outline-cta"
+          onClick={() => {
+            void load();
+            void loadAttendance();
+          }}
+          disabled={loading}
+        >
           Tải lại
         </button>
         <button
@@ -181,9 +232,36 @@ function AdminSafetyContent() {
         <h2>
           <MapPin size={21} /> Bản đồ hành trình KTV
         </h2>
+        <div className="safety-attendance-map-meta">
+          <label>
+            Vị trí check-in ngày
+            <input
+              type="date"
+              aria-label="Ngày check-in trên bản đồ"
+              value={attendanceDate}
+              onChange={(event) => setAttendanceDate(event.target.value)}
+            />
+          </label>
+          <p>
+            {checkInsWithGps} vị trí check-in có GPS / {attendanceTotal} lượt điểm danh.
+            {attendanceTotal > attendance.length && " Chỉ hiển thị tối đa 100 lượt đầu tiên."}
+          </p>
+        </div>
+        {attendanceError && (
+          <p className="safety-warning" role="alert">
+            Không tải được điểm chấm công: {attendanceError}
+          </p>
+        )}
+        {checkInsWithoutGps > 0 && (
+          <p className="safety-web-note">
+            {checkInsWithoutGps} lượt không có tọa độ GPS nên không thể ghim lên bản đồ. Check-in
+            ngoài 200m vẫn có thể hiện điểm nếu GPS đã được ghi nhận. Điểm check-in không phải theo
+            dõi thời gian thực.
+          </p>
+        )}
         {mapOpen ? (
           <>
-            <SafetyMap sessions={data} focusSessionId={selectedId} />
+            <SafetyMap sessions={data} checkIns={attendance} focusSessionId={selectedId} />
             {selectedId && (
               <button className="mm-outline-cta" onClick={() => setSelectedId("")}>
                 Hiển thị tất cả KTV
@@ -196,9 +274,9 @@ function AdminSafetyContent() {
         ) : (
           <>
             <p>
-              Bản đồ nền dùng OpenStreetMap. Khi mở, nhà cung cấp bản đồ nhận vùng bản đồ được xem
-              và thông tin kết nối; tên KTV, địa chỉ khách và điểm đánh dấu không được gửi trong yêu
-              cầu bản đồ.
+              Bản đồ nền do OpenFreeMap cung cấp (dữ liệu OpenStreetMap). Khi mở, nhà cung cấp có
+              thể biết vùng bản đồ được xem và thông tin kết nối; tên nhân sự, địa chỉ khách và
+              các điểm GPS chỉ được vẽ trong trình duyệt quản trị.
             </p>
             <button className="mm-primary-cta" onClick={() => setMapOpen(true)}>
               Mở bản đồ hành trình
@@ -212,8 +290,8 @@ function AdminSafetyContent() {
         <article className="safety-card">
           <h2>Chưa có phiên chia sẻ vị trí</h2>
           <p>
-            Khi KTV đồng ý chia sẻ cho ca làm việc hoặc chuyến phục vụ tại nhà, thông tin sẽ xuất
-            hiện tại đây.
+            Chưa có KTV nào chủ động bật chia sẻ hành trình. Vị trí check-in một lần sẽ hiện riêng
+            trên bản đồ ở trên nếu lúc điểm danh có GPS; không tự tạo phiên tracking.
           </p>
         </article>
       ) : (

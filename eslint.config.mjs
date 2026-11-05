@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Pinned third-party MapLibre v6 worker, served unmodified from public/.
+    "public/vendor/maplibre/**",
   ]),
 ]);
 

@@ -88,6 +88,32 @@
 .safety-shift-card {
   background: #f7faf5;
 }
+.safety-attendance-map-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  padding: 10px 0;
+}
+.safety-attendance-map-meta label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.safety-attendance-map-meta input {
+  min-height: 38px;
+  border: 1px solid #d9e3d7;
+  padding: 7px 10px;
+  background: #fff;
+  border-radius: 10px;
+  color: inherit;
+  font: inherit;
+}
+.safety-attendance-map-meta p {
+  font-size: 13px;
+  margin: 0;
+}
 .mm-safety form {
   display: grid;
   gap: 18px;

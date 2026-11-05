@@ -1,12 +1,19 @@
 import type { Feature, FeatureCollection, LineString, Point, Polygon } from "geojson";
 import type { SafetySession, SafetyTrailPoint } from "./types";
 import { ongoing, time } from "./types";
+import {
+  attendanceLabel,
+  formattedCheckInTime,
+  isConfigured,
+  type AttendanceRecord,
+} from "../staff-attendance/data";
 
 const MAX_GAP_MS = 180_000;
 
 export type RouteProperties = { sessionId: string; focused: boolean };
 export type LocationProperties = { color: string; label: string };
 export type AccuracyProperties = { color: string };
+export type CheckInProperties = { color: string; label: string };
 
 /** Keep GPS outages as gaps rather than drawing misleading straight lines. */
 export function routeSegments(points: SafetyTrailPoint[]): SafetyTrailPoint[][] {
@@ -95,5 +102,37 @@ export function locationFeatures(
   return {
     points: { type: "FeatureCollection", features: points },
     accuracy: { type: "FeatureCollection", features: accuracy },
+  };
+}
+
+/** Check-in locations are single observations, never reconstructed routes. */
+export function checkInFeatures(
+  attendance: AttendanceRecord[],
+): FeatureCollection<Point, CheckInProperties> {
+  return {
+    type: "FeatureCollection",
+    features: attendance
+      .filter((row) => isConfigured(row))
+      .map(
+        (row): Feature<Point, CheckInProperties> => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [row.longitude!, row.latitude!],
+          },
+          properties: {
+            color: row.status === "IN_RANGE" ? "#247a56" : "#bc7b21",
+            label: [
+              row.employee?.displayName ??
+                row.staff?.displayName ??
+                row.staffName ??
+                row.employeeName ??
+                "Nhân viên",
+              attendanceLabel(row.status),
+              formattedCheckInTime(row.checkedInAt ?? row.createdAt),
+            ].join(" · "),
+          },
+        }),
+      ),
   };
 }

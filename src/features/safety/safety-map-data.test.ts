@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { locationFeatures, routeFeatures, routeSegments } from "./safety-map-data";
+import { existsSync, statSync } from "node:fs";
+import { checkInFeatures, locationFeatures, routeFeatures, routeSegments } from "./safety-map-data";
 import type { SafetySession, SafetyTrailPoint } from "./types";
+import type { AttendanceRecord } from "../staff-attendance/data";
 
 const iso = (seconds: number) => new Date(Date.UTC(2026, 10, 5, 12, 0, seconds)).toISOString();
 const point = (seconds: number): SafetyTrailPoint => ({
@@ -28,6 +30,11 @@ const session = (): SafetySession => ({
 });
 
 describe("KTV route map data", () => {
+  it("bundles the MapLibre v6 worker at the same-origin URL expected by Next.js", () => {
+    const path = "public/vendor/maplibre/maplibre-gl-worker.mjs";
+    expect(existsSync(path)).toBe(true);
+    expect(statSync(path).size).toBeGreaterThan(100_000);
+  });
   it("breaks routes across GPS outages longer than three minutes", () => {
     const segments = routeSegments(session().trail!);
     expect(segments.map((segment) => segment.length)).toEqual([2, 2]);
@@ -48,5 +55,34 @@ describe("KTV route map data", () => {
   });
   it("does not display any location when a session has no GPS", () => {
     expect(locationFeatures([session()]).points.features).toHaveLength(0);
+  });
+  it("shows out-of-range check-ins as one-time GPS points without creating a route", () => {
+    const recorded: AttendanceRecord[] = [
+      {
+        id: "record-1",
+        branchId: "branch-1",
+        status: "OUT_OF_RANGE",
+        latitude: 21.031,
+        longitude: 105.752,
+        accuracyMeters: 25,
+        checkedInAt: iso(0),
+        coinsEarned: 0,
+        employee: { displayName: "Nhân viên thử nghiệm" },
+      },
+      {
+        id: "record-2",
+        branchId: "branch-1",
+        status: "LOCATION_UNAVAILABLE",
+        latitude: null,
+        longitude: null,
+        coinsEarned: 0,
+      },
+    ];
+    const points = checkInFeatures(recorded);
+    expect(points.features).toHaveLength(1);
+    expect(points.features[0].geometry.coordinates).toEqual([105.752, 21.031]);
+    expect(points.features[0].properties?.label).toContain("Ngoài phạm vi 200m");
+    expect(points.features[0].properties?.color).toBe("#bc7b21");
+    expect(routeFeatures([]).features).toEqual([]);
   });
 });

@@ -12,10 +12,17 @@ vi.mock("@/features/auth/hooks/useAuth", () => ({
 }));
 vi.mock("./geolocation", () => ({ watchSafetyLocation: state.watch }));
 vi.mock("./safety-map", () => ({
-  SafetyMap: ({ focusSessionId }: { focusSessionId?: string }) => (
+  SafetyMap: ({
+    focusSessionId,
+    checkIns,
+  }: {
+    focusSessionId?: string;
+    checkIns?: { id: string }[];
+  }) => (
     <div>
       <span>Bản đồ kiểm tra</span>
       <span data-testid="focused-route">{focusSessionId}</span>
+      <span data-testid="check-in-points">{checkIns?.length ?? 0}</span>
     </div>
   ),
 }));
@@ -173,5 +180,31 @@ describe("Safety consent and SOS UI", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Xem hành trình" }));
     expect(screen.getByText("Bản đồ kiểm tra")).toBeInTheDocument();
     expect(screen.getByTestId("focused-route")).toHaveTextContent("session");
+  });
+  it("shows one-time out-of-range check-ins even without any active KTV tracking session", async () => {
+    state.user = { id: "admin", roles: ["SUPER_ADMIN"] };
+    state.fetch.mockImplementation((path: string) => {
+      if (path.startsWith("/admin/staff-attendance/check-ins")) {
+        return Promise.resolve({
+          items: [
+            {
+              id: "checked-in",
+              status: "OUT_OF_RANGE",
+              latitude: 21.04,
+              longitude: 105.75,
+              branchId: "branch",
+              coinsEarned: 0,
+            },
+          ],
+          total: 1,
+        });
+      }
+      return Promise.resolve({ serverTime: new Date().toISOString(), sessions: [] });
+    });
+    render(<AdminSafety />);
+    await screen.findByText(/1 vị trí check-in có GPS \/ 1 lượt điểm danh/);
+    fireEvent.click(screen.getByRole("button", { name: "Mở bản đồ hành trình" }));
+    expect(screen.getByTestId("check-in-points")).toHaveTextContent("1");
+    expect(screen.getByText("Chưa có phiên chia sẻ vị trí")).toBeInTheDocument();
   });
 });
