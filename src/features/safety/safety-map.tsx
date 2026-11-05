@@ -1,9 +1,18 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
-import type { Map as LeafletMap, LayerGroup } from "leaflet";
+import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import type { SafetySession } from "./types";
-import { ongoing, time } from "./types";
-import "leaflet/dist/leaflet.css";
+import { locationFeatures, routeFeatures } from "./safety-map-data";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+// OpenFreeMap provides keyless vector maps, including commercial websites.
+// GPS layers remain in browser memory; only basemap tiles/style are fetched.
+const BASEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
+const ROUTE_SOURCE = "ktv-safety-route";
+const POINT_SOURCE = "ktv-safety-points";
+const ACCURACY_SOURCE = "ktv-safety-accuracy";
+
 export function SafetyMap({
   sessions,
   focusSessionId,
@@ -11,121 +20,169 @@ export function SafetyMap({
   sessions: SafetySession[];
   focusSessionId?: string;
 }) {
-  const node = useRef<HTMLDivElement>(null),
-    map = useRef<LeafletMap | null>(null),
-    layer = useRef<LayerGroup | null>(null),
-    lastFocus = useRef(""),
-    [ready, setReady] = useState(false),
-    [notice, setNotice] = useState("");
+  const node = useRef<HTMLDivElement>(null);
+  const map = useRef<MapLibreMap | null>(null);
+  const lastFocus = useRef("");
+  const [ready, setReady] = useState(false);
+  const [notice, setNotice] = useState("");
+
   useEffect(() => {
     let cancelled = false;
-    void import("leaflet")
-      .then((L) => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    void import("maplibre-gl")
+      .then(({ Map, NavigationControl, AttributionControl, Popup }) => {
         if (cancelled || !node.current) return;
-        map.current = L.map(node.current, { scrollWheelZoom: false }).setView(
-          [21.0285, 105.8542],
-          11,
+        const instance = new Map({
+          container: node.current,
+          style: BASEMAP_STYLE,
+          center: [105.8542, 21.0285],
+          zoom: 11,
+          pitchWithRotate: false,
+          dragRotate: false,
+          scrollZoom: false,
+          attributionControl: false,
+        });
+        map.current = instance;
+        instance.addControl(new NavigationControl({ showCompass: false }), "top-left");
+        instance.addControl(
+          new AttributionControl({
+            compact: false,
+            customAttribution:
+              '<a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>',
+          }),
+          "bottom-right",
         );
-        layer.current = L.layerGroup().addTo(map.current);
-        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        })
-          .on("tileerror", () =>
+        instance.on("load", () => {
+          if (cancelled) return;
+          instance.addSource(ROUTE_SOURCE, {
+            type: "geojson",
+            data: routeFeatures([]),
+          });
+          instance.addSource(ACCURACY_SOURCE, {
+            type: "geojson",
+            data: locationFeatures([]).accuracy,
+          });
+          instance.addSource(POINT_SOURCE, {
+            type: "geojson",
+            data: locationFeatures([]).points,
+          });
+          instance.addLayer({
+            id: "ktv-accuracy-fill",
+            type: "fill",
+            source: ACCURACY_SOURCE,
+            paint: { "fill-color": ["get", "color"], "fill-opacity": 0.09 },
+          });
+          instance.addLayer({
+            id: "ktv-accuracy-outline",
+            type: "line",
+            source: ACCURACY_SOURCE,
+            paint: { "line-color": ["get", "color"], "line-width": 1 },
+          });
+          instance.addLayer({
+            id: "ktv-route-line",
+            type: "line",
+            source: ROUTE_SOURCE,
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: {
+              "line-color": ["case", ["get", "focused"], "#176747", "#679b86"],
+              "line-width": ["case", ["get", "focused"], 5, 3],
+              "line-opacity": ["case", ["get", "focused"], 0.95, 0.65],
+            },
+          });
+          instance.addLayer({
+            id: "ktv-location-dot",
+            type: "circle",
+            source: POINT_SOURCE,
+            paint: {
+              "circle-radius": 9,
+              "circle-color": ["get", "color"],
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-width": 2,
+            },
+          });
+          instance.on("click", "ktv-location-dot", (event) => {
+            const feature = event.features?.[0];
+            const coordinates = feature?.geometry;
+            if (!feature || coordinates?.type !== "Point") return;
+            const label = document.createElement("div");
+            // Use textContent: a provider name must never become popup HTML.
+            label.textContent = String(feature.properties?.label ?? "Vị trí KTV");
+            new Popup({ closeButton: true })
+              .setLngLat(coordinates.coordinates as [number, number])
+              .setDOMContent(label)
+              .addTo(instance);
+          });
+          instance.on("mouseenter", "ktv-location-dot", () => {
+            instance.getCanvas().style.cursor = "pointer";
+          });
+          instance.on("mouseleave", "ktv-location-dot", () => {
+            instance.getCanvas().style.cursor = "";
+          });
+          setReady(true);
+          setNotice("");
+        });
+        instance.on("error", () => {
+          if (!instance.isStyleLoaded()) {
             setNotice(
-              "Chưa tải được bản đồ nền. Vẫn có thể xem tọa độ và thời điểm cập nhật trong danh sách.",
-            ),
-          )
-          .addTo(map.current);
-        setReady(true);
+              "Chưa tải được bản đồ nền. Bạn vẫn có thể xem tọa độ và thời điểm GPS trong danh sách.",
+            );
+          }
+        });
+        timeout = setTimeout(() => {
+          if (!cancelled && !instance.isStyleLoaded()) {
+            setNotice(
+              "Kết nối bản đồ đang chậm hoặc bị chặn. Vui lòng kiểm tra mạng; dữ liệu GPS vẫn hiển thị trong danh sách.",
+            );
+          }
+        }, 12_000);
       })
-      .catch(() => setNotice("Chưa tải được bản đồ. Vui lòng xem danh sách vị trí."));
+      .catch(() => setNotice("Thiết bị không mở được bản đồ. Hãy xem danh sách vị trí KTV."));
     return () => {
       cancelled = true;
+      if (timeout) clearTimeout(timeout);
       map.current?.remove();
       map.current = null;
-      layer.current = null;
     };
   }, []);
+
   useEffect(() => {
-    if (!ready || !layer.current) return;
-    let cancelled = false;
-    void import("leaflet").then((L) => {
-      if (cancelled || !layer.current) return;
-      layer.current.clearLayers();
-      for (const s of sessions) {
-        const route = s.trail ?? [];
-        // Do not draw a misleading straight line across a long GPS outage.
-        if (route.length > 1) {
-          let segment = [route[0]];
-          const draw = () => {
-            if (segment.length < 2) return;
-            L.polyline(
-              segment.map((p) => [p.latitude, p.longitude] as [number, number]),
-              {
-                color: focusSessionId === s.id ? "#176747" : "#679b86",
-                weight: focusSessionId === s.id ? 5 : 3,
-                opacity: focusSessionId === s.id ? 0.9 : 0.55,
-              },
-            ).addTo(layer.current!);
-          };
-          for (const point of route.slice(1)) {
-            if (
-              Date.parse(point.recordedAt) - Date.parse(segment[segment.length - 1].recordedAt) >
-              180000
-            ) {
-              draw();
-              segment = [point];
-            } else {
-              segment.push(point);
-            }
-          }
-          draw();
-        }
-        const p = s.point || s.sos?.point;
-        if (!p) continue;
-        const recent = ongoing(s) && s.sharing && Date.now() - Date.parse(p.recordedAt) <= 60000;
-        const color =
-          s.sos && s.sos.status !== "RESOLVED" ? "#b63732" : recent ? "#21674a" : "#9b762e";
-        L.circle([p.latitude, p.longitude], {
-          radius: p.accuracy,
-          color,
-          weight: 1,
-          fillOpacity: 0.07,
-        }).addTo(layer.current);
-        const label = document.createElement("div");
-        label.textContent =
-          s.providerName + " · " + time(p.recordedAt) + (recent ? " · Điểm mới" : " · Điểm cũ");
-        L.circleMarker([p.latitude, p.longitude], {
-          radius: 9,
-          color,
-          fillColor: color,
-          fillOpacity: 0.85,
-        })
-          .bindTooltip(label)
-          .addTo(layer.current);
-      }
-      if (focusSessionId && map.current && focusSessionId !== lastFocus.current) {
-        const chosen = sessions.find((session) => session.id === focusSessionId);
-        const coordinates = [
-          ...(chosen?.trail ?? []).map(
-            (point) => [point.latitude, point.longitude] as [number, number],
-          ),
-          ...(chosen?.point
-            ? [[chosen.point.latitude, chosen.point.longitude] as [number, number]]
-            : []),
-        ];
-        if (coordinates.length) {
-          map.current.fitBounds(L.latLngBounds(coordinates).pad(0.25), { maxZoom: 16 });
-          lastFocus.current = focusSessionId;
-        }
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [sessions, ready, focusSessionId]);
+    const instance = map.current;
+    if (!ready || !instance) return;
+    const locations = locationFeatures(sessions);
+    void (instance.getSource(ROUTE_SOURCE) as GeoJSONSource | undefined)?.setData(
+      routeFeatures(sessions, focusSessionId),
+    );
+    void (instance.getSource(POINT_SOURCE) as GeoJSONSource | undefined)?.setData(locations.points);
+    void (instance.getSource(ACCURACY_SOURCE) as GeoJSONSource | undefined)?.setData(
+      locations.accuracy,
+    );
+
+    if (!focusSessionId) {
+      lastFocus.current = "";
+      return;
+    }
+    if (lastFocus.current === focusSessionId) return;
+    const selected = sessions.find((s) => s.id === focusSessionId);
+    const coordinates = [
+      ...(selected?.trail ?? []).map((p) => [p.longitude, p.latitude] as [number, number]),
+      ...(selected?.point
+        ? [[selected.point.longitude, selected.point.latitude] as [number, number]]
+        : []),
+    ];
+    if (coordinates.length) {
+      const longitudes = coordinates.map((c) => c[0]);
+      const latitudes = coordinates.map((c) => c[1]);
+      instance.fitBounds(
+        [
+          [Math.min(...longitudes), Math.min(...latitudes)],
+          [Math.max(...longitudes), Math.max(...latitudes)],
+        ],
+        { padding: 35, maxZoom: 16, duration: 450 },
+      );
+      lastFocus.current = focusSessionId;
+    }
+  }, [sessions, focusSessionId, ready]);
+
   return (
     <div>
       {notice && (
@@ -140,8 +197,9 @@ export function SafetyMap({
         aria-label="Bản đồ vị trí và hành trình chia sẻ của KTV"
       />
       <p className="safety-fine">
-        Đường xanh: hành trình GPS được KTV đồng ý chia sẻ. Đường bị ngắt tại khoảng mất GPS trên 3
-        phút. Xanh: điểm mới · Vàng: điểm cũ · Đỏ: SOS. Vòng tròn biểu thị sai số GPS.
+        Bản đồ nền OpenFreeMap · dữ liệu OpenStreetMap. Đường xanh: hành trình KTV đã đồng ý chia
+        sẻ; ngắt tại khoảng mất GPS trên 3 phút. Xanh: điểm mới · Vàng: điểm cũ · Đỏ: SOS. Vòng tròn
+        là sai số GPS.
       </p>
     </div>
   );
