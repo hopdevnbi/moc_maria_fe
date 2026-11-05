@@ -54,6 +54,30 @@ async function mount() {
 }
 
 describe("responsive PWA installation UX", () => {
+  it("releases the PWA modal scroll lock when navigating to staff Check-in on Android and iPhone", async () => {
+    for (const agent of [
+      "Mozilla/5.0 (Linux; Android 16; Pixel 9) Chrome/140.0",
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0) Safari/605.1.15",
+    ]) {
+      Object.defineProperty(navigator, "userAgent", { configurable: true, value: agent });
+      route.pathname = "/";
+      const view = render(<PwaInstallAssistant />);
+      await act(async () => vi.advanceTimersByTime(1));
+      act(() => window.dispatchEvent(new Event(PWA_OPEN_EVENT)));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(document.body.style.overflow).toBe("hidden");
+
+      route.pathname = "/check-in";
+      await act(async () => {
+        view.rerender(<PwaInstallAssistant />);
+        await Promise.resolve();
+      });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(document.body.style.overflow).not.toBe("hidden");
+      view.unmount();
+    }
+  });
+
   it("shows a small invitation after engagement, supports postponing it for seven days", async () => {
     await mount();
     expect(screen.queryByText("Mộc Maria trên điện thoại")).not.toBeInTheDocument();

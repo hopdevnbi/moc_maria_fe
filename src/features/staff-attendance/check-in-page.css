@@ -1,6 +1,20 @@
 .mm-checkin-page {
-  min-height: 100dvh;
+  /* Own the vertical scroll on mobile. An older dialog/PWA may have left
+     body overflow locked during a client-side navigation to Check-in. */
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
   background: #faf9f2;
+}
+/* Private staff check-in is a full-screen workflow; do not reserve a second
+   page height for the promotional banner above its scroll container. */
+body:has(.mm-checkin-page) .christmas-welcome {
+  display: none;
 }
 .mm-checkin-main {
   width: min(850px, calc(100% - 40px));

@@ -59,6 +59,22 @@ function PwaInstallAssistantContent() {
   const headingId = useId();
   const detailId = useId();
 
+  // The assistant survives Next.js client-side route transitions. A dialog
+  // left open on the previous route must release its body scroll lock.
+  useEffect(() => {
+    let active = true;
+    // Schedule after the current route commit instead of triggering a
+    // synchronous React state update from the effect itself.
+    queueMicrotask(() => {
+      if (!active) return;
+      setOpen(false);
+      setTeaser(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
   useEffect(() => {
     if (!canUsePwaOnHost(window.location.hostname)) return;
     const standalone = window.matchMedia?.("(display-mode: standalone)");

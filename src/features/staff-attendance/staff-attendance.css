@@ -1,6 +1,8 @@
 .mm-att-card {
   min-width: 0;
-  overflow: hidden;
+  /* clip preserves the rounded outline without trapping touch-scroll events
+     in an overflow:hidden non-scrollable container on iOS Safari. */
+  overflow: clip;
   border: 1px solid #d8e5d8;
   border-radius: 25px;
   background: #fffdf8;
