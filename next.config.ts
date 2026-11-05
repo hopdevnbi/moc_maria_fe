@@ -15,6 +15,13 @@ const nextConfig: NextConfig = {
         hostname: "giangxa-media-cdn.b-cdn.net",
         pathname: "/moc-maria/provider-tips/qr/**",
       },
+      {
+        // Same-origin fallback when a mobile browser/PWA fails to load the
+        // direct Bunny CDN selfie (only this tightly scoped media folder).
+        protocol: "https",
+        hostname: "giangxa-media-cdn.b-cdn.net",
+        pathname: "/moc-maria/staff-attendance/**",
+      },
     ],
   },
   cacheComponents: true,

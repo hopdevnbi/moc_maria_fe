@@ -309,6 +309,38 @@
   text-align: center;
   background: white;
 }
+.mm-att-selfie-photo-error {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 230px;
+  padding: 22px;
+  color: #476452;
+  text-align: center;
+}
+.mm-att-selfie-photo-error strong {
+  font-size: 14px;
+}
+.mm-att-selfie-photo-error span {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.mm-att-selfie-photo-error button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 9px 15px;
+  border: 1px solid #b5cdb8;
+  border-radius: 11px;
+  background: #fff;
+  color: #315f43;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
 .mm-att-selfie a {
   display: inline-flex;
   font-size: 12px;

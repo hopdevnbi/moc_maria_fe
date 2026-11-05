@@ -14,6 +14,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { RoleName } from "@/features/auth/auth.types";
 import { ApiError } from "@/features/auth/auth-api";
 import { prepareAttendanceSelfie } from "./selfie-image";
+import { StaffSelfiePreview } from "./staff-selfie-preview";
 import {
   attendanceLabel,
   attendanceSelfieUrl,
@@ -598,22 +599,11 @@ function AttendanceSession({ standalone }: { standalone: boolean }) {
                 )}
               </div>
               {attendanceSelfieUrl(today.selfieUrl) && (
-                <figure className="mm-att-selfie-photo">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- Render a private dated CDN selfie directly without the public Next image optimizer. */}
-                  <img
-                    src={attendanceSelfieUrl(today.selfieUrl)!}
-                    alt={`Ảnh selfie điểm danh ngày ${displayAttendanceDate(today.localDate ?? day)}`}
-                    width="720"
-                    height="960"
-                    loading="lazy"
-                    decoding="async"
-                    referrerPolicy="no-referrer"
-                  />
-                  <figcaption>
-                    <CheckCircle2 size={15} aria-hidden="true" />
-                    Một ảnh xác nhận · {displayAttendanceDate(today.localDate ?? day)}
-                  </figcaption>
-                </figure>
+                <StaffSelfiePreview
+                  key={today.id}
+                  url={attendanceSelfieUrl(today.selfieUrl)!}
+                  date={displayAttendanceDate(today.localDate ?? day)}
+                />
               )}
               {!today.selfieUrl && (
                 <div className="mm-att-upload-actions">

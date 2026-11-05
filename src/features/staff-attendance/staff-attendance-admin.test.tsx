@@ -34,6 +34,7 @@ const withoutPhoto: AttendanceRecord = {
   coinsEarned: 0,
   staff: { displayName: "Hoàng Anh", email: "ha@example.test" },
 };
+let records: AttendanceRecord[];
 
 function draw() {
   const client = new QueryClient({
@@ -48,9 +49,14 @@ function draw() {
 
 beforeEach(() => {
   mocks.roles = ["SUPER_ADMIN"];
-  mocks.fetch.mockReset().mockImplementation(async (path: string) => {
+  records = [withPhoto, withoutPhoto];
+  mocks.fetch.mockReset().mockImplementation(async (path: string, options?: RequestInit) => {
+    if (options?.method === "DELETE") {
+      records = records.filter((r) => !path.endsWith(r.id));
+      return { deleted: true };
+    }
     if (path.includes("/staff-attendance/check-ins?"))
-      return { items: [withPhoto, withoutPhoto], total: 2 };
+      return { items: records, total: records.length };
     if (path.includes("/staff-attendance/summary?"))
       return {
         totalCheckIns: 2,
@@ -65,6 +71,51 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("Super Admin attendance list UX", () => {
+  it("requires confirmation before deleting just one check-in and refreshes the list", async () => {
+    draw();
+    await screen.findByText("Nguyệt Nguyễn");
+    fireEvent.click(screen.getByRole("button", { name: "Xóa lượt check-in của Nguyệt Nguyễn" }));
+    const dialog = screen.getByRole("alertdialog", { name: "Xóa lượt điểm danh?" });
+    expect(within(dialog).getByText(/hoàn tác/)).toBeInTheDocument();
+    expect(
+      mocks.fetch.mock.calls.filter(([, options]) => options?.method === "DELETE"),
+    ).toHaveLength(0);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Quay lại" }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Xóa lượt check-in của Nguyệt Nguyễn" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Xác nhận xóa" }),
+    );
+    await waitFor(() => expect(screen.queryByText("Nguyệt Nguyễn")).not.toBeInTheDocument());
+    expect(screen.getByText("Hoàng Anh")).toBeInTheDocument();
+    expect(mocks.fetch.mock.calls.filter(([, options]) => options?.method === "DELETE")).toEqual([
+      [
+        "/admin/staff-attendance/check-ins/checkin-1",
+        expect.objectContaining({ method: "DELETE" }),
+      ],
+    ]);
+    expect(screen.getByText(/Đã xóa lượt check-in của Nguyệt Nguyễn/)).toBeInTheDocument();
+  });
+
+  it("keeps the original check-in and reports errors when delete is rejected", async () => {
+    mocks.fetch.mockImplementation(async (path: string, options?: RequestInit) => {
+      if (options?.method === "DELETE") throw new Error("Số dư coin không đủ hoàn tác.");
+      if (path.includes("/staff-attendance/check-ins?")) return { items: records, total: 2 };
+      if (path.includes("/staff-attendance/summary?"))
+        return { total: 2, statuses: { IN_RANGE: 1, LOCATION_UNAVAILABLE: 1 } };
+      if (path.includes("/admin/branches"))
+        return [{ id: "branch-1", name: "Mộc Maria", latitude: 21, longitude: 105 }];
+      throw new Error("Unexpected request");
+    });
+    draw();
+    await screen.findByText("Nguyệt Nguyễn");
+    fireEvent.click(screen.getByRole("button", { name: "Xóa lượt check-in của Nguyệt Nguyễn" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", { name: "Xác nhận xóa" }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent("Số dư coin không đủ hoàn tác");
+    expect(screen.getAllByText("Nguyệt Nguyễn").length).toBeGreaterThan(0);
+  });
   it("renders clear staff cards, GPS, coins and a selfie link rather than inline admin images", async () => {
     draw();
     const employee = await screen.findByText("Nguyệt Nguyễn");

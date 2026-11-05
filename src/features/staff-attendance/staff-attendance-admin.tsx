@@ -16,6 +16,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Trash2,
   UsersRound,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -59,6 +60,10 @@ export function StaffAttendanceAdmin() {
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AttendanceRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteNotice, setDeleteNotice] = useState("");
   const checkIns = useQuery({
     queryKey: ["admin", "staff-attendance", date, page],
     queryFn: () =>
@@ -133,6 +138,32 @@ export function StaffAttendanceAdmin() {
       setFeedback(cause instanceof Error ? cause.message : "Chưa cập nhật được tọa độ.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function removeCheckIn() {
+    if (!allowed || !deleteTarget || deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await authFetch("/admin/staff-attendance/check-ins/" + encodeURIComponent(deleteTarget.id), {
+        method: "DELETE",
+        cache: "no-store",
+      });
+      setDeleteNotice(
+        `Đã xóa lượt check-in của ${recordName(deleteTarget)}. Nhân viên có thể điểm danh lại trong ngày.`,
+      );
+      setDeleteTarget(null);
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["admin", "staff-attendance"] }),
+        client.invalidateQueries({ queryKey: ["staff-attendance"] }),
+      ]);
+    } catch (cause) {
+      setDeleteError(
+        cause instanceof Error ? cause.message : "Không thể xóa lượt chấm công. Vui lòng thử lại.",
+      );
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -267,6 +298,11 @@ export function StaffAttendanceAdmin() {
             Hiển thị <strong>{filtered.length}</strong> lượt · {displayAttendanceDate(date)}
           </span>
         </div>
+        {deleteNotice && (
+          <p className="mm-att-admin-delete-success" role="status">
+            <CheckCircle2 size={16} aria-hidden="true" /> {deleteNotice}
+          </p>
+        )}
         {checkIns.isPending ? (
           <p role="status" className="mm-att-admin-empty">
             Đang tải lịch sử điểm danh...
@@ -294,19 +330,35 @@ export function StaffAttendanceAdmin() {
                       </small>
                     </div>
                   </div>
-                  <span
-                    className={
-                      "mm-att-admin-status " +
-                      (record.status === "IN_RANGE" ? "is-valid" : "is-review")
-                    }
-                  >
-                    {record.status === "IN_RANGE" ? (
-                      <CheckCircle2 size={15} />
-                    ) : (
-                      <ShieldAlert size={15} />
-                    )}
-                    {attendanceLabel(record.status)}
-                  </span>
+                  <div className="mm-att-admin-record-actions">
+                    <span
+                      className={
+                        "mm-att-admin-status " +
+                        (record.status === "IN_RANGE" ? "is-valid" : "is-review")
+                      }
+                    >
+                      {record.status === "IN_RANGE" ? (
+                        <CheckCircle2 size={15} />
+                      ) : (
+                        <ShieldAlert size={15} />
+                      )}
+                      {attendanceLabel(record.status)}
+                    </span>
+                    <button
+                      type="button"
+                      className="mm-att-admin-delete-trigger"
+                      aria-label={`Xóa lượt check-in của ${recordName(record)}`}
+                      title="Xóa lượt check-in để điểm danh lại"
+                      disabled={deleting}
+                      onClick={() => {
+                        setDeleteTarget(record);
+                        setDeleteError("");
+                        setDeleteNotice("");
+                      }}
+                    >
+                      <Trash2 size={15} aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
                 <div className="mm-att-admin-record-details">
                   <div className="mm-att-admin-info">
@@ -379,6 +431,61 @@ export function StaffAttendanceAdmin() {
           </div>
         </div>
       </section>
+      {deleteTarget && (
+        <div
+          className="mm-att-admin-delete-overlay"
+          role="presentation"
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="mm-att-delete-title"
+            aria-describedby="mm-att-delete-detail"
+            className="mm-att-admin-delete-dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="mm-att-admin-delete-symbol">
+              <Trash2 size={22} aria-hidden="true" />
+            </span>
+            <h3 id="mm-att-delete-title">Xóa lượt điểm danh?</h3>
+            <p id="mm-att-delete-detail">
+              Xóa lượt check-in ngày{" "}
+              <strong>{displayAttendanceDate(deleteTarget.localDate ?? date)}</strong> của{" "}
+              <strong>{recordName(deleteTarget)}</strong> để có thể check-in lại.
+              {deleteTarget.coinsEarned > 0 && (
+                <>
+                  {" "}
+                  Hệ thống sẽ hoàn tác <strong>{deleteTarget.coinsEarned} coin</strong> đã cộng nếu
+                  ví còn đủ số dư.
+                </>
+              )}
+            </p>
+            <p className="mm-att-admin-delete-hint">
+              Thao tác được ghi lại trong nhật ký quản trị. Ảnh selfie cũ không còn gắn với lượt
+              check-in mới.
+            </p>
+            {deleteError && (
+              <p role="alert" className="mm-att-admin-delete-error">
+                {deleteError}
+              </p>
+            )}
+            <div className="mm-att-admin-delete-buttons">
+              <button type="button" disabled={deleting} onClick={() => setDeleteTarget(null)}>
+                Quay lại
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                className="is-danger"
+                onClick={() => void removeCheckIn()}
+              >
+                <Trash2 size={15} aria-hidden="true" /> {deleting ? "Đang xóa..." : "Xác nhận xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <section className="mm-att-admin-panel" aria-labelledby="mm-att-center">
         <div className="mm-att-admin-config-head">
           <span className="mm-att-admin-config-icon">
