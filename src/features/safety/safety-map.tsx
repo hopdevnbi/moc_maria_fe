@@ -254,7 +254,7 @@ export function SafetyMap({
         className="safety-map"
         ref={node}
         role="region"
-        aria-label="Bản đồ vị trí và hành trình chia sẻ của KTV"
+        aria-label="Bản đồ vị trí và hành trình chia sẻ của nhân sự"
       />
       <p className="safety-fine">
         Bản đồ nền OpenFreeMap · dữ liệu OpenStreetMap. Đường xanh: hành trình KTV đã đồng ý chia

@@ -21,27 +21,202 @@ body:has(.mm-checkin-page) .christmas-welcome {
   margin: 30px auto 0;
   padding-bottom: calc(130px + env(safe-area-inset-bottom));
 }
-.mm-checkin-safety {
-  margin-top: 20px;
-  border: 1px solid #d8e7d8;
-  border-radius: 18px;
-  background: #f4f8f2;
-  overflow: hidden;
+.mm-checkin-gps-share {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #c7dece;
+  border-radius: 22px;
+  background: linear-gradient(150deg, #ecf5ed, #f9fcf7);
+  color: #25563e;
+  box-shadow: 0 10px 30px rgb(30 80 51 / 7%);
 }
-.mm-checkin-safety summary {
+.mm-checkin-gps-share-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.mm-checkin-gps-share-heading > div:last-child {
+  min-width: 0;
+}
+.mm-checkin-gps-share-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 50px;
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  background: #d9eadd;
+}
+.mm-checkin-gps-share-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #5e7b63;
+}
+.mm-checkin-gps-share h2 {
+  margin: 4px 0 7px;
+  font:
+    600 clamp(21px, 5vw, 26px) / 1.25 var(--font-wellness-serif),
+    Georgia,
+    serif;
+}
+.mm-checkin-gps-share p {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 13px;
+}
+.mm-checkin-gps-share-heading p,
+.mm-checkin-gps-helper {
+  color: #5f7866;
+}
+.mm-checkin-gps-primary,
+.mm-checkin-gps-secondary,
+.mm-checkin-gps-stop {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  min-height: 48px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.mm-checkin-gps-primary {
+  border: 1px solid #246544;
+  background: #246544;
+  color: #fff;
+}
+.mm-checkin-gps-start {
+  width: 100%;
+  min-height: 60px;
+  font-size: 16px;
+  box-shadow: 0 6px 16px rgb(24 78 49 / 15%);
+}
+.mm-checkin-gps-secondary {
+  border: 1px solid #c3d9ca;
+  background: #fff;
+  color: #315c43;
+}
+.mm-checkin-gps-stop {
+  border: 1px solid #edd1c7;
+  background: #fff2ec;
+  color: #943f33;
+}
+.mm-checkin-gps-share button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.mm-checkin-gps-share button:focus-visible,
+.mm-checkin-gps-share input:focus-visible,
+.mm-checkin-gps-share select:focus-visible {
+  outline: 3px solid #70b489;
+  outline-offset: 3px;
+}
+.mm-checkin-gps-consent-form,
+.mm-checkin-gps-active {
+  display: grid;
+  gap: 13px;
+}
+.mm-checkin-gps-consent-form > label:first-child {
+  display: grid;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.mm-checkin-gps-consent-form select {
+  min-height: 44px;
+  border: 1px solid #c8dcca;
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  color: #25563e;
+  font: inherit;
+}
+.mm-checkin-gps-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.6;
+  font-size: 12px;
+}
+.mm-checkin-gps-consent input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #246544;
+}
+.mm-checkin-gps-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.mm-checkin-gps-buttons > button {
+  flex: 1 1 185px;
+}
+.mm-checkin-gps-active {
+  border-top: 1px solid #d4e5d5;
+  padding-top: 13px;
+}
+.mm-checkin-gps-status {
   display: flex;
   align-items: center;
+  gap: 9px;
+}
+.mm-checkin-gps-pulse,
+.mm-checkin-gps-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2b9655;
+  box-shadow: 0 0 0 4px rgb(43 150 85 / 13%);
+}
+.mm-checkin-gps-pulse {
+  animation: mm-gps-pulse 1.8s ease-in-out infinite;
+}
+.mm-checkin-gps-dot {
+  background: #b3833c;
+  box-shadow: 0 0 0 4px rgb(179 131 60 / 13%);
+}
+@keyframes mm-gps-pulse {
+  50% {
+    box-shadow: 0 0 0 8px rgb(43 150 85 / 4%);
+  }
+}
+.mm-checkin-gps-stop-confirm {
+  display: grid;
   gap: 10px;
-  padding: 19px;
-  cursor: pointer;
-  color: #215c41;
-  font-weight: 700;
+  padding: 14px;
+  border: 1px solid #e6c5b4;
+  border-radius: 14px;
+  background: #fff6f0;
 }
-.mm-checkin-safety summary::marker {
-  content: "";
+.mm-checkin-gps-alert {
+  padding: 12px;
+  border: 1px solid #e7c5b3;
+  border-radius: 12px;
+  background: #fff6ef;
+  color: #914637;
 }
-.mm-checkin-safety-body {
-  padding: 0 14px 16px;
+.mm-checkin-gps-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #647d69;
+  font-size: 11px !important;
+}
+.mm-checkin-gps-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 .mm-checkin-admin-tracking {
   min-width: 0;
@@ -192,6 +367,17 @@ body:has(.mm-checkin-page) .christmas-welcome {
   color: #6e816e;
 }
 @media (max-width: 600px) {
+  .mm-checkin-gps-share {
+    padding: 16px;
+  }
+  .mm-checkin-gps-share-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+  .mm-checkin-gps-buttons > button {
+    flex-basis: 100%;
+  }
   .mm-checkin-main {
     width: calc(100% - 28px);
     margin-top: 14px;

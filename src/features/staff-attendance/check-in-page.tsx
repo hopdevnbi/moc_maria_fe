@@ -6,30 +6,10 @@ import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { MobileHeader } from "@/features/mobile/experience";
 import { MobileNavigation } from "@/features/mobile/mobile-navigation";
 import { StaffAttendanceCard } from "./staff-attendance-card";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { ProviderSafety } from "@/features/safety/provider-safety";
+import { CheckInJourneySharing } from "./check-in-journey-sharing";
 import { SuperAdminCheckInTracking } from "./super-admin-checkin-tracking";
 import "@/features/safety/safety.css";
 import "./check-in-page.css";
-
-function KtvJourneyCheckIn() {
-  const { user } = useAuth();
-  if (
-    !user?.isActive ||
-    !user.roles.some((role) => role === "THERAPIST" || role === "DOCTOR_CONSULTANT")
-  )
-    return null;
-  return (
-    <details className="mm-checkin-safety">
-      <summary>
-        <ShieldCheck size={18} /> Chia sẻ hành trình ca làm việc với Super Admin
-      </summary>
-      <div className="mm-checkin-safety-body">
-        <ProviderSafety />
-      </div>
-    </details>
-  );
-}
 
 export function CheckInPage() {
   return (
@@ -58,8 +38,8 @@ export function CheckInPage() {
           </div>
         </header>
         <RequireAuth>
+          <CheckInJourneySharing />
           <StaffAttendanceCard standalone />
-          <KtvJourneyCheckIn />
           <SuperAdminCheckInTracking />
         </RequireAuth>
       </main>

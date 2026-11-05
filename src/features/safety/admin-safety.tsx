@@ -151,10 +151,10 @@ function AdminSafetyContent({ initialMapOpen }: { initialMapOpen: boolean }) {
       <div className="safety-intro">
         <ShieldCheck size={26} />
         <div>
-          <h2>Theo dõi chuyến phục vụ</h2>
+          <h2>Theo dõi hành trình KTV & Super Admin</h2>
           <p>
-            KTV chủ động bật chia sẻ theo chuyến đi/ca làm việc. Theo dõi vị trí và hành trình gần
-            thời gian thực; GPS có thể ngừng khi điện thoại khóa màn hình.
+            KTV hoặc Super Admin chủ động bật chia sẻ trên trang check-in. Theo dõi vị trí và hành
+            trình gần thời gian thực; GPS có thể ngừng khi điện thoại khóa màn hình.
           </p>
         </div>
       </div>
@@ -166,7 +166,7 @@ function AdminSafetyContent({ initialMapOpen }: { initialMapOpen: boolean }) {
       <div className="safety-stats">
         <div>
           <strong>{running.length}</strong>
-          <span>Chuyến đang hoạt động</span>
+          <span>Phiên chia sẻ đang hoạt động</span>
         </div>
         <div className={unresolved.length ? "urgent" : ""}>
           <strong>{unresolved.length}</strong>
@@ -230,7 +230,7 @@ function AdminSafetyContent({ initialMapOpen }: { initialMapOpen: boolean }) {
       )}
       <div className="safety-card" ref={mapSection} style={{ scrollMarginTop: 90 }}>
         <h2>
-          <MapPin size={21} /> Bản đồ hành trình KTV
+          <MapPin size={21} /> Bản đồ hành trình nhân sự
         </h2>
         <div className="safety-attendance-map-meta">
           <label>
@@ -290,8 +290,8 @@ function AdminSafetyContent({ initialMapOpen }: { initialMapOpen: boolean }) {
         <article className="safety-card">
           <h2>Chưa có phiên chia sẻ vị trí</h2>
           <p>
-            Chưa có KTV nào chủ động bật chia sẻ hành trình. Vị trí check-in một lần sẽ hiện riêng
-            trên bản đồ ở trên nếu lúc điểm danh có GPS; không tự tạo phiên tracking.
+            Chưa có KTV hay Super Admin nào chủ động bật chia sẻ hành trình. Vị trí check-in một lần
+            sẽ hiện riêng trên bản đồ ở trên nếu lúc điểm danh có GPS; không tự tạo phiên tracking.
           </p>
         </article>
       ) : (
