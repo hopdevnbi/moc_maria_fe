@@ -124,6 +124,7 @@
   background: #fff0e9;
 }
 .mm-att-feedback button {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -133,6 +134,21 @@
   border-radius: 9px;
   background: #fff;
   cursor: pointer;
+}
+.mm-att-confirm strong {
+  display: block;
+  color: #8a6427;
+}
+.mm-att-confirm p {
+  margin-block: 8px 12px;
+}
+.mm-att-confirm > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.mm-att-confirm button {
+  margin-left: 0;
 }
 .mm-att-actions {
   display: flex;

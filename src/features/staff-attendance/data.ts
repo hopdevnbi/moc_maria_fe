@@ -87,7 +87,9 @@ export function staffBranches(value: StaffAttendanceMe | undefined): AttendanceB
   return value.branch ? [value.branch] : [];
 }
 
-export function isConfigured(branch: AttendanceBranch | null | undefined): boolean {
+export function isConfigured(
+  branch: Pick<AttendanceBranch, "latitude" | "longitude"> | null | undefined,
+): boolean {
   return (
     typeof branch?.latitude === "number" &&
     Number.isFinite(branch.latitude) &&
@@ -104,6 +106,25 @@ export function radiusMeters(branch: AttendanceBranch): number {
   return typeof branch.radiusMeters === "number" && branch.radiusMeters > 0
     ? branch.radiusMeters
     : 200;
+}
+
+export type LocationReading = {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  timestamp: number;
+};
+
+export function isUsableLocation(reading: LocationReading, now: number): boolean {
+  return (
+    isConfigured(reading) &&
+    Number.isFinite(reading.accuracy) &&
+    reading.accuracy >= 0 &&
+    reading.accuracy <= 100 &&
+    Number.isFinite(reading.timestamp) &&
+    reading.timestamp <= now + 5000 &&
+    now - reading.timestamp <= 30_000
+  );
 }
 
 export function metersBetween(
@@ -126,8 +147,7 @@ export function mayAutoCheckIn(
   now: number,
 ): boolean {
   if (!isConfigured(branch)) return false;
-  if (!Number.isFinite(reading.accuracy) || reading.accuracy > 100) return false;
-  if (reading.timestamp > now + 5000 || now - reading.timestamp > 30_000) return false;
+  if (!isUsableLocation(reading, now)) return false;
   return (
     metersBetween(
       { latitude: branch.latitude!, longitude: branch.longitude! },

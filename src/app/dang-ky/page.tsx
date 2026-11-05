@@ -1,13 +1,26 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { AuthShell } from "@/features/auth/components/AuthShell";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 import { safeReturnTo } from "@/features/auth/return-to";
 
-export default async function RegisterPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ returnTo?: string }>;
-}) {
+type RegisterPageProps = { searchParams: Promise<{ returnTo?: string }> };
+
+export default function RegisterPage(props: RegisterPageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-xl px-6 py-20" role="status">
+          Đang mở trang đăng ký…
+        </div>
+      }
+    >
+      <RegisterContent {...props} />
+    </Suspense>
+  );
+}
+
+async function RegisterContent({ searchParams }: RegisterPageProps) {
   const returnTo = safeReturnTo((await searchParams).returnTo, "/chuyen-vien");
   return (
     <AuthShell

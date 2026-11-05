@@ -4,6 +4,7 @@ const STATIC_PATHS = new Set([
   "/bang-gia",
   "/cam-truy-cap",
   "/chuyen-vien",
+  "/check-in",
   "/dang-ky",
   "/dang-nhap",
   "/dat-lai-mat-khau",
@@ -93,7 +94,7 @@ export function trackAnalyticsPage(pathname: string, measurementId: string | und
         ? "admin"
         : path.startsWith("/ktv/")
           ? "ktv"
-          : ["/tai-khoan", "/tin-nhan", "/lich-hen"].includes(path)
+          : ["/tai-khoan", "/tin-nhan", "/lich-hen", "/check-in"].includes(path)
             ? "account"
             : "public";
   const parameters = {

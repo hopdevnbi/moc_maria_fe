@@ -4,11 +4,23 @@ import { AuthShell } from "@/features/auth/components/AuthShell";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { safeReturnTo } from "@/features/auth/return-to";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ returnTo?: string }>;
-}) {
+type LoginPageProps = { searchParams: Promise<{ returnTo?: string }> };
+
+export default function LoginPage(props: LoginPageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-xl px-6 py-20" role="status">
+          Đang mở trang đăng nhập…
+        </div>
+      }
+    >
+      <LoginContent {...props} />
+    </Suspense>
+  );
+}
+
+async function LoginContent({ searchParams }: LoginPageProps) {
   const returnTo = safeReturnTo((await searchParams).returnTo, "/chuyen-vien");
   return (
     <AuthShell

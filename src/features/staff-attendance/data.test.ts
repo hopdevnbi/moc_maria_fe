@@ -28,6 +28,9 @@ describe("staff attendance source data", () => {
     expect(mayAutoCheckIn(branch, { ...point, latitude: 21.033 }, now)).toBe(false);
     expect(mayAutoCheckIn(branch, { ...point, accuracy: 180 }, now)).toBe(false);
     expect(mayAutoCheckIn(branch, { ...point, timestamp: now - 31000 }, now)).toBe(false);
+    expect(mayAutoCheckIn(branch, { ...point, timestamp: NaN }, now)).toBe(false);
+    expect(mayAutoCheckIn(branch, { ...point, accuracy: -1 }, now)).toBe(false);
+    expect(mayAutoCheckIn(branch, { ...point, latitude: 100 }, now)).toBe(false);
   });
   it("parses backend envelopes and location-unavailable status", () => {
     const row = {

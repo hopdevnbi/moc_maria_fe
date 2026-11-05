@@ -1,61 +1,92 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GlobalContactActions } from "./global-contact-actions";
-
-const mocks = vi.hoisted(() => ({
-  loggedIn: false,
-  authFetch: vi.fn(),
-  path: "/",
-}));
+const mocks = vi.hoisted(() => ({ loggedIn: false, authFetch: vi.fn(), path: "/" }));
 vi.mock("next/navigation", () => ({ usePathname: () => mocks.path }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
     status: mocks.loggedIn ? "authenticated" : "anonymous",
-    user: mocks.loggedIn ? { id: "sample-customer", permissions: ["customer.portal"] } : null,
+    user: mocks.loggedIn ? { id: "customer-1", permissions: ["customer.portal"] } : null,
     authFetch: mocks.authFetch,
   }),
 }));
 vi.mock("@/features/gift-events/event-support", () => ({
-  EventSupport: ({ status, user }: { status: string; user: { id: string } | null }) => (
-    <button
-      type="button"
-      aria-label="Hỗ trợ online toàn website"
-      data-status={status}
-      data-user={user?.id}
-    />
-  ),
+  EventSupport: ({
+    open,
+    onOpenChange,
+    user,
+  }: {
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+    user: { id: string } | null;
+  }) =>
+    open ? (
+      <section role="dialog" aria-label="Support" data-user={user?.id}>
+        <button onClick={() => onOpenChange(false)}>Fermer</button>
+      </section>
+    ) : null,
 }));
-
 afterEach(() => {
   cleanup();
   mocks.loggedIn = false;
   mocks.path = "/";
 });
-
-describe("global Mộc Maria contact actions", () => {
-  it("shows exactly one support button and one official Facebook link to guests", () => {
+function open() {
+  fireEvent.click(screen.getByRole("button", { name: "Mở tiện ích nhanh" }));
+}
+describe("Assistive Mộc Maria menu", () => {
+  it("starts with one compact launcher and expands all three actions for guests", () => {
     render(<GlobalContactActions />);
-    expect(screen.getAllByRole("button", { name: "Hỗ trợ online toàn website" })).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "Hỗ trợ online toàn website" })).toHaveAttribute(
-      "data-status",
-      "anonymous",
-    );
-    const facebook = screen.getByRole("link", { name: /Fanpage Facebook Mộc Maria/ });
-    expect(facebook).toHaveAttribute("href", "https://www.facebook.com/mocmariads");
-    expect(facebook).toHaveAttribute("target", "_blank");
-    expect(facebook).toHaveAttribute("rel", "noopener noreferrer");
+    expect(screen.queryByRole("navigation", { name: "Tiện ích nhanh" })).not.toBeInTheDocument();
+    open();
+    expect(screen.getByRole("button", { name: "Support" })).toHaveFocus();
+    const fb = screen.getByRole("link", { name: /Facebook Mộc Maria/ });
+    expect(fb).toHaveAttribute("href", "https://www.facebook.com/mocmariads");
+    expect(fb).toHaveAttribute("rel", "noopener noreferrer");
+    expect(screen.getByRole("link", { name: "Check-in" })).toHaveAttribute("href", "/check-in");
   });
-  it("removes the redundant support picker and Facebook floaters from the chat page", () => {
+  it("keeps all actions available on chat and check-in routes for signed-in users", () => {
+    mocks.loggedIn = true;
     mocks.path = "/tin-nhan";
-    const { container } = render(<GlobalContactActions />);
-    expect(container).toBeEmptyDOMElement();
+    const { rerender } = render(<GlobalContactActions />);
+    open();
+    expect(screen.getByRole("link", { name: "Check-in" })).toBeVisible();
+    mocks.path = "/check-in";
+    rerender(<GlobalContactActions />);
+    expect(screen.queryByRole("navigation", { name: "Tiện ích nhanh" })).not.toBeInTheDocument();
+    open();
+    expect(screen.getByRole("button", { name: "Support" })).toBeVisible();
   });
-  it("passes the signed-in session through to the existing KTV support", () => {
+  it("dismisses by Escape and restores launcher focus", () => {
+    render(<GlobalContactActions />);
+    open();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.getByRole("button", { name: "Mở tiện ích nhanh" })).toHaveFocus();
+    expect(screen.queryByRole("navigation", { name: "Tiện ích nhanh" })).not.toBeInTheDocument();
+  });
+  it("dismisses outside, toggles, and clears on account changes", () => {
+    const { rerender } = render(<GlobalContactActions />);
+    open();
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole("navigation", { name: "Tiện ích nhanh" })).not.toBeInTheDocument();
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "Đóng tiện ích nhanh" }));
+    open();
+    mocks.loggedIn = true;
+    rerender(<GlobalContactActions />);
+    expect(screen.queryByRole("navigation", { name: "Tiện ích nhanh" })).not.toBeInTheDocument();
+  });
+  it("opens the existing support with the authenticated session and no duplicate launcher", () => {
     mocks.loggedIn = true;
     render(<GlobalContactActions />);
-    expect(screen.getByRole("button", { name: "Hỗ trợ online toàn website" })).toHaveAttribute(
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "Support" }));
+    expect(screen.getByRole("dialog", { name: "Support" })).toHaveAttribute(
       "data-user",
-      "sample-customer",
+      "customer-1",
     );
+    expect(screen.queryByRole("navigation", { name: "Tiện ích nhanh" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Đóng tiện ích nhanh" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -35,12 +35,28 @@ export function EventSupport({
   status,
   user,
   authFetch,
+  open: controlledOpen,
+  onOpenChange,
+  hideLauncher = false,
+  returnFocusRef,
 }: {
   status: string;
   user: { id: string; permissions: string[] } | null;
   authFetch: <T>(path: string, init?: RequestInit) => Promise<T>;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideLauncher?: boolean;
+  returnFocusRef?: RefObject<HTMLButtonElement | null>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = useCallback(
+    (value: boolean) => {
+      setInternalOpen(value);
+      onOpenChange?.(value);
+    },
+    [onOpenChange],
+  );
   const client = useQueryClient();
   const [search, setSearch] = useState("");
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -73,7 +89,7 @@ export function EventSupport({
     if (!open) {
       if (restoreFocus.current) {
         restoreFocus.current = false;
-        launcherRef.current?.focus();
+        (returnFocusRef ?? launcherRef).current?.focus();
       }
       return;
     }
@@ -85,6 +101,7 @@ export function EventSupport({
       }
     };
     const onOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node && returnFocusRef?.current?.contains(event.target)) return;
       if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false);
     };
     document.addEventListener("keydown", onKeyDown);
@@ -93,7 +110,7 @@ export function EventSupport({
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("pointerdown", onOutside);
     };
-  }, [open]);
+  }, [open, setOpen, returnFocusRef]);
 
   return (
     <aside ref={rootRef} className="mm-ev-support" aria-label="Hỗ trợ khách hàng Mộc Maria">
@@ -246,18 +263,20 @@ export function EventSupport({
           </footer>
         </section>
       )}
-      <button
-        type="button"
-        className="mm-ev-support-launcher"
-        ref={launcherRef}
-        aria-label={open ? "Đóng hỗ trợ online" : "Mở hỗ trợ online"}
-        aria-expanded={open}
-        aria-controls={open ? "mm-event-support-content" : undefined}
-        onClick={() => setOpen((value) => !value)}
-      >
-        {open ? <X size={23} /> : <Headset size={23} />}
-        <span>{open ? "Đóng hỗ trợ" : "Hỗ trợ online"}</span>
-      </button>
+      {!hideLauncher && (
+        <button
+          type="button"
+          className="mm-ev-support-launcher"
+          ref={launcherRef}
+          aria-label={open ? "Đóng hỗ trợ online" : "Mở hỗ trợ online"}
+          aria-expanded={open}
+          aria-controls={open ? "mm-event-support-content" : undefined}
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <X size={23} /> : <Headset size={23} />}
+          <span>{open ? "Đóng hỗ trợ" : "Hỗ trợ online"}</span>
+        </button>
+      )}
     </aside>
   );
 }

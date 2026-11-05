@@ -12,12 +12,15 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { RoleName } from "@/features/auth/auth.types";
+import { ApiError } from "@/features/auth/auth-api";
 import { prepareChatImage } from "@/features/mobile/chat-image";
 import {
   attendanceLabel,
   formattedCheckInTime,
   hcmDate,
   isConfigured,
+  isUsableLocation,
+  metersBetween,
   mayAutoCheckIn,
   radiusMeters,
   staffBranches,
@@ -29,8 +32,15 @@ const staffRoles: RoleName[] = ["BRANCH_MANAGER", "RECEPTIONIST", "THERAPIST", "
 export function canStaffCheckIn(roles: readonly RoleName[]) {
   return roles.some((role) => staffRoles.includes(role));
 }
-type LocationPoint = { latitude: number; longitude: number; accuracyMeters: number };
+type LocationPoint = {
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number;
+  timestamp: number;
+};
 function locationError(error: unknown): string {
+  if (error instanceof Error && error.message === "GPS_IMPRECISE")
+    return "GPS chưa đủ chính xác hoặc đã cũ. Chưa ghi nhận điểm danh; hãy ra nơi thoáng rồi thử lại.";
   const code = (error as { code?: number })?.code;
   if (code === 1) return "Quyền GPS bị từ chối. Hãy cấp quyền vị trí trong trình duyệt để thử lại.";
   if (code === 3) return "GPS quá thời gian chờ. Hãy ra nơi thoáng hơn rồi thử lại.";
@@ -45,18 +55,37 @@ async function getLocation(): Promise<LocationPoint> {
       timeout: 12000,
     }),
   );
-  if (Date.now() - p.timestamp > 30000) throw new Error("GPS_STALE");
+  if (
+    !isUsableLocation(
+      {
+        latitude: p.coords.latitude,
+        longitude: p.coords.longitude,
+        accuracy: p.coords.accuracy,
+        timestamp: p.timestamp,
+      },
+      Date.now(),
+    )
+  )
+    throw new Error("GPS_IMPRECISE");
   return {
     latitude: p.coords.latitude,
     longitude: p.coords.longitude,
     accuracyMeters: p.coords.accuracy,
+    timestamp: p.timestamp,
   };
 }
 
-export function StaffAttendanceCard() {
+export function StaffAttendanceCard({ standalone = false }: { standalone?: boolean }) {
+  const { user } = useAuth();
+  return <AttendanceSession key={user?.id ?? "guest"} standalone={standalone} />;
+}
+
+function AttendanceSession({ standalone }: { standalone: boolean }) {
   const { user, authFetch } = useAuth();
+  const userId = user?.id;
   const client = useQueryClient();
-  const eligible = !!user && canStaffCheckIn(user.roles);
+  // The server also permits an active staff profile without one of the usual roles.
+  const eligible = !!user && user.isActive && (standalone || canStaffCheckIn(user.roles));
   const [day, setDay] = useState(() => hcmDate());
   const [branchId, setBranchId] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -65,14 +94,29 @@ export function StaffAttendanceCard() {
   const [uploading, setUploading] = useState(false);
   const [auto, setAuto] = useState(false);
   const locked = useRef(false);
+  const gpsPending = useRef(false);
+  const alive = useRef(false);
+  const [uncertain, setUncertain] = useState(false);
+  const [zeroCheckIn, setZeroCheckIn] = useState<{
+    branchId: string;
+    point?: LocationPoint;
+  } | null>(null);
   const lastNotice = useRef(0);
   useEffect(() => {
-    const timer = setInterval(() => setDay(hcmDate()), 60000);
-    return () => clearInterval(timer);
+    alive.current = true;
+    const updateDay = () => setDay(hcmDate());
+    const timer = setInterval(updateDay, 1000);
+    window.addEventListener("focus", updateDay);
+    return () => {
+      alive.current = false;
+      clearInterval(timer);
+      window.removeEventListener("focus", updateDay);
+    };
   }, []);
   const query = useQuery({
     queryKey: ["staff-attendance", user?.id, day],
-    queryFn: () => authFetch<StaffAttendanceMe>("/staff-attendance/me", { cache: "no-store" }),
+    queryFn: ({ signal }) =>
+      authFetch<StaffAttendanceMe>("/staff-attendance/me", { cache: "no-store", signal }),
     enabled: eligible,
     retry: false,
     refetchOnWindowFocus: true,
@@ -84,7 +128,20 @@ export function StaffAttendanceCard() {
 
   const checkIn = useCallback(
     async (id: string, point?: LocationPoint) => {
-      if (locked.current) return;
+      if (locked.current || gpsPending.current || !alive.current) return;
+      if (query.data?.localDate !== hcmDate()) {
+        setDay(hcmDate());
+        setBusy(false);
+        setFeedback("Đã sang ngày mới. Hãy chờ tải lại trạng thái rồi check-in.");
+        return;
+      }
+      if (point && !isUsableLocation({ ...point, accuracy: point.accuracyMeters }, Date.now())) {
+        setZeroCheckIn(null);
+        setBusy(false);
+        setHasError(true);
+        setFeedback(locationError(new Error("GPS_IMPRECISE")));
+        return;
+      }
       locked.current = true;
       setBusy(true);
       setHasError(false);
@@ -93,9 +150,21 @@ export function StaffAttendanceCard() {
         const result = await authFetch<StaffAttendanceMe>("/staff-attendance/check-ins", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ branchId: id, ...point }),
+          body: JSON.stringify({
+            branchId: id,
+            ...(point
+              ? {
+                  latitude: point.latitude,
+                  longitude: point.longitude,
+                  accuracyMeters: point.accuracyMeters,
+                }
+              : {}),
+          }),
         });
         const record = result.today;
+        if (!alive.current) return;
+        client.setQueryData(["staff-attendance", userId, result.localDate], result);
+        setZeroCheckIn(null);
         setAuto(false);
         setFeedback(
           result.alreadyCheckedIn
@@ -107,28 +176,60 @@ export function StaffAttendanceCard() {
                 : "Đã ghi nhận check-in: " + attendanceLabel(record.status) + ". Lượt này +0 coin.",
         );
       } catch (error) {
+        if (!alive.current) return;
         setHasError(true);
         setAuto(false);
+        setUncertain(true);
         setFeedback(error instanceof Error ? error.message : "Không thể check-in. Hãy thử lại.");
       } finally {
-        await client.invalidateQueries({ queryKey: ["staff-attendance", user?.id] });
+        await client.invalidateQueries({ queryKey: ["staff-attendance", userId] });
         locked.current = false;
-        setBusy(false);
+        if (alive.current) setBusy(false);
       }
     },
-    [authFetch, client, user?.id],
+    [authFetch, client, userId, query.data?.localDate],
   );
 
   async function manual() {
-    if (!branch || busy || today) return;
+    if (
+      !branch ||
+      busy ||
+      today ||
+      locked.current ||
+      gpsPending.current ||
+      uncertain ||
+      query.isFetching
+    )
+      return;
+    gpsPending.current = true;
+    const startedDay = hcmDate();
+    setZeroCheckIn(null);
     setBusy(true);
     setHasError(false);
     setFeedback("Đang xin quyền truy cập vị trí GPS...");
     try {
       const point = await getLocation();
-      setBusy(false);
+      gpsPending.current = false;
+      if (!alive.current) return;
+      if (startedDay !== hcmDate()) {
+        setDay(hcmDate());
+        setBusy(false);
+        setFeedback("Đã sang ngày mới. Hãy kiểm tra ngày điểm danh rồi thử lại.");
+        return;
+      }
+      if (
+        !configured ||
+        metersBetween({ latitude: branch.latitude!, longitude: branch.longitude! }, point) >
+          radiusMeters(branch)
+      ) {
+        setBusy(false);
+        setZeroCheckIn({ branchId: branch.id, point });
+        return;
+      }
       await checkIn(branch.id, point);
     } catch (error) {
+      gpsPending.current = false;
+      if (!alive.current) return;
       setBusy(false);
       setHasError(true);
       setFeedback(locationError(error));
@@ -136,7 +237,18 @@ export function StaffAttendanceCard() {
   }
 
   useEffect(() => {
-    if (!auto || !branch || !configured || today || busy) return;
+    if (
+      !auto ||
+      !branch ||
+      !configured ||
+      today ||
+      busy ||
+      uncertain ||
+      query.isFetching ||
+      query.isError ||
+      zeroCheckIn
+    )
+      return;
     if (!navigator.geolocation) return;
     let watchId: number | undefined;
     let disposed = false;
@@ -149,7 +261,13 @@ export function StaffAttendanceCard() {
       if (disposed || document.visibilityState !== "visible") return;
       watchId = navigator.geolocation.watchPosition(
         (p) => {
-          if (disposed || document.visibilityState !== "visible" || locked.current) return;
+          if (
+            disposed ||
+            document.visibilityState !== "visible" ||
+            locked.current ||
+            gpsPending.current
+          )
+            return;
           const reading = {
             latitude: p.coords.latitude,
             longitude: p.coords.longitude,
@@ -163,6 +281,7 @@ export function StaffAttendanceCard() {
               latitude: reading.latitude,
               longitude: reading.longitude,
               accuracyMeters: reading.accuracy,
+              timestamp: reading.timestamp,
             });
           } else if (Date.now() - lastNotice.current > 15000) {
             lastNotice.current = Date.now();
@@ -187,7 +306,18 @@ export function StaffAttendanceCard() {
       stop();
       document.removeEventListener("visibilitychange", watch);
     };
-  }, [auto, branch, configured, today, busy, checkIn]);
+  }, [
+    auto,
+    branch,
+    configured,
+    today,
+    busy,
+    checkIn,
+    uncertain,
+    query.isFetching,
+    query.isError,
+    zeroCheckIn,
+  ]);
 
   async function uploadSelfie(event: ChangeEvent<HTMLInputElement>) {
     const original = event.target.files?.[0];
@@ -198,6 +328,7 @@ export function StaffAttendanceCard() {
     setFeedback("Đang xử lý và tải ảnh selfie...");
     try {
       const file = await prepareChatImage(original);
+      if (!alive.current) return;
       if (!file || file.size > 5 * 1024 * 1024) {
         throw new Error("Ảnh không hợp lệ hoặc vượt giới hạn 5MB. Hãy chọn ảnh khác.");
       }
@@ -238,7 +369,9 @@ export function StaffAttendanceCard() {
         </p>
       ) : query.isError ? (
         <div className="mm-att-feedback is-error" role="alert">
-          Chưa tải được dữ liệu check-in.
+          {query.error instanceof ApiError && query.error.status === 403
+            ? "Check-in dành cho nhân viên và KTV có hồ sơ đang hoạt động. Tài khoản hiện tại chưa được cấp quyền điểm danh."
+            : "Chưa tải được dữ liệu check-in."}
           <button type="button" onClick={() => void query.refetch()}>
             <RefreshCw size={16} /> Tải lại
           </button>
@@ -261,7 +394,12 @@ export function StaffAttendanceCard() {
                 <span>Chọn cơ sở</span>
                 <select
                   value={branch?.id ?? ""}
-                  onChange={(event) => setBranchId(event.target.value)}
+                  disabled={busy}
+                  onChange={(event) => {
+                    setBranchId(event.target.value);
+                    setZeroCheckIn(null);
+                    setAuto(false);
+                  }}
                 >
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -272,11 +410,17 @@ export function StaffAttendanceCard() {
               </label>
             )}
           </div>
-          {!configured && (
+          {!branch ? (
             <p className="mm-att-warning" role="status">
-              Cơ sở chưa cấu hình tọa độ. Bạn vẫn có thể check-in, nhưng chưa đủ điều kiện nhận coin
-              theo GPS.
+              Chưa có cơ sở đang hoạt động. Vui lòng liên hệ quản trị để được hỗ trợ.
             </p>
+          ) : (
+            !configured && (
+              <p className="mm-att-warning" role="status">
+                Cơ sở chưa cấu hình tọa độ. Bạn vẫn có thể check-in, nhưng chưa đủ điều kiện nhận
+                coin theo GPS.
+              </p>
+            )
           )}
           {today ? (
             <div className="mm-att-done">
@@ -296,7 +440,7 @@ export function StaffAttendanceCard() {
                 <button
                   className="mm-att-primary"
                   type="button"
-                  disabled={!branch || busy}
+                  disabled={!branch || busy || query.isFetching || uncertain || !!zeroCheckIn}
                   onClick={() => void manual()}
                 >
                   <LocateFixed size={20} /> {busy ? "Đang ghi nhận..." : "Check-in bằng GPS"}
@@ -304,12 +448,65 @@ export function StaffAttendanceCard() {
                 <button
                   className="mm-att-secondary"
                   type="button"
-                  disabled={!branch || busy}
-                  onClick={() => branch && void checkIn(branch.id)}
+                  disabled={!branch || busy || query.isFetching || uncertain || !!zeroCheckIn}
+                  onClick={() => {
+                    if (branch) {
+                      setAuto(false);
+                      setZeroCheckIn({ branchId: branch.id });
+                    }
+                  }}
                 >
                   Check-in không có GPS (+0 coin)
                 </button>
               </div>
+              {zeroCheckIn && (
+                <div
+                  className="mm-att-feedback mm-att-confirm"
+                  role="group"
+                  aria-label="Xác nhận điểm danh không nhận coin"
+                >
+                  <strong>Lượt này +0 coin</strong>
+                  <p>
+                    {!configured
+                      ? "Cơ sở chưa có tọa độ."
+                      : zeroCheckIn.point
+                        ? "Bạn đang ngoài phạm vi cơ sở."
+                        : "Bạn đang chọn điểm danh không có GPS."}{" "}
+                    Chỉ có một lượt mỗi ngày; sau khi ghi nhận, bạn không thể check-in lại để nhận
+                    coin hôm nay.
+                  </p>
+                  <div>
+                    <button
+                      type="button"
+                      disabled={busy || query.isFetching || uncertain}
+                      onClick={() => void checkIn(zeroCheckIn.branchId, zeroCheckIn.point)}
+                    >
+                      Xác nhận điểm danh +0 coin
+                    </button>
+                    <button type="button" disabled={busy} onClick={() => setZeroCheckIn(null)}>
+                      Quay lại
+                    </button>
+                  </div>
+                </div>
+              )}
+              {uncertain && (
+                <div role="alert" className="mm-att-feedback is-error">
+                  Cần kiểm tra lại trạng thái để tránh ghi nhận nhầm sau lỗi kết nối.
+                  <button
+                    type="button"
+                    disabled={query.isFetching}
+                    onClick={async () => {
+                      const result = await query.refetch();
+                      if (!result.isError) {
+                        setUncertain(false);
+                        setZeroCheckIn(null);
+                      }
+                    }}
+                  >
+                    Kiểm tra trạng thái
+                  </button>
+                </div>
+              )}
               <p className="mm-att-small">
                 Ngoài 200m vẫn check-in được; quản trị sẽ thấy trạng thái không đủ phạm vi và bạn
                 nhận 0 coin.
@@ -318,7 +515,9 @@ export function StaffAttendanceCard() {
                 <input
                   type="checkbox"
                   checked={auto}
-                  disabled={!configured || !branch || busy}
+                  disabled={
+                    !configured || !branch || busy || query.isFetching || uncertain || !!zeroCheckIn
+                  }
                   onChange={(event) => {
                     if (event.target.checked && !navigator.geolocation) {
                       setHasError(true);

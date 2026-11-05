@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EventSupport } from "./event-support";
+import { createRef, useState } from "react";
 
 vi.mock("next/link", () => ({
   default: ({ onClick, ...props }: React.ComponentProps<"a">) => (
@@ -56,6 +57,39 @@ afterEach(() => {
 });
 
 describe("Mộc Maria event floating support", () => {
+  it("uses an external launcher and restores focus without reopening after its close click", () => {
+    const ref = createRef<HTMLButtonElement>();
+    function Controlled() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button ref={ref} onClick={() => setOpen((v) => !v)}>
+            Tiện ích
+          </button>
+          <EventSupport
+            status="anonymous"
+            user={null}
+            authFetch={authFetch}
+            open={open}
+            onOpenChange={setOpen}
+            hideLauncher
+            returnFocusRef={ref}
+          />
+        </>
+      );
+    }
+    render(<Controlled />);
+    const launcher = screen.getByRole("button", { name: "Tiện ích" });
+    fireEvent.click(launcher);
+    expect(screen.getByRole("dialog")).toBeVisible();
+    fireEvent.pointerDown(launcher);
+    fireEvent.click(launcher);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(launcher);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(launcher).toHaveFocus();
+    expect(screen.queryByRole("button", { name: "Mở hỗ trợ online" })).not.toBeInTheDocument();
+  });
   it("is fixed launcher and requires account before support chat", () => {
     render(<EventSupport status="anonymous" user={null} authFetch={authFetch} />);
     fireEvent.click(screen.getByRole("button", { name: "Mở hỗ trợ online" }));

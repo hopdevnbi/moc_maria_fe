@@ -1,130 +1,177 @@
 .mm-global-contact {
+  --mm-contact-bottom: calc(20px + env(safe-area-inset-bottom));
   position: fixed;
   z-index: 120;
-  right: max(22px, env(safe-area-inset-right));
-  bottom: max(22px, env(safe-area-inset-bottom));
+  right: max(20px, env(safe-area-inset-right));
+  bottom: var(--mm-contact-bottom);
+  font-family: var(--font-wellness-sans), system-ui, sans-serif;
+  color: #234b3a;
+}
+.mm-contact-launcher {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 1px solid #e4ce9c;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #3d7157, #173f30);
+  color: #fff8df;
+  box-shadow:
+    0 7px 24px #183d3540,
+    inset 0 0 0 5px #ffffff14;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform 180ms,
+    box-shadow 180ms;
+}
+.mm-contact-launcher:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px #183d3550;
+}
+.mm-contact-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 14px);
+  width: 276px;
+  max-width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right));
+  padding: 18px 12px 12px;
+  border: 1px solid #e0e8dc;
+  border-radius: 25px;
+  background: #fffefaf7;
+  box-shadow:
+    0 16px 55px #163c3529,
+    0 2px 8px #163c350d;
+  backdrop-filter: blur(18px);
+  transform-origin: bottom right;
+  animation: mm-contact-unfold 180ms ease-out;
+}
+.mm-contact-menu::after {
+  content: "";
+  position: absolute;
+  right: 21px;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  background: #fffefa;
+  border-right: 1px solid #e0e8dc;
+  border-bottom: 1px solid #e0e8dc;
+  transform: rotate(45deg);
+}
+.mm-contact-menu-heading {
+  display: grid;
+  gap: 4px;
+  margin: 0 9px 15px;
+}
+.mm-contact-menu-heading span {
+  color: #9b8248;
+  letter-spacing: 1.7px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.mm-contact-menu-heading strong {
+  font-family: var(--font-wellness-serif), Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+.mm-contact-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+}
+.mm-contact-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  pointer-events: none;
-  max-width: calc(100vw - 24px);
-  font-family: var(--font-wellness-sans), system-ui, sans-serif;
-}
-
-body:has(.ktv-chat-shell) .mm-global-contact {
-  display: none;
-}
-
-.mm-global-contact > *,
-.mm-global-contact .mm-ev-support > * {
-  pointer-events: auto;
-}
-
-/* Keep the existing support panel, but let the shared container position it. */
-.mm-global-contact .mm-ev-support {
-  position: static;
-  z-index: auto;
-  bottom: auto;
-  right: auto;
-  width: auto;
-  max-width: 100%;
-}
-
-.mm-global-contact-facebook {
-  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  min-height: 50px;
-  padding: 12px 18px;
-  border-radius: 999px;
-  background: #1877f2;
-  color: #fff;
-  box-shadow: 0 8px 23px #1877f23d;
-  font-size: 13px;
-  font-weight: 700;
+  min-height: 87px;
+  min-width: 0;
+  border: 0;
+  border-radius: 17px;
+  padding: 6px 2px;
+  background: transparent;
+  color: #244a39;
   text-decoration: none;
-  transition:
-    transform 0.2s,
-    background 0.2s;
+  font:
+    600 11px/1.4 var(--font-wellness-sans),
+    system-ui,
+    sans-serif;
+  cursor: pointer;
 }
-.mm-global-contact-facebook:hover {
-  background: #1465d1;
-  transform: translateY(-2px);
+.mm-contact-item:hover {
+  background: #edf3e8;
 }
-.mm-global-contact-facebook:focus-visible,
-.mm-global-contact button:focus-visible,
-.mm-global-contact a:focus-visible {
-  outline: 3px solid #d4ae67;
+.mm-contact-icon {
+  display: grid;
+  place-items: center;
+  width: 49px;
+  height: 49px;
+  border-radius: 50%;
+}
+.is-support .mm-contact-icon {
+  background: #e7f0e6;
+  color: #315d43;
+}
+.is-facebook .mm-contact-icon {
+  background: #eaf2ff;
+  color: #1877f2;
+}
+.is-checkin .mm-contact-icon {
+  background: #faf0d8;
+  color: #9b762b;
+}
+.mm-global-contact :is(button, a):focus-visible {
+  outline: 3px solid #b99c54;
   outline-offset: 3px;
 }
-
+.mm-global-contact > .mm-ev-support {
+  position: static;
+  width: 0;
+  max-width: none;
+}
+.mm-global-contact .mm-ev-support-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 14px);
+  max-height: calc(100dvh - 112px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+@keyframes mm-contact-unfold {
+  from {
+    opacity: 0;
+    transform: translate(10px, 8px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
 @media (max-width: 800px) {
   .mm-global-contact {
     right: max(12px, env(safe-area-inset-right));
-    bottom: max(12px, env(safe-area-inset-bottom));
-    gap: 8px;
-    flex-direction: row;
-    align-items: flex-end;
+    --mm-contact-bottom: calc(16px + env(safe-area-inset-bottom));
   }
-  /* Lift contact controls above the persistent mobile navigation bar. */
+  .mm-contact-launcher {
+    width: 52px;
+    height: 52px;
+  }
   body:has(.mobile-tabbar) .mm-global-contact {
-    bottom: calc(88px + env(safe-area-inset-bottom));
+    --mm-contact-bottom: calc(86px + env(safe-area-inset-bottom));
   }
-  /* On booking, the sticky appointment CTA also needs clear space. */
   body:has(.mm-quick-booking-main) .mm-global-contact {
-    bottom: calc(180px + env(safe-area-inset-bottom));
+    --mm-contact-bottom: calc(168px + env(safe-area-inset-bottom));
   }
-  /* The post-gift picker keeps Chat in the tab bar; floaters obscure its CTA. */
-  body:has(.mm-event-mobile-shell .mm-ev-booking-next) .mm-global-contact {
-    display: none;
-  }
-  .mm-global-contact-facebook {
-    min-width: 46px;
-    min-height: 46px;
-    padding: 11px;
-    font-size: 0;
-  }
-  .mm-global-contact-facebook span {
-    display: none;
-  }
-  .mm-global-contact .mm-ev-support-launcher {
-    width: 46px;
-    min-height: 46px;
-    padding: 11px;
-  }
-  .mm-global-contact .mm-ev-support-launcher span {
-    display: none;
-  }
-  .mm-global-contact .mm-ev-support-panel {
-    position: absolute;
-    right: 0;
-    bottom: calc(100% + 12px);
-    width: min(390px, calc(100vw - 40px - env(safe-area-inset-left) - env(safe-area-inset-right)));
-    max-height: min(550px, calc(100dvh - 230px));
-  }
-}
-
-@media (max-width: 400px) {
-  .mm-global-contact .mm-ev-support-launcher span {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 700px) {
-  .mm-global-contact:has(.mm-ev-support-panel)
-    :is(.mm-ev-support-launcher, .mm-global-contact-facebook) {
-    visibility: hidden;
-    pointer-events: none;
+  body:has(.ktv-chat-shell) .mm-global-contact {
+    --mm-contact-bottom: calc(152px + env(safe-area-inset-bottom));
   }
   .mm-global-contact .mm-ev-support-panel {
     position: fixed;
     left: max(12px, env(safe-area-inset-left));
     right: max(12px, env(safe-area-inset-right));
-    bottom: calc(78px + env(safe-area-inset-bottom));
+    bottom: calc(var(--mm-contact-bottom) + 64px);
     width: auto;
-    max-height: calc(100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - var(--mm-contact-bottom) - 88px - env(safe-area-inset-top));
     border-radius: 20px;
   }
   .mm-ev-support-head h2 {
@@ -135,9 +182,23 @@ body:has(.ktv-chat-shell) .mm-global-contact {
     letter-spacing: 0.6px;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
-  .mm-global-contact-facebook {
+  .mm-contact-launcher {
     transition: none;
+  }
+  .mm-contact-menu {
+    animation: none;
+  }
+}
+
+@media (max-height: 500px) {
+  .mm-contact-menu {
+    padding: 8px;
+  }
+  .mm-contact-menu-heading {
+    display: none;
+  }
+  .mm-contact-item {
+    min-height: 76px;
   }
 }
