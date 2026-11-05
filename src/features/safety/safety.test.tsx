@@ -11,7 +11,14 @@ vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({ user: state.user, authFetch: state.fetch }),
 }));
 vi.mock("./geolocation", () => ({ watchSafetyLocation: state.watch }));
-vi.mock("./safety-map", () => ({ SafetyMap: () => <div>Bản đồ kiểm tra</div> }));
+vi.mock("./safety-map", () => ({
+  SafetyMap: ({ focusSessionId }: { focusSessionId?: string }) => (
+    <div>
+      <span>Bản đồ kiểm tra</span>
+      <span data-testid="focused-route">{focusSessionId}</span>
+    </div>
+  ),
+}));
 const session = () => ({
   id: "session",
   providerName: "Linh Anh",
@@ -33,6 +40,34 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe("Safety consent and SOS UI", () => {
+  it("offers opt-in shift tracking without a customer inquiry and starts only after consent", async () => {
+    state.fetch.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/appointment-inquiries"
+          ? []
+          : path === "/ktv-safety/shift"
+            ? { ...session(), purpose: "SHIFT", visit: null }
+            : [],
+      ),
+    );
+    render(<ProviderSafety />);
+    await screen.findByRole("button", { name: "Bật chia sẻ hành trình ca làm việc" });
+    expect(state.watch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Bật chia sẻ hành trình ca làm việc" }));
+    const consent = screen.getByRole("checkbox");
+    expect(consent).toBeRequired();
+    expect(consent).not.toBeChecked();
+    fireEvent.click(consent);
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận bật chia sẻ GPS" }));
+    await waitFor(() =>
+      expect(state.fetch).toHaveBeenCalledWith(
+        "/ktv-safety/shift",
+        expect.objectContaining({ body: expect.stringContaining('"consent":true') }),
+      ),
+    );
+    await screen.findByText("Đang chia sẻ hành trình ca làm việc");
+    expect(state.watch).toHaveBeenCalledTimes(1);
+  });
   it("does not start GPS automatically for a loaded session; explicit resume starts it", async () => {
     state.fetch.mockImplementation((path: string) =>
       Promise.resolve(
@@ -111,7 +146,32 @@ describe("Safety consent and SOS UI", () => {
     render(<AdminSafety />);
     await screen.findByText("Chưa có phiên chia sẻ vị trí");
     expect(screen.queryByText("Bản đồ kiểm tra")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Mở bản đồ" }));
+    fireEvent.click(screen.getByRole("button", { name: "Mở bản đồ hành trình" }));
     expect(screen.getByText("Bản đồ kiểm tra")).toBeInTheDocument();
+  });
+  it("lets only Super Admin select a consented KTV route on the monitor", async () => {
+    state.user = { id: "admin", roles: ["SUPER_ADMIN"] };
+    state.fetch.mockResolvedValue({
+      serverTime: new Date().toISOString(),
+      sessions: [
+        {
+          ...session(),
+          purpose: "SHIFT",
+          routeConsent: true,
+          trail: [
+            {
+              latitude: 21.03,
+              longitude: 105.8,
+              accuracy: 10,
+              recordedAt: new Date().toISOString(),
+            },
+          ],
+        },
+      ],
+    });
+    render(<AdminSafety />);
+    fireEvent.click(await screen.findByRole("button", { name: "Xem hành trình" }));
+    expect(screen.getByText("Bản đồ kiểm tra")).toBeInTheDocument();
+    expect(screen.getByTestId("focused-route")).toHaveTextContent("session");
   });
 });

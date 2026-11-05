@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Bell, MapPin, ShieldCheck, Siren } from "lucide-react";
+import { Bell, MapPin, Route, ShieldCheck, Siren } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { SafetyMap } from "./safety-map";
 import { ongoing, time, pointState, stateLabels, type SafetySession } from "./types";
@@ -21,10 +21,12 @@ function AdminSafetyContent() {
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(""),
+    [selectedId, setSelectedId] = useState(""),
     [mapOpen, setMapOpen] = useState(false),
     [sound, setSound] = useState(false),
     [now, setNow] = useState(0);
   const audio = useRef<HTMLAudioElement | null>(null),
+    mapSection = useRef<HTMLDivElement | null>(null),
     seen = useRef<Set<string>>(new Set()),
     offset = useRef(0),
     inFlight = useRef(false);
@@ -66,6 +68,11 @@ function AdminSafetyContent() {
         .catch(() => setNotice("Trình duyệt đã chặn âm báo. Bấm bật âm báo lại."));
     seen.current = new Set(ids);
   }, [data, sound]);
+  useEffect(() => {
+    if (mapOpen && selectedId) {
+      mapSection.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    }
+  }, [mapOpen, selectedId]);
   async function incident(e: FormEvent<HTMLFormElement>, s: SafetySession) {
     e.preventDefault();
     if (busy || !s.sos) return;
@@ -102,7 +109,8 @@ function AdminSafetyContent() {
         <div>
           <h2>Theo dõi chuyến phục vụ</h2>
           <p>
-            KTV tự bật chia sẻ. GPS được cập nhật khi trang KTV đang mở; điểm cũ luôn được đánh dấu.
+            KTV chủ động bật chia sẻ theo chuyến đi/ca làm việc. Theo dõi vị trí và hành trình gần
+            thời gian thực; GPS có thể ngừng khi điện thoại khóa màn hình.
           </p>
         </div>
       </div>
@@ -126,7 +134,7 @@ function AdminSafetyContent() {
         </div>
         <div>
           <strong>{overdue.length}</strong>
-          <span>Quá giờ check-in</span>
+          <span>Quá giờ xác nhận an toàn</span>
         </div>
       </div>
       <div className="safety-actions">
@@ -169,13 +177,18 @@ function AdminSafetyContent() {
           {notice}
         </p>
       )}
-      <div className="safety-card">
+      <div className="safety-card" ref={mapSection} style={{ scrollMarginTop: 90 }}>
         <h2>
-          <MapPin size={21} /> Bản đồ riêng tư
+          <MapPin size={21} /> Bản đồ hành trình KTV
         </h2>
         {mapOpen ? (
           <>
-            <SafetyMap sessions={data} />
+            <SafetyMap sessions={data} focusSessionId={selectedId} />
+            {selectedId && (
+              <button className="mm-outline-cta" onClick={() => setSelectedId("")}>
+                Hiển thị tất cả KTV
+              </button>
+            )}
             <button className="mm-outline-cta" onClick={() => setMapOpen(false)}>
               Đóng bản đồ
             </button>
@@ -188,7 +201,7 @@ function AdminSafetyContent() {
               cầu bản đồ.
             </p>
             <button className="mm-primary-cta" onClick={() => setMapOpen(true)}>
-              Mở bản đồ
+              Mở bản đồ hành trình
             </button>
           </>
         )}
@@ -199,7 +212,8 @@ function AdminSafetyContent() {
         <article className="safety-card">
           <h2>Chưa có phiên chia sẻ vị trí</h2>
           <p>
-            Khi KTV bật chế độ an toàn cho chuyến phục vụ tại nhà, thông tin sẽ xuất hiện tại đây.
+            Khi KTV đồng ý chia sẻ cho ca làm việc hoặc chuyến phục vụ tại nhà, thông tin sẽ xuất
+            hiện tại đây.
           </p>
         </article>
       ) : (
@@ -216,7 +230,11 @@ function AdminSafetyContent() {
                     {error ? "Chưa xác minh cập nhật" : stateLabels[status]}
                   </span>
                 </div>
-                <p>{s.visit?.serviceName || "Thông tin chuyến đi đã hết thời hạn lưu"}</p>
+                <p>
+                  {s.purpose === "SHIFT"
+                    ? "Chia sẻ hành trình ca làm việc"
+                    : s.visit?.serviceName || "Thông tin chuyến đi đã hết thời hạn lưu"}
+                </p>
                 {s.visit && (
                   <>
                     <p>Khách: {s.visit.customerName}</p>
@@ -231,10 +249,29 @@ function AdminSafetyContent() {
                     : ongoing(s)
                       ? "Đang trên đường"
                       : "Phiên đã kết thúc"}{" "}
-                  · Check-in tiếp theo: {time(s.expectedCheckAt)}
+                  · Xác nhận tiếp theo: {time(s.expectedCheckAt)}
                 </p>
+                {s.routeConsent && (
+                  <div className="safety-route-summary">
+                    <Route size={17} />
+                    <span>
+                      {s.trail?.length ?? 0} điểm hành trình · lưu tối đa 24 giờ sau khi hoàn tất
+                    </span>
+                    <button
+                      type="button"
+                      className="mm-outline-cta"
+                      disabled={!s.trail?.length && !s.point}
+                      onClick={() => {
+                        setSelectedId(s.id);
+                        setMapOpen(true);
+                      }}
+                    >
+                      Xem hành trình
+                    </button>
+                  </div>
+                )}
                 {ongoing(s) && now > Date.parse(s.expectedCheckAt) && (
-                  <p className="safety-warning">Quá giờ check-in · cần liên hệ kiểm tra</p>
+                  <p className="safety-warning">Quá giờ xác nhận an toàn · cần liên hệ kiểm tra</p>
                 )}
                 {p ? (
                   <>

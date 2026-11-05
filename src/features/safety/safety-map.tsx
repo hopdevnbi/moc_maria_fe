@@ -4,10 +4,17 @@ import type { Map as LeafletMap, LayerGroup } from "leaflet";
 import type { SafetySession } from "./types";
 import { ongoing, time } from "./types";
 import "leaflet/dist/leaflet.css";
-export function SafetyMap({ sessions }: { sessions: SafetySession[] }) {
+export function SafetyMap({
+  sessions,
+  focusSessionId,
+}: {
+  sessions: SafetySession[];
+  focusSessionId?: string;
+}) {
   const node = useRef<HTMLDivElement>(null),
     map = useRef<LeafletMap | null>(null),
     layer = useRef<LayerGroup | null>(null),
+    lastFocus = useRef(""),
     [ready, setReady] = useState(false),
     [notice, setNotice] = useState("");
   useEffect(() => {
@@ -48,6 +55,34 @@ export function SafetyMap({ sessions }: { sessions: SafetySession[] }) {
       if (cancelled || !layer.current) return;
       layer.current.clearLayers();
       for (const s of sessions) {
+        const route = s.trail ?? [];
+        // Do not draw a misleading straight line across a long GPS outage.
+        if (route.length > 1) {
+          let segment = [route[0]];
+          const draw = () => {
+            if (segment.length < 2) return;
+            L.polyline(
+              segment.map((p) => [p.latitude, p.longitude] as [number, number]),
+              {
+                color: focusSessionId === s.id ? "#176747" : "#679b86",
+                weight: focusSessionId === s.id ? 5 : 3,
+                opacity: focusSessionId === s.id ? 0.9 : 0.55,
+              },
+            ).addTo(layer.current!);
+          };
+          for (const point of route.slice(1)) {
+            if (
+              Date.parse(point.recordedAt) - Date.parse(segment[segment.length - 1].recordedAt) >
+              180000
+            ) {
+              draw();
+              segment = [point];
+            } else {
+              segment.push(point);
+            }
+          }
+          draw();
+        }
         const p = s.point || s.sos?.point;
         if (!p) continue;
         const recent = ongoing(s) && s.sharing && Date.now() - Date.parse(p.recordedAt) <= 60000;
@@ -71,11 +106,26 @@ export function SafetyMap({ sessions }: { sessions: SafetySession[] }) {
           .bindTooltip(label)
           .addTo(layer.current);
       }
+      if (focusSessionId && map.current && focusSessionId !== lastFocus.current) {
+        const chosen = sessions.find((session) => session.id === focusSessionId);
+        const coordinates = [
+          ...(chosen?.trail ?? []).map(
+            (point) => [point.latitude, point.longitude] as [number, number],
+          ),
+          ...(chosen?.point
+            ? [[chosen.point.latitude, chosen.point.longitude] as [number, number]]
+            : []),
+        ];
+        if (coordinates.length) {
+          map.current.fitBounds(L.latLngBounds(coordinates).pad(0.25), { maxZoom: 16 });
+          lastFocus.current = focusSessionId;
+        }
+      }
     });
     return () => {
       cancelled = true;
     };
-  }, [sessions, ready]);
+  }, [sessions, ready, focusSessionId]);
   return (
     <div>
       {notice && (
@@ -87,11 +137,11 @@ export function SafetyMap({ sessions }: { sessions: SafetySession[] }) {
         className="safety-map"
         ref={node}
         role="region"
-        aria-label="Bản đồ vị trí KTV tại Hà Nội"
+        aria-label="Bản đồ vị trí và hành trình chia sẻ của KTV"
       />
       <p className="safety-fine">
-        Xanh: điểm mới · Vàng: điểm cũ · Đỏ: SOS. Vòng tròn biểu thị sai số GPS. Bản đồ không xác
-        nhận KTV đang ở chính xác địa chỉ khách.
+        Đường xanh: hành trình GPS được KTV đồng ý chia sẻ. Đường bị ngắt tại khoảng mất GPS trên 3
+        phút. Xanh: điểm mới · Vàng: điểm cũ · Đỏ: SOS. Vòng tròn biểu thị sai số GPS.
       </p>
     </div>
   );

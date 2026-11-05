@@ -1,0 +1,51 @@
+.mm-att-workspace {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.mm-att-workspace-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 7px;
+  border: 1px solid #dce9da;
+  border-radius: 18px;
+  background: #f1f6ef;
+}
+.mm-att-workspace-tabs button {
+  flex: 1 1 205px;
+  min-height: 50px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #51715b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  cursor: pointer;
+}
+.mm-att-workspace-tabs button.is-active {
+  background: #246b4b;
+  color: #fff;
+  box-shadow: 0 3px 10px #1b543322;
+}
+.mm-att-workspace-tabs button:focus-visible {
+  outline: 3px solid #97c9a5;
+  outline-offset: 2px;
+}
+.mm-att-workspace [role="tabpanel"] {
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .mm-att-workspace-tabs button {
+    flex-basis: 100%;
+  }
+  .safety-route-summary button {
+    width: 100%;
+  }
+}

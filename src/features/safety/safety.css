@@ -73,6 +73,21 @@
   gap: 12px;
   margin: 18px 0;
 }
+.safety-route-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #246b4b;
+  padding: 12px 0;
+  font-size: 13px;
+}
+.safety-route-summary button {
+  margin-left: auto;
+}
+.safety-shift-card {
+  background: #f7faf5;
+}
 .mm-safety form {
   display: grid;
   gap: 18px;

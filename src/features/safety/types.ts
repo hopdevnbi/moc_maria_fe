@@ -5,10 +5,18 @@ export interface SafetyPoint {
   recordedAt: string;
   receivedAt: string;
 }
+export type SafetyTrailPoint = Pick<
+  SafetyPoint,
+  "latitude" | "longitude" | "accuracy" | "recordedAt"
+>;
 export interface SafetySession {
   id: string;
   providerName: string;
-  inquiryId: string;
+  inquiryId?: string;
+  purpose?: "VISIT" | "SHIFT";
+  routeConsent?: boolean;
+  /** Only present in the SUPER_ADMIN monitor response. */
+  trail?: SafetyTrailPoint[];
   status: string;
   sharing: boolean;
   startedAt: string;

@@ -21,6 +21,28 @@ body:has(.mm-checkin-page) .christmas-welcome {
   margin: 30px auto 0;
   padding-bottom: calc(130px + env(safe-area-inset-bottom));
 }
+.mm-checkin-safety {
+  margin-top: 20px;
+  border: 1px solid #d8e7d8;
+  border-radius: 18px;
+  background: #f4f8f2;
+  overflow: hidden;
+}
+.mm-checkin-safety summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 19px;
+  cursor: pointer;
+  color: #215c41;
+  font-weight: 700;
+}
+.mm-checkin-safety summary::marker {
+  content: "";
+}
+.mm-checkin-safety-body {
+  padding: 0 14px 16px;
+}
 .mm-checkin-back {
   display: inline-flex;
   align-items: center;

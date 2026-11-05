@@ -22,6 +22,7 @@ function ProviderSafetyContent() {
     [gpsSession, setGpsSession] = useState(""),
     [gpsNotice, setGpsNotice] = useState(""),
     [confirmSos, setConfirmSos] = useState(false),
+    [showShift, setShowShift] = useState(false),
     [now, setNow] = useState(0);
   const current = sessions.find((s) => ongoing(s) && Date.parse(s.expiresAt) > now);
   const load = useCallback(async () => {
@@ -142,6 +143,31 @@ function ProviderSafetyContent() {
       setBusy(false);
     }
   }
+  async function startShift(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (busy) return;
+    const form = new FormData(e.currentTarget);
+    setBusy(true);
+    setNotice("");
+    try {
+      const s = await authFetch<SafetySession>("/ktv-safety/shift", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          consent: form.get("consent") === "on",
+          expectedCheckAt: new Date(Date.now() + Number(form.get("minutes")) * 60000).toISOString(),
+        }),
+      });
+      setSessions((old) => [s, ...old]);
+      setNow(Date.now());
+      setShowShift(false);
+      setGpsSession(s.id);
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "Chưa bật được chia sẻ hành trình.");
+    } finally {
+      setBusy(false);
+    }
+  }
   if (!allowed) return <p role="alert">Chế độ này dành cho tài khoản kỹ thuật viên.</p>;
   return (
     <section className="mm-safety">
@@ -175,25 +201,38 @@ function ProviderSafetyContent() {
       ) : current ? (
         <article className="safety-card">
           <div className="safety-card-heading">
-            <h2>{current.status === "ARRIVED" ? "Đã đến nơi phục vụ" : "Đang trên đường"}</h2>
+            <h2>
+              {current.purpose === "SHIFT"
+                ? "Đang chia sẻ hành trình ca làm việc"
+                : current.status === "ARRIVED"
+                  ? "Đã đến nơi phục vụ"
+                  : "Đang trên đường"}
+            </h2>
             <span
               className={"safety-pill " + (pointState(current, now) === "FRESH" ? "fresh" : "")}
             >
               {stateLabels[pointState(current, now)]}
             </span>
           </div>
-          <h3>{current.visit?.serviceName}</h3>
+          {current.purpose === "SHIFT" ? (
+            <p>Chế độ ca làm việc không hiển thị thông tin khách hàng.</p>
+          ) : (
+            <>
+              <h3>{current.visit?.serviceName}</h3>
+              <p>
+                <MapPin size={16} /> {current.visit?.address}
+              </p>
+              <p>Khách hàng: {current.visit?.customerName}</p>
+            </>
+          )}
           <p>
-            <MapPin size={16} /> {current.visit?.address}
-          </p>
-          <p>Khách hàng: {current.visit?.customerName}</p>
-          <p>
-            Check-in tiếp theo trước {time(current.expectedCheckAt)} · Tự kết thúc{" "}
-            {time(current.expiresAt)}
+            {current.purpose === "SHIFT" ? "Xác nhận an toàn tiếp theo" : "Check-in tiếp theo"}
+            {" trước "}
+            {time(current.expectedCheckAt)} · Tự kết thúc {time(current.expiresAt)}
           </p>
           {now > Date.parse(current.expectedCheckAt) && (
             <p className="safety-warning">
-              Đã quá giờ check-in. Hãy cập nhật trạng thái hoặc liên hệ quản trị.
+              Đã quá giờ xác nhận an toàn. Hãy cập nhật trạng thái hoặc liên hệ quản trị.
             </p>
           )}
           <p role="status">
@@ -216,13 +255,22 @@ function ProviderSafetyContent() {
               {trackingId ? <Pause size={18} /> : <Play size={18} />}{" "}
               {trackingId ? "Tạm dừng GPS" : "Tiếp tục chia sẻ GPS"}
             </button>
-            {current.status === "TRAVELLING" && (
+            {current.purpose !== "SHIFT" && current.status === "TRAVELLING" && (
               <button
                 className="mm-primary-cta"
                 disabled={busy}
                 onClick={() => void action("ARRIVED")}
               >
                 <CheckCircle2 size={18} /> Tôi đã đến nơi
+              </button>
+            )}
+            {current.purpose === "SHIFT" && (
+              <button
+                className="mm-primary-cta"
+                disabled={busy}
+                onClick={() => void action("CHECK")}
+              >
+                <CheckCircle2 size={18} /> Tôi vẫn an toàn · nhắc lại sau 2 giờ
               </button>
             )}
             <button
@@ -288,8 +336,8 @@ function ProviderSafetyContent() {
           {!inquiries.length ? (
             <>
               <p>
-                Chưa có yêu cầu tại nhà đã nhận trao đổi. Mở yêu cầu đặt lịch, trao đổi và thống
-                nhất chuyến đi với khách trước.
+                Chưa có yêu cầu tại nhà đã nhận trao đổi. Bạn vẫn có thể chia sẻ hành trình cho ca
+                làm việc riêng bên dưới.
               </p>
               <Link className="mm-primary-cta" href="/tai-khoan#yeu-cau-dat-lich">
                 Xem yêu cầu đặt lịch
@@ -319,10 +367,11 @@ function ProviderSafetyContent() {
               <label className="safety-consent">
                 <input type="checkbox" name="consent" required />
                 <span>
-                  Tôi đã thống nhất chuyến đi với khách và tự nguyện chia sẻ vị trí với super admin
-                  trong phiên này, tối đa 8 giờ. Có thể dừng bất kỳ lúc nào. Điểm GPS hiện tại được
-                  xóa khi dừng; vị trí gửi kèm SOS được giữ tối đa 24 giờ. Bản đồ dùng OpenStreetMap
-                  và có thể chia sẻ vùng bản đồ đang xem với nhà cung cấp bản đồ.
+                  Tôi đã thống nhất chuyến đi với khách và đồng ý chia sẻ vị trí cùng hành trình với
+                  Super Admin trong phiên này, tối đa 8 giờ. Có thể tạm dừng hoặc kết thúc. Khi bấm
+                  Dừng, hành trình được xóa ngay; khi Hoàn tất, lịch sử hành trình được giữ tối đa
+                  24 giờ. Vị trí SOS có thể giữ tối đa 24 giờ. Bản đồ dùng OpenStreetMap và có thể
+                  chia sẻ vùng bản đồ đang xem với nhà cung cấp bản đồ.
                 </span>
               </label>
               <button className="mm-primary-cta" disabled={busy || !!error}>
@@ -332,10 +381,58 @@ function ProviderSafetyContent() {
           )}
         </article>
       )}
+      {!current && (
+        <article className="safety-card safety-shift-card">
+          <h2>Định vị ca làm việc (KTV)</h2>
+          <p>
+            Không cần lịch hẹn tại nhà. Bật chia sẻ khi bắt đầu di chuyển, chỉ Super Admin được xem
+            vị trí và đường đi. GPS chỉ cập nhật khi trang web đang mở.
+          </p>
+          {!showShift ? (
+            <button type="button" className="mm-primary-cta" onClick={() => setShowShift(true)}>
+              <MapPin size={18} /> Bật chia sẻ hành trình ca làm việc
+            </button>
+          ) : (
+            <form onSubmit={(e) => void startShift(e)}>
+              <label>
+                Nhắc cập nhật trạng thái sau
+                <select name="minutes" defaultValue="120">
+                  <option value="30">30 phút</option>
+                  <option value="60">1 giờ</option>
+                  <option value="120">2 giờ</option>
+                  <option value="240">4 giờ</option>
+                </select>
+              </label>
+              <label className="safety-consent">
+                <input type="checkbox" name="consent" required />
+                <span>
+                  Tôi đồng ý chia sẻ vị trí và hành trình ca làm việc với Super Admin, tối đa 8 giờ.
+                  Có thể tạm dừng hoặc kết thúc bất cứ lúc nào. Bấm Dừng sẽ xóa ngay hành trình; bấm
+                  Hoàn tất sẽ giữ lịch sử tối đa 24 giờ rồi tự xóa. GPS chỉ hoạt động khi trang web
+                  đang hiển thị.
+                </span>
+              </label>
+              <div className="safety-actions">
+                <button className="mm-primary-cta" disabled={busy} type="submit">
+                  {busy ? "Đang bật..." : "Xác nhận bật chia sẻ GPS"}
+                </button>
+                <button
+                  type="button"
+                  className="mm-outline-cta"
+                  onClick={() => setShowShift(false)}
+                  disabled={busy}
+                >
+                  Hủy
+                </button>
+              </div>
+            </form>
+          )}
+        </article>
+      )}
       <p className="safety-fine">
-        Phiên an toàn không thay thế xác nhận lịch hẹn. Trang chỉ giữ điểm GPS mới nhất, không lưu
-        hành trình. Dữ liệu chuyến đi được xóa sau 24 giờ kể từ khi kết thúc; quyền truy cập của
-        quản trị được ghi nhật ký.
+        Phiên an toàn không thay thế xác nhận lịch hẹn. Với phiên mới có đồng ý chia sẻ hành trình,
+        chỉ Super Admin xem được các điểm đường đi. Hành trình được xóa khi bấm Dừng, hoặc tối đa 24
+        giờ sau khi Hoàn tất; quyền xem của quản trị được ghi nhật ký.
       </p>
       {sessions
         .filter((s) => !ongoing(s) || Date.parse(s.expiresAt) <= now)
