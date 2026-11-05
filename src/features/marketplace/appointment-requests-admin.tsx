@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { mutationMessage, usePrivateData, usePrivateMutation } from "./private-api";
+import { ApiError } from "@/features/auth/auth-api";
 import {
   defaultStatusNote,
   inquiryStatusLabels,
@@ -122,6 +123,9 @@ export function AppointmentRequestsAdmin() {
   const [actionRecord, setActionRecord] = useState<AdminAppointmentRequest | null>(null);
   const [performed, setPerformed] = useState(false);
   const [success, setSuccess] = useState("");
+  const [staleAction, setStaleAction] = useState(false);
+  const [refreshingAction, setRefreshingAction] = useState(false);
+  const [refreshNotice, setRefreshNotice] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -147,12 +151,49 @@ export function AppointmentRequestsAdmin() {
 
   function beginAction(next: RequestStatus | "ARCHIVE" | "RESTORE") {
     if (!selected) return;
-    setActionRecord({ ...selected });
+    // A detail request may already be fresher than the paginated list.
+    const current = detail.data?.id === selected.id ? detail.data : selected;
+    setActionRecord({ ...current });
     setAction(next === "ARCHIVE" || next === "RESTORE" ? null : next);
     setArchiveAction(next === "ARCHIVE" || next === "RESTORE" ? next : null);
     setReason(defaultStatusNote(next));
     setPerformed(false);
+    setStaleAction(false);
+    setRefreshNotice("");
     change.reset();
+  }
+
+  async function reloadAction() {
+    if (!actionRecord || refreshingAction) return;
+    setRefreshingAction(true);
+    setRefreshNotice("");
+    try {
+      const result = await detail.refetch();
+      await requests.refetch();
+      const current = result.data;
+      if (!current || current.id !== actionRecord.id)
+        throw new Error("Không tải được trạng thái mới của yêu cầu này.");
+      setActionRecord({ ...current });
+      change.reset();
+      if (action && current.status === action) {
+        setAction(null);
+        setArchiveAction(null);
+        setSuccess(`Yêu cầu đã ở trạng thái ${requestStatusLabels[action]}.`);
+      } else if (action && !current.allowedActions?.includes(action)) {
+        setAction(null);
+        setArchiveAction(null);
+        setSuccess("Trạng thái đã đổi và thao tác cũ không còn hợp lệ. Hãy chọn lại.");
+      } else {
+        setRefreshNotice(
+          `Đã tải trạng thái hiện tại: ${requestStatusLabels[current.status] || current.status}. Hãy kiểm tra rồi xác nhận lại.`,
+        );
+      }
+      setStaleAction(false);
+    } catch {
+      setRefreshNotice("Không thể tải trạng thái mới. Vui lòng kiểm tra kết nối và thử lại.");
+    } finally {
+      setRefreshingAction(false);
+    }
   }
 
   async function submitAction(event: FormEvent<HTMLFormElement>) {
@@ -162,6 +203,8 @@ export function AppointmentRequestsAdmin() {
       (!action && !archiveAction) ||
       reason.trim().length < 10 ||
       change.isPending ||
+      staleAction ||
+      refreshingAction ||
       (action === "COMPLETED" && !performed)
     )
       return;
@@ -191,8 +234,10 @@ export function AppointmentRequestsAdmin() {
       }
       setSuccess("Đã lưu kết quả xử lý yêu cầu. Danh sách đã được cập nhật.");
       await requests.refetch();
-    } catch {
-      // The mutation error stays visible in the confirmation dialog.
+    } catch (error) {
+      // Keep optimistic concurrency checks: an outdated form must never overwrite
+      // a KTV or another administrator's more recent decision.
+      if (error instanceof ApiError && error.status === 409) setStaleAction(true);
     }
   }
 
@@ -650,6 +695,20 @@ export function AppointmentRequestsAdmin() {
                 {mutationMessage(change.error)}
               </p>
             )}
+            {staleAction && (
+              <div role="alert" className="mm-request-error">
+                Dữ liệu lịch hẹn có thể đã thay đổi. Để tránh ghi đè thao tác của người khác, hãy
+                tải trạng thái mới trước khi xác nhận lại.
+                <button
+                  type="button"
+                  onClick={() => void reloadAction()}
+                  disabled={refreshingAction}
+                >
+                  {refreshingAction ? "Đang tải trạng thái..." : "Tải trạng thái mới"}
+                </button>
+              </div>
+            )}
+            {refreshNotice && <p role="status">{refreshNotice}</p>}
             <div className="mm-request-modal-actions">
               <button
                 type="button"
@@ -657,7 +716,7 @@ export function AppointmentRequestsAdmin() {
                   setAction(null);
                   setArchiveAction(null);
                 }}
-                disabled={change.isPending}
+                disabled={change.isPending || refreshingAction}
               >
                 Quay lại
               </button>
@@ -666,6 +725,8 @@ export function AppointmentRequestsAdmin() {
                 className="primary"
                 disabled={
                   change.isPending ||
+                  staleAction ||
+                  refreshingAction ||
                   reason.trim().length < 10 ||
                   (action === "COMPLETED" && !performed)
                 }

@@ -5,24 +5,29 @@ import {
   type AdminAppointmentRequest,
 } from "./appointment-requests-admin";
 import { DEFAULT_COMPLETION_NOTE, defaultStatusNote } from "@/shared/booking/inquiry-status";
+import { ApiError } from "@/features/auth/auth-api";
 const state = vi.hoisted(() => ({
   items: [] as AdminAppointmentRequest[],
+  detail: null as AdminAppointmentRequest | null,
   mutateAsync: vi.fn().mockResolvedValue(undefined),
   refetch: vi.fn(),
+  detailRefetch: vi.fn(),
 }));
 vi.mock("./private-api", () => ({
-  usePrivateData: () => ({
-    data: {
-      items: state.items,
-      total: state.items.length,
-      page: 1,
-      hasMore: false,
-      counts: { ALL: 1, PENDING: 1, COMPLETED: 0 },
-    },
+  usePrivateData: (path: string) => ({
+    data: path.startsWith("/admin/appointment-inquiries/")
+      ? (state.detail ?? state.items[0])
+      : {
+          items: state.items,
+          total: state.items.length,
+          page: 1,
+          hasMore: false,
+          counts: { ALL: 1, PENDING: 1, COMPLETED: 0 },
+        },
     isPending: false,
     isFetching: false,
     isError: false,
-    refetch: state.refetch,
+    refetch: path.startsWith("/admin/appointment-inquiries/") ? state.detailRefetch : state.refetch,
   }),
   usePrivateMutation: () => ({
     mutateAsync: state.mutateAsync,
@@ -33,6 +38,8 @@ vi.mock("./private-api", () => ({
   mutationMessage: () => "Không thể lưu",
 }));
 beforeEach(() => {
+  state.detail = null;
+  state.mutateAsync.mockReset().mockResolvedValue(undefined);
   state.items = [
     {
       id: "abc123",
@@ -56,6 +63,7 @@ afterEach(() => {
   cleanup();
   state.mutateAsync.mockClear();
   state.refetch.mockClear();
+  state.detailRefetch.mockClear();
 });
 function superAdmin() {
   state.items[0] = {
@@ -164,5 +172,28 @@ describe("Appointment admin lifecycle", () => {
         }),
       }),
     );
+  });
+  it("blocks stale 409 retries until Super Admin reloads current status and reconfirms", async () => {
+    superAdmin();
+    state.mutateAsync.mockRejectedValueOnce(
+      new ApiError(409, "Trạng thái đã thay đổi. Vui lòng tải lại."),
+    );
+    state.detailRefetch.mockResolvedValueOnce({
+      data: { ...state.items[0], status: "CONTACTED", allowedActions: ["CANCELLED", "CONFIRMED"] },
+    });
+    state.refetch.mockResolvedValue({ data: { items: state.items } });
+    render(<AppointmentRequestsAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: "Hủy yêu cầu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận xử lý" }));
+    expect(await screen.findByRole("button", { name: "Tải trạng thái mới" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Xác nhận xử lý" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Tải trạng thái mới" }));
+    expect(await screen.findByText(/Đã tải trạng thái hiện tại: Đang trao đổi/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Xác nhận xử lý" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận xử lý" }));
+    expect(state.mutateAsync).toHaveBeenLastCalledWith(
+      expect.objectContaining({ body: expect.objectContaining({ expectedStatus: "CONTACTED" }) }),
+    );
+    expect(state.mutateAsync).toHaveBeenCalledTimes(2);
   });
 });
