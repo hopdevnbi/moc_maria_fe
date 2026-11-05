@@ -275,8 +275,8 @@ function AdminSafetyContent() {
           <>
             <p>
               Bản đồ nền do OpenFreeMap cung cấp (dữ liệu OpenStreetMap). Khi mở, nhà cung cấp có
-              thể biết vùng bản đồ được xem và thông tin kết nối; tên nhân sự, địa chỉ khách và
-              các điểm GPS chỉ được vẽ trong trình duyệt quản trị.
+              thể biết vùng bản đồ được xem và thông tin kết nối; tên nhân sự, địa chỉ khách và các
+              điểm GPS chỉ được vẽ trong trình duyệt quản trị.
             </p>
             <button className="mm-primary-cta" onClick={() => setMapOpen(true)}>
               Mở bản đồ hành trình
