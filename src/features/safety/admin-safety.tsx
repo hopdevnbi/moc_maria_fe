@@ -16,11 +16,11 @@ interface Monitor {
   serverTime: string;
   sessions: SafetySession[];
 }
-export function AdminSafety() {
+export function AdminSafety({ initialMapOpen = false }: { initialMapOpen?: boolean } = {}) {
   const { user } = useAuth();
-  return <AdminSafetyContent key={user?.id || "signed-out"} />;
+  return <AdminSafetyContent key={user?.id || "signed-out"} initialMapOpen={initialMapOpen} />;
 }
-function AdminSafetyContent() {
+function AdminSafetyContent({ initialMapOpen }: { initialMapOpen: boolean }) {
   const { user, authFetch } = useAuth(),
     allowed = user?.roles.includes("SUPER_ADMIN");
   const [data, setData] = useState<SafetySession[]>([]),
@@ -29,7 +29,7 @@ function AdminSafetyContent() {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(""),
     [selectedId, setSelectedId] = useState(""),
-    [mapOpen, setMapOpen] = useState(false),
+    [mapOpen, setMapOpen] = useState(initialMapOpen),
     [attendanceDate, setAttendanceDate] = useState(() => hcmDate()),
     [attendance, setAttendance] = useState<AttendanceRecord[]>([]),
     [attendanceTotal, setAttendanceTotal] = useState(0),

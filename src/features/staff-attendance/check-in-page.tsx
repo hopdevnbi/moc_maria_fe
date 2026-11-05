@@ -8,6 +8,7 @@ import { MobileNavigation } from "@/features/mobile/mobile-navigation";
 import { StaffAttendanceCard } from "./staff-attendance-card";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { ProviderSafety } from "@/features/safety/provider-safety";
+import { SuperAdminCheckInTracking } from "./super-admin-checkin-tracking";
 import "@/features/safety/safety.css";
 import "./check-in-page.css";
 
@@ -59,6 +60,7 @@ export function CheckInPage() {
         <RequireAuth>
           <StaffAttendanceCard standalone />
           <KtvJourneyCheckIn />
+          <SuperAdminCheckInTracking />
         </RequireAuth>
       </main>
       <MobileNavigation active={null} />

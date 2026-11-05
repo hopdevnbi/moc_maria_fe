@@ -43,6 +43,106 @@ body:has(.mm-checkin-page) .christmas-welcome {
 .mm-checkin-safety-body {
   padding: 0 14px 16px;
 }
+.mm-checkin-admin-tracking {
+  min-width: 0;
+  margin-top: 20px;
+  border: 1px solid #d3e3d5;
+  border-radius: 22px;
+  background: #f3f8f1;
+  box-shadow: 0 8px 30px rgb(43 85 59 / 6%);
+  overflow: hidden;
+}
+.mm-checkin-admin-tracking-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+}
+.mm-checkin-admin-tracking-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 14px;
+  color: #276344;
+  background: #e1f0e4;
+}
+.mm-checkin-admin-tracking-copy {
+  flex: 1;
+  min-width: 0;
+}
+.mm-checkin-admin-tracking-eyebrow {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+  color: #658264;
+}
+.mm-checkin-admin-tracking-copy h2 {
+  margin: 5px 0;
+  font:
+    600 19px/1.4 var(--font-wellness-serif),
+    Georgia,
+    serif;
+  color: #244c38;
+}
+.mm-checkin-admin-tracking-copy p {
+  margin: 0;
+  color: #63806b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.mm-checkin-admin-tracking-toggle {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 10px 14px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 12px;
+  background: #276344;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mm-checkin-admin-tracking-toggle svg {
+  transition: transform 0.2s ease;
+}
+.mm-checkin-admin-tracking-toggle svg.is-open {
+  transform: rotate(180deg);
+}
+.mm-checkin-admin-tracking-toggle:focus-visible {
+  outline: 3px solid #81bb92;
+  outline-offset: 3px;
+}
+.mm-checkin-admin-tracking-content {
+  padding: 17px 20px 20px;
+  border-top: 1px solid #d3e3d5;
+  background: #fffdfa;
+  min-width: 0;
+}
+.mm-checkin-admin-tracking-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  margin-bottom: 13px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #276344;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.mm-checkin-admin-tracking-content .safety-map {
+  min-width: 0;
+}
 .mm-checkin-back {
   display: inline-flex;
   align-items: center;
@@ -98,5 +198,30 @@ body:has(.mm-checkin-page) .christmas-welcome {
   }
   .mm-checkin-intro {
     padding-top: 9px;
+  }
+  .mm-checkin-admin-tracking-header {
+    flex-wrap: wrap;
+    padding: 15px;
+    gap: 10px;
+  }
+  .mm-checkin-admin-tracking-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+  .mm-checkin-admin-tracking-copy {
+    flex-basis: calc(100% - 55px);
+  }
+  .mm-checkin-admin-tracking-copy h2 {
+    font-size: 17px;
+  }
+  .mm-checkin-admin-tracking-toggle {
+    width: 100%;
+  }
+  .mm-checkin-admin-tracking-content {
+    padding: 12px;
+  }
+  .mm-checkin-admin-tracking-content .safety-card {
+    padding: 14px;
   }
 }
