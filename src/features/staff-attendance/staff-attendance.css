@@ -290,6 +290,25 @@
   font-size: 12px;
   font-weight: 750;
   cursor: pointer;
+  touch-action: manipulation;
+}
+.mm-att-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  justify-content: flex-end;
+}
+.mm-att-upload-actions small {
+  flex-basis: 100%;
+  text-align: right;
+  color: #728775;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.mm-att-upload-secondary {
+  background: #fff;
+  border-color: #c7d0c7;
 }
 .mm-att-upload input {
   position: absolute;
@@ -298,6 +317,20 @@
   width: 100%;
   height: 100%;
   cursor: pointer;
+}
+@media (max-width: 650px) {
+  .mm-att-upload-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .mm-att-upload-actions .mm-att-upload {
+    flex: 1 1 120px;
+    min-width: 0;
+    font-size: 13px;
+  }
+  .mm-att-upload-actions small {
+    text-align: left;
+  }
 }
 .mm-att-upload:focus-within {
   outline: 2px solid #477955;

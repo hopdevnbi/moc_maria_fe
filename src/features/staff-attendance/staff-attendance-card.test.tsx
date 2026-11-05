@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StaffAttendanceCard } from "./staff-attendance-card";
 import { ApiError } from "@/features/auth/auth-api";
 import { hcmDate, type StaffAttendanceMe } from "./data";
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), id: "staff-1" }));
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), prepareSelfie: vi.fn(), id: "staff-1" }));
+vi.mock("./selfie-image", () => ({ prepareAttendanceSelfie: mocks.prepareSelfie }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
     user: { id: mocks.id, isActive: true, roles: ["THERAPIST"], permissions: ["staff.portal"] },
@@ -48,6 +49,7 @@ function point(latitude = 21, accuracy = 15, timestamp = Date.now()): Geolocatio
 beforeEach(() => {
   mocks.id = "staff-1";
   mocks.fetch.mockReset();
+  mocks.prepareSelfie.mockReset().mockImplementation(async (file: File) => file);
   current = {
     localDate: hcmDate(),
     today: null,
@@ -61,6 +63,16 @@ beforeEach(() => {
     },
   };
   mocks.fetch.mockImplementation(async (_path, init) => {
+    if (String(_path).endsWith("/selfie")) {
+      current = {
+        ...current,
+        today: {
+          ...current.today!,
+          selfieUrl: "https://giangxa-media-cdn.b-cdn.net/moc-maria/staff-attendance/selfie.webp",
+        },
+      };
+      return structuredClone(current.today);
+    }
     if (init?.method === "POST")
       current = {
         ...current,
@@ -94,6 +106,52 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("attendance client boundaries", () => {
+  it("offers separate front camera and gallery on mobile and confirms the CDN link after upload", async () => {
+    current.today = {
+      id: "attendance-1",
+      branchId: "branch-1",
+      status: "IN_RANGE",
+      coinsEarned: 5,
+      selfieUrl: null,
+    };
+    draw();
+    const camera = await screen.findByLabelText("Chụp selfie bằng camera trước");
+    const gallery = screen.getByLabelText("Chọn ảnh selfie từ thư viện");
+    expect(camera).toHaveAttribute("capture", "user");
+    expect(gallery).not.toHaveAttribute("capture");
+    const image = new File(["selfie"], "selfie.jpg", { type: "image/jpeg" });
+    fireEvent.change(gallery, { target: { files: [image] } });
+    expect(await screen.findByRole("link", { name: "Xem selfie đã gửi" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("/moc-maria/staff-attendance/selfie.webp"),
+    );
+    const selfiePost = posts().filter((call) => String(call[0]).endsWith("/selfie"));
+    expect(selfiePost).toHaveLength(1);
+    expect(selfiePost[0][1].body).toBeInstanceOf(FormData);
+    expect((selfiePost[0][1].body as FormData).get("file")).toBeInstanceOf(File);
+    expect(mocks.prepareSelfie).toHaveBeenCalledWith(image);
+  });
+
+  it("lets a user choose the same photo again after an upload error, without inventing success", async () => {
+    current.today = {
+      id: "attendance-1",
+      branchId: "branch-1",
+      status: "IN_RANGE",
+      coinsEarned: 5,
+      selfieUrl: null,
+    };
+    mocks.prepareSelfie.mockRejectedValueOnce(new Error("Không xử lý được ảnh selfie"));
+    draw();
+    const input = await screen.findByLabelText("Chọn ảnh selfie từ thư viện");
+    const image = new File(["photo"], "photo.jpg", { type: "image/jpeg" });
+    fireEvent.change(input, { target: { files: [image] } });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Không xử lý được ảnh selfie");
+    expect(screen.queryByRole("link", { name: "Xem selfie đã gửi" })).not.toBeInTheDocument();
+    fireEvent.change(input, { target: { files: [image] } });
+    expect(await screen.findByRole("link", { name: "Xem selfie đã gửi" })).toBeInTheDocument();
+    expect(mocks.prepareSelfie).toHaveBeenCalledTimes(2);
+    expect(posts().filter((call) => String(call[0]).endsWith("/selfie"))).toHaveLength(1);
+  });
   it("stops automatic GPS in the background and ignores a delayed reading", async () => {
     let visibility = "visible";
     vi.spyOn(document, "visibilityState", "get").mockImplementation(

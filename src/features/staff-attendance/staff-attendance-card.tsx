@@ -13,7 +13,7 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { RoleName } from "@/features/auth/auth.types";
 import { ApiError } from "@/features/auth/auth-api";
-import { prepareChatImage } from "@/features/mobile/chat-image";
+import { prepareAttendanceSelfie } from "./selfie-image";
 import {
   attendanceLabel,
   formattedCheckInTime,
@@ -25,6 +25,7 @@ import {
   radiusMeters,
   staffBranches,
   type StaffAttendanceMe,
+  type AttendanceRecord,
 } from "./data";
 import "./staff-attendance.css";
 
@@ -92,6 +93,7 @@ function AttendanceSession({ standalone }: { standalone: boolean }) {
   const [hasError, setHasError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const selfieLocked = useRef(false);
   const [auto, setAuto] = useState(false);
   const locked = useRef(false);
   const gpsPending = useRef(false);
@@ -322,28 +324,53 @@ function AttendanceSession({ standalone }: { standalone: boolean }) {
   async function uploadSelfie(event: ChangeEvent<HTMLInputElement>) {
     const original = event.target.files?.[0];
     event.target.value = "";
-    if (!today || !original || uploading) return;
+    if (!today || !original || uploading || selfieLocked.current) return;
+    selfieLocked.current = true;
     setUploading(true);
     setHasError(false);
     setFeedback("Đang xử lý và tải ảnh selfie...");
     try {
-      const file = await prepareChatImage(original);
+      const file = await prepareAttendanceSelfie(original);
       if (!alive.current) return;
-      if (!file || file.size > 5 * 1024 * 1024) {
-        throw new Error("Ảnh không hợp lệ hoặc vượt giới hạn 5MB. Hãy chọn ảnh khác.");
-      }
       const form = new FormData();
       form.append("file", file, file.name);
-      await authFetch("/staff-attendance/check-ins/" + encodeURIComponent(today.id) + "/selfie", {
-        method: "POST",
-        body: form,
-      });
+      const updated = await authFetch<AttendanceRecord>(
+        "/staff-attendance/check-ins/" + encodeURIComponent(today.id) + "/selfie",
+        {
+          method: "POST",
+          cache: "no-store",
+          body: form,
+        },
+      );
+      if (!updated?.selfieUrl)
+        throw new Error("Máy chủ chưa xác nhận ảnh đã lưu. Hãy kiểm tra lại trạng thái.");
+      // Show the confirmed CDN URL immediately, even if the phone loses focus
+      // while the camera/gallery is open or the following refetch is delayed.
+      client.setQueryData<StaffAttendanceMe>(["staff-attendance", user?.id, day], (previous) =>
+        previous?.today?.id === updated.id
+          ? { ...previous, today: { ...previous.today, ...updated } }
+          : previous,
+      );
       setFeedback("Ảnh selfie đã lưu thành công.");
-      await client.invalidateQueries({ queryKey: ["staff-attendance", user?.id] });
+      await client
+        .invalidateQueries({ queryKey: ["staff-attendance", user?.id] })
+        .catch(() => undefined);
     } catch (error) {
       setHasError(true);
-      setFeedback(error instanceof Error ? error.message : "Chưa tải ảnh lên được. Hãy thử lại.");
+      setFeedback(
+        error instanceof ApiError && error.status === 409
+          ? "Ảnh đã được gửi ở thiết bị khác. Đang tải lại trạng thái để kiểm tra."
+          : error instanceof Error
+            ? error.message
+            : "Chưa tải ảnh lên được. Hãy thử lại.",
+      );
+      if (error instanceof ApiError && error.status === 409) {
+        await client
+          .invalidateQueries({ queryKey: ["staff-attendance", user?.id] })
+          .catch(() => undefined);
+      }
     } finally {
+      selfieLocked.current = false;
       setUploading(false);
     }
   }
@@ -561,17 +588,31 @@ function AttendanceSession({ standalone }: { standalone: boolean }) {
                 )}
               </div>
               {!today.selfieUrl && (
-                <label className="mm-att-upload">
-                  <Camera size={17} />
-                  {uploading ? "Đang tải ảnh..." : "Chụp / tải selfie"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="user"
-                    disabled={uploading}
-                    onChange={(event) => void uploadSelfie(event)}
-                  />
-                </label>
+                <div className="mm-att-upload-actions">
+                  <label className="mm-att-upload">
+                    <Camera size={17} />
+                    {uploading ? "Đang tải ảnh..." : "Chụp selfie"}
+                    <input
+                      aria-label="Chụp selfie bằng camera trước"
+                      type="file"
+                      accept="image/*"
+                      capture="user"
+                      disabled={uploading}
+                      onChange={(event) => void uploadSelfie(event)}
+                    />
+                  </label>
+                  <label className="mm-att-upload mm-att-upload-secondary">
+                    Chọn ảnh có sẵn
+                    <input
+                      aria-label="Chọn ảnh selfie từ thư viện"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      disabled={uploading}
+                      onChange={(event) => void uploadSelfie(event)}
+                    />
+                  </label>
+                  <small>Ảnh được tối ưu trên máy, sau đó lưu lên CDN. Tối đa 5 MB.</small>
+                </div>
               )}
             </div>
           )}

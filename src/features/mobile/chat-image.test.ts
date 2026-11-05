@@ -113,6 +113,23 @@ describe("mobile camera and PWA chat image preparation", () => {
     expect((await prepareChatImage(image))?.type).toBe("image/jpeg");
   });
 
+  it("forces a smaller bitmap for a 48 MP selfie even when its compressed file is under 2 MB", async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((cb) => {
+      cb(new Blob(["converted"], { type: "image/webp" }));
+    });
+    const tiny48MP = new File(["small HEIC-style camera image"], "selfie.jpg", {
+      type: "image/jpeg",
+    });
+    Object.defineProperty(tiny48MP, "size", { configurable: true, value: 1_200_000 });
+    const result = await prepareChatImage(tiny48MP, { forceResize: true });
+    expect(createImageBitmap).toHaveBeenCalledWith(
+      tiny48MP,
+      expect.objectContaining({ resizeWidth: 2048 }),
+    );
+    expect(result?.type).toBe("image/webp");
+    expect(drawImage).toHaveBeenCalledTimes(1);
+  });
+
   it("never sends unsupported HEIC unchanged if the phone cannot decode it", async () => {
     vi.stubGlobal("createImageBitmap", undefined);
     Object.defineProperty(URL, "createObjectURL", {

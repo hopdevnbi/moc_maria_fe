@@ -80,7 +80,7 @@ function decodeUsingImageElement(file: File): Promise<Decoded> {
   });
 }
 
-async function decodeImage(file: File): Promise<Decoded> {
+async function decodeImage(file: File, forceResize = false): Promise<Decoded> {
   if (typeof createImageBitmap === "function") {
     let timedOut = false;
     let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -88,7 +88,7 @@ async function decodeImage(file: File): Promise<Decoded> {
       // Request a reduced bitmap for large phone photos before allocating a
       // full 48MP+ decoded surface (often fatal in low-memory Android PWAs).
       const decoding =
-        file.size > DIRECT_UPLOAD_BYTES
+        file.size > DIRECT_UPLOAD_BYTES || forceResize
           ? createImageBitmap(file, { resizeWidth: 2048, resizeQuality: "high" })
           : createImageBitmap(file);
       void decoding
@@ -147,15 +147,18 @@ async function canvasBlob(
   return result?.type === format && result.size > 0 ? result : null;
 }
 
-export async function prepareChatImage(file: File): Promise<File | null> {
+export async function prepareChatImage(
+  file: File,
+  options: { forceResize?: boolean } = {},
+): Promise<File | null> {
   const mime = chatImageMime(file);
   if (!mime || file.size > MAX_CHAT_IMAGE_BYTES || file.size === 0) return null;
   const original = fallback(file);
-  if (original && file.size <= 64 * 1024) return original;
+  if (original && file.size <= 64 * 1024 && !options.forceResize) return original;
 
   let decoded: Decoded;
   try {
-    decoded = await decodeImage(original ?? file);
+    decoded = await decodeImage(original ?? file, options.forceResize === true);
   } catch {
     return original;
   }
@@ -165,6 +168,7 @@ export async function prepareChatImage(file: File): Promise<File | null> {
   const { width, height } = decoded;
   if (
     original &&
+    !options.forceResize &&
     file.size <= DIRECT_UPLOAD_BYTES &&
     width > 0 &&
     height > 0 &&
@@ -176,7 +180,10 @@ export async function prepareChatImage(file: File): Promise<File | null> {
 
   const canvas = document.createElement("canvas");
   try {
-    if (!width || !height || width * height > MAX_SOURCE_PIXELS) return null;
+    // A 48 MP selfie can still be downscaled after HTMLImageElement decoding
+    // when Safari does not implement createImageBitmap resize options.
+    const maxPixels = options.forceResize ? 50_000_000 : MAX_SOURCE_PIXELS;
+    if (!width || !height || width * height > maxPixels) return null;
     const context = canvas.getContext("2d");
     if (!context) return original;
 
