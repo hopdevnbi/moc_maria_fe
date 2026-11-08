@@ -48,7 +48,13 @@ function publicAvatar(src?: string | null): string | null {
   return null;
 }
 
-function ScheduleSection({ showcase }: { showcase: KtvShowcase }) {
+function ScheduleSection({
+  showcase,
+  canChat,
+}: {
+  showcase: KtvShowcase;
+  canChat: boolean;
+}) {
   const isConfigured = showcase.weeklyHours.length > 0;
   const days = [1, 2, 3, 4, 5, 6, 0];
   return (
@@ -89,8 +95,9 @@ function ScheduleSection({ showcase }: { showcase: KtvShowcase }) {
           <div>
             <strong>Trao đổi thời gian phù hợp với bạn</strong>
             <p>
-              Kỹ thuật viên chưa công bố lịch cố định. Bạn có thể gửi yêu cầu hoặc nhắn tin để thống
-              nhất thời gian.
+              {canChat
+                ? "Kỹ thuật viên chưa công bố lịch cố định. Bạn có thể gửi yêu cầu hoặc nhắn tin để thống nhất thời gian."
+                : "Kỹ thuật viên chưa công bố lịch cố định. Vui lòng liên hệ Mộc Maria để biết thêm thông tin."}
             </p>
           </div>
         </div>
@@ -119,6 +126,7 @@ export function KtvPublicDetail({
 }) {
   const reviewId = provider.chatProviderId || profileId;
   const canChat = provider.chatEnabled !== false && !!reviewId;
+  const introductionOnly = provider.isDemo === true && provider.chatEnabled === false;
   const avatar = publicAvatar(provider.avatarUrl);
   const name = provider.publicName;
   const mainBooking = bookingHref({ provider: profileId });
@@ -167,12 +175,16 @@ export function KtvPublicDetail({
               <span className="ktv-showcase-kicker">
                 <Sparkles size={14} /> NGƯỜI ĐỒNG HÀNH CÙNG MỘC
               </span>
-              <KtvShowcaseEditorLauncher providerId={profileId} initial={showcase} name={name} />
+              {!introductionOnly && (
+                <KtvShowcaseEditorLauncher providerId={profileId} initial={showcase} name={name} />
+              )}
             </div>
             <h1 id="ktv-profile-name">{name}</h1>
-            <div className="ktv-showcase-rating">
-              <ProviderRating providerId={reviewId} />
-            </div>
+            {!introductionOnly && (
+              <div className="ktv-showcase-rating">
+                <ProviderRating providerId={reviewId} />
+              </div>
+            )}
             <p className="ktv-showcase-profession">
               {showcase.headline || provider.title || "Kỹ thuật viên Mộc Maria"}
             </p>
@@ -202,11 +214,18 @@ export function KtvPublicDetail({
                 "Đồng hành cùng bạn trên hành trình chăm sóc và thư giãn tại Mộc Maria."}
             </p>
             <div className="ktv-showcase-actions">
-              <Link href={mainBooking} className="ktv-showcase-action ktv-showcase-action-primary">
-                <CalendarClock size={18} />
-                <span>Yêu cầu đặt lịch</span>
-                <ArrowUpRight size={17} />
-              </Link>
+              {introductionOnly ? (
+                <span className="ktv-showcase-action ktv-showcase-action-secondary" aria-disabled="true">
+                  <CalendarClock size={18} />
+                  <span>Chưa mở nhận lịch</span>
+                </span>
+              ) : (
+                <Link href={mainBooking} className="ktv-showcase-action ktv-showcase-action-primary">
+                  <CalendarClock size={18} />
+                  <span>Yêu cầu đặt lịch</span>
+                  <ArrowUpRight size={17} />
+                </Link>
+              )}
               {canChat && (
                 <Link
                   href={chatHref(reviewId)}
@@ -223,12 +242,14 @@ export function KtvPublicDetail({
           </div>
         </section>
 
-        <KtvTipPanel
-          key={profileId}
-          providerId={profileId}
-          name={name}
-          chatHref={canChat ? chatHref(reviewId) : null}
-        />
+        {!introductionOnly && (
+          <KtvTipPanel
+            key={profileId}
+            providerId={profileId}
+            name={name}
+            chatHref={canChat ? chatHref(reviewId) : null}
+          />
+        )}
 
         {showcase.media.length > 0 && (
           <section className="ktv-showcase-section" id="hinh-anh-video">
@@ -246,7 +267,7 @@ export function KtvPublicDetail({
         )}
 
         <div className="ktv-showcase-lower-grid">
-          <ScheduleSection showcase={showcase} />
+          <ScheduleSection showcase={showcase} canChat={canChat} />
           <aside className="ktv-showcase-aside">
             <span className="ktv-showcase-aside-icon">
               <HeartHandshake size={26} strokeWidth={1.4} />
@@ -317,9 +338,11 @@ export function KtvPublicDetail({
           )}
         </section>
 
-        <div className="ktv-showcase-review-section">
-          <ProviderReviews providerId={reviewId} />
-        </div>
+        {!introductionOnly && (
+          <div className="ktv-showcase-review-section">
+            <ProviderReviews providerId={reviewId} />
+          </div>
+        )}
         <div className="ktv-showcase-legal">
           <ShieldCheck size={17} /> Thông tin giới thiệu và lịch tham khảo không thay thế xác nhận
           chuyên môn, điều kiện cung cấp dịch vụ và lịch đặt thực tế.

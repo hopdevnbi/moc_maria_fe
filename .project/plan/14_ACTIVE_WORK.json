@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-09",
+  "updatedAt": "2026-11-08",
   "claims": [
     {
       "agent": "Codex current chat",
@@ -538,6 +538,24 @@
         "test": "Local typecheck/build PASS; PR full quality with 64 suites/258 tests PASS. Live both event URLs expose JPEG 1200x630 CDN OG image and canonical event host; release endpoint matches main source. CDN exact bytes and crawler UA HTTP200 image/jpeg verified.",
         "businessData": "No ad, budget, account security, backend or business-data changes. Meta authentication 3858385 and saved preview cache require owner action."
       }
+    },
+    {
+      "agent": "ChatGPT Mộc Maria 2026-11-08",
+      "status": "ACTIVE",
+      "stage": "Owner-supplied KTV Thanh Thanh public introduction",
+      "frontendBranch": "codex/ktv-thanh-thanh",
+      "frontendWorktree": "moc_maria_fe/.worktrees/ktv-thanh-thanh",
+      "ownedPaths": [
+        "FE/src/features/mobile/owner-provided-ktvs*",
+        "FE/src/features/mobile/data.ts (new owner-only fallback)",
+        "FE/src/features/mobile/provider-slugs.ts (named route)",
+        "FE/src/app/chuyen-vien/[id]/page.tsx (owner-only pending profile)",
+        "FE/src/features/mobile/ktv-showcase.tsx (preview gates)",
+        "FE/public/media/ktv/thanh-thanh-20261108.webp",
+        "FE/docs/KTV_THANH_THANH_20261108.md",
+        "FE/.project/plan/14_ACTIVE_WORK.json (claim only)"
+      ],
+      "note": "New identity only; pending-only public intro. Do not reuse a previous KTV account, enable chat or bookings, or claim production DB writes/deployment."
     }
   ]
 }

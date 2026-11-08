@@ -5,6 +5,10 @@ import demoProviders from "@/features/mobile/demo-ktvs.json";
 import { approvedDescriptions } from "./presentation-data";
 import { persistedDirectory } from "./provider-directory";
 import { officialKtvProfiles } from "./official-ktv-roster";
+import {
+  ownerProvidedKtvProfiles,
+  pendingOwnerProvidedKtvProfiles,
+} from "./owner-provided-ktvs";
 
 // Only the public service/branch catalog is cached. Provider approvals and booking slots stay live.
 export async function catalogSnapshot() {
@@ -37,15 +41,17 @@ export async function publicProviderDirectory() {
     publicMarketplace(),
     publicRead<ChatProvider[]>("/ktv-chat/providers"),
   ]);
+  const accounts = chat.ok ? chat.data : [];
+  const published = await approvedDescriptions(
+    persistedDirectory(
+      data.providers,
+      [...officialKtvProfiles(demoProviders as Provider[]), ...ownerProvidedKtvProfiles],
+      accounts,
+    ),
+  );
   return {
     ...data,
     providersUnavailable: data.providersUnavailable || !chat.ok,
-    providers: await approvedDescriptions(
-      persistedDirectory(
-        data.providers,
-        officialKtvProfiles(demoProviders as Provider[]),
-        chat.ok ? chat.data : [],
-      ),
-    ),
+    providers: [...published, ...pendingOwnerProvidedKtvProfiles(accounts, published)],
   };
 }

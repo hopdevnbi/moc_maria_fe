@@ -1,5 +1,6 @@
 import profiles from "./demo-ktvs.json";
 import { officialKtvProfiles } from "./official-ktv-roster";
+import { ownerProvidedKtvProfiles } from "./owner-provided-ktvs";
 
 function slugify(value: string): string {
   return value
@@ -13,7 +14,10 @@ function slugify(value: string): string {
 }
 
 const historicSlugs = new Map(profiles.map((profile) => [profile.id, slugify(profile.publicName)]));
-export const namedProfiles = officialKtvProfiles(profiles).map((profile) => ({
+export const namedProfiles = [
+  ...officialKtvProfiles(profiles),
+  ...ownerProvidedKtvProfiles,
+].map((profile) => ({
   ...profile,
   urlSlug: slugify(profile.publicName),
 }));
