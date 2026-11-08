@@ -11,6 +11,7 @@ export function ktvAvatarUrl(value: string | null | undefined, isDemo = false): 
   const path = value.slice(cdn.length);
   if (
     /^moc-maria\/ktv\/[a-zA-Z0-9/_-]+\.(?:jpg|jpeg|png|webp)$/.test(path) ||
+    /^moc-maria\/provider-showcase\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/i.test(path) ||
     (isDemo && /^moc-maria\/demo-ktv\/[a-zA-Z0-9/_-]+\.(?:jpg|jpeg|png|webp)$/.test(path))
   ) {
     return value;

@@ -28,6 +28,7 @@ import {
   type DisplaySnapshot,
   type DisplayVisibility,
 } from "./display-policy";
+import { KtvCreateAdmin } from "./ktv-create-admin";
 import "./provider-display.css";
 
 const path = "/admin/provider-display";
@@ -198,9 +199,17 @@ export function ProviderDisplayAdmin() {
           <h2 id="pd-title">KTV trên trang chủ</h2>
           <p>Chọn người xuất hiện đầu tiên. Quản lý thông tin và hiển thị trong cùng một nơi.</p>
         </div>
-        <Link href="/" target="_blank" className="pd-link">
-          <ExternalLink size={16} /> Xem trang chủ
-        </Link>
+        <div className="pd-intro-actions">
+          <KtvCreateAdmin
+            onCreated={() => {
+              void query.refetch();
+              setDraft(null);
+            }}
+          />
+          <Link href="/" target="_blank" className="pd-link">
+            <ExternalLink size={16} /> Xem trang chủ
+          </Link>
+        </div>
       </header>
       <div className="pd-stats">
         <div>

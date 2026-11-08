@@ -14,13 +14,12 @@ function slugify(value: string): string {
 }
 
 const historicSlugs = new Map(profiles.map((profile) => [profile.id, slugify(profile.publicName)]));
-export const namedProfiles = [
-  ...officialKtvProfiles(profiles),
-  ...ownerProvidedKtvProfiles,
-].map((profile) => ({
-  ...profile,
-  urlSlug: slugify(profile.publicName),
-}));
+export const namedProfiles = [...officialKtvProfiles(profiles), ...ownerProvidedKtvProfiles].map(
+  (profile) => ({
+    ...profile,
+    urlSlug: slugify(profile.publicName),
+  }),
+);
 
 export function providerProfileHref(provider: {
   id: string;

@@ -7,10 +7,10 @@ import { findNamedProfile, providerProfileHref } from "./provider-slugs";
 import demoProfiles from "./demo-ktvs.json";
 import { officialDemoKtvOffers } from "./official-ktv-offers";
 import { ownerProvidedKtvShowcase } from "./owner-provided-ktv-showcase";
-import {
-  ownerProvidedKtvProfiles,
-  pendingOwnerProvidedKtvProfiles,
-} from "./owner-provided-ktvs";
+import { ownerProvidedKtvProfiles, pendingOwnerProvidedKtvProfiles } from "./owner-provided-ktvs";
+import { persistedDirectory } from "./provider-directory";
+import { bookingHref } from "./links";
+import { internalProviderParam } from "./public-route-ids";
 
 describe("Owner-provided KTV Thanh Thanh", () => {
   const [profile] = ownerProvidedKtvProfiles;
@@ -54,9 +54,9 @@ describe("Owner-provided KTV Thanh Thanh", () => {
 
   it("has a valid site-owned image and named profile URL", () => {
     expect(ktvAvatarUrl(profile.avatarUrl, true)).toBe(profile.avatarUrl);
-    expect(
-      existsSync(resolve(process.cwd(), "public/media/ktv/thanh-thanh-20261108.webp")),
-    ).toBe(true);
+    expect(existsSync(resolve(process.cwd(), "public/media/ktv/thanh-thanh-20261108.webp"))).toBe(
+      true,
+    );
     expect(providerProfileHref(profile)).toBe("/chuyen-vien/thanh-thanh");
     expect(findNamedProfile("thanh-thanh")?.id).toBe(profile.id);
   });
@@ -86,5 +86,31 @@ describe("Owner-provided KTV Thanh Thanh", () => {
     ] satisfies ChatProvider[];
     expect(pendingOwnerProvidedKtvProfiles(linked, [])).toEqual([]);
     expect(pendingOwnerProvidedKtvProfiles([], [profile as Provider])).toEqual([]);
+  });
+
+  it("opens the booking request only after a unique backend receiver is registered", () => {
+    const receiverId = "08ea6346-c8a9-41b7-aeab-380ce7462bf7";
+    const receiver: ChatProvider = {
+      id: receiverId,
+      publicAlias: profile.id,
+      publicName: profile.publicName,
+      title: profile.title!,
+      serviceArea: profile.serviceArea,
+      avatarUrl: profile.avatarUrl,
+      services: [{ id: "demo-pressure", name: "Chăm sóc giải cảm" }],
+    };
+    const [linked] = persistedDirectory([], ownerProvidedKtvProfiles, [receiver]);
+    expect(linked).toMatchObject({
+      id: "ktv-thanh-thanh",
+      chatProviderId: receiverId,
+      chatEnabled: true,
+      bookable: false,
+    });
+    const bookingUrl = bookingHref({ provider: linked.id });
+    expect(bookingUrl).toBe("/dat-lich?provider=thanh-thanh");
+    expect(
+      internalProviderParam(new URLSearchParams(bookingUrl.split("?")[1]).get("provider")!),
+    ).toBe(profile.id);
+    expect(pendingOwnerProvidedKtvProfiles([receiver], [linked])).toEqual([]);
   });
 });

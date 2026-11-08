@@ -27,6 +27,14 @@ This task changes the frontend presentation only. Production DB and website depl
 - Presentation and pricing are not account verification or service eligibility. Until her distinct KTV account exists, Thanh Thanh's homepage chat/booking actions remain disabled, and detail service rows display a non-clickable pending state. No fake bookings, approvals, testimonials or scheduled shifts.
 - Verification: 25 scoped Vitest assertions PASS; TypeScript typecheck, ESLint and Next.js production build PASS. Local production HTTP checks of home, Thanh Thanh and Nguyen Hoan profiles returned 200 and included all five identical official menu names. The Thanh Thanh detail continues to display the non-clickable pending state.
 
+## Image/video and Admin creation workflow
+
+- Owner's `1.jpg` was optimized as `/media/ktv/thanh-thanh-gallery-20261108.webp`, and `2.mp4` is served as `/media/ktv/thanh-thanh-intro-20261108.mp4`. Both use the same KTV gallery as existing profiles and were released in commit `2c421a4`.
+- New Super Admin dialog on `/quan-tri/ktv` uses the Backend onboarding API to create a unique KTV account, display generated one-time credentials, choose official care services and upload the new profile's media to Bunny CDN. The Admin KTV detail also embeds the media manager.
+- The **Tạo mới KTV** control is deliberately disabled until `GET /admin/provider-display/ktv/capabilities` confirms a compatible deployed Backend. A Vercel deployment alone cannot activate the Backend feature.
+- To preserve Thanh Thanh's public URL, the new Backend onboarding path assigns her reserved alias `ktv-thanh-thanh` when her own account is created. Static introduction media is used while no saved CDN-backed showcase exists; after the first save, the existing editor owns the gallery.
+- Do not publish images/video without rights and consent for everyone appearing in them. Actual booking qualifications and staff approval are separate operational steps.
+
 ## Local validation
 
 - Frontend `npm.cmd run typecheck`, scoped ESLint and production `npm.cmd run build`: PASS.

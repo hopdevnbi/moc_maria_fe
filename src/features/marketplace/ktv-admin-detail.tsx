@@ -17,6 +17,7 @@ import { ApplicationReview } from "./training-admin";
 import { KtvAvatar } from "./ktv-avatar";
 import { resolveAdminKtvAvatar } from "./ktv-admin-avatar-source";
 import type { Application, Course } from "./types";
+import { KtvMediaAdmin } from "@/features/provider-display/ktv-media-admin";
 import "./ktv-admin.css";
 
 function PublicAgeEditor({ id }: { id: string }) {
@@ -144,6 +145,7 @@ export function AdminKtvDetail({ id }: { id: string }) {
             <strong>{item.publicName}</strong>
           </div>
           {user?.permissions.includes("roles.manage") && <PublicAgeEditor id={item.id} />}
+          {user?.roles?.includes("SUPER_ADMIN") && <KtvMediaAdmin providerId={item.id} />}
           {courses.isPending ? (
             <p role="status" className="mm-ktv-loading">
               Đang tải đào tạo và chứng nhận...

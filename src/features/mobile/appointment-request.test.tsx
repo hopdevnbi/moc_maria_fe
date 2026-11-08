@@ -5,6 +5,7 @@ import demoProviders from "./demo-ktvs.json";
 import demoServices from "./demo-services.json";
 import { careMenu } from "./official-menu";
 import { officialKtvProfiles } from "./official-ktv-roster";
+import { ownerProvidedKtvProfiles } from "./owner-provided-ktvs";
 const state = vi.hoisted(() => ({
   fetch: vi.fn(),
   register: vi.fn(),
@@ -448,6 +449,27 @@ const officialCareServices = careMenu.map((care, index) => ({
 }));
 
 describe("official service to all seven KTV inquiry flow", () => {
+  it("sends Thanh Thanh's booking request to her own backend account after activation", async () => {
+    const receiverId = "08ea6346-c8a9-41b7-aeab-380ce7462bf7";
+    const profile = {
+      ...ownerProvidedKtvProfiles[0],
+      chatEnabled: true,
+      chatProviderId: receiverId,
+    };
+    render(
+      <AppointmentRequest
+        providers={[profile]}
+        services={demoServices}
+        initial={{ provider: "ktv-thanh-thanh" }}
+      />,
+    );
+    expect(screen.getAllByText("Thanh Thanh").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Gửi yêu cầu đặt lịch" }));
+    await screen.findByText("Đã gửi yêu cầu đến Thanh Thanh");
+    expect(JSON.parse(state.fetch.mock.calls[0][1].body)).toMatchObject({
+      providerId: receiverId,
+    });
+  });
   it("shows seven real portraits, deduplicates legacy services and excludes drinks", () => {
     const drink = {
       ...officialCareServices[0],

@@ -42,19 +42,16 @@ function publicAvatar(src?: string | null): string | null {
   if (
     /^https:\/\/giangxa-media-cdn\.b-cdn\.net\/moc-maria\/(?:ktv|staff-avatars)\/[a-z0-9/_-]+\.(?:webp|jpe?g)$/i.test(
       src,
+    ) ||
+    /^https:\/\/giangxa-media-cdn\.b-cdn\.net\/moc-maria\/provider-showcase\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/i.test(
+      src,
     )
   )
     return src;
   return null;
 }
 
-function ScheduleSection({
-  showcase,
-  canChat,
-}: {
-  showcase: KtvShowcase;
-  canChat: boolean;
-}) {
+function ScheduleSection({ showcase, canChat }: { showcase: KtvShowcase; canChat: boolean }) {
   const isConfigured = showcase.weeklyHours.length > 0;
   const days = [1, 2, 3, 4, 5, 6, 0];
   return (
@@ -215,12 +212,18 @@ export function KtvPublicDetail({
             </p>
             <div className="ktv-showcase-actions">
               {introductionOnly ? (
-                <span className="ktv-showcase-action ktv-showcase-action-secondary" aria-disabled="true">
+                <span
+                  className="ktv-showcase-action ktv-showcase-action-secondary"
+                  aria-disabled="true"
+                >
                   <CalendarClock size={18} />
                   <span>Chưa mở nhận lịch</span>
                 </span>
               ) : (
-                <Link href={mainBooking} className="ktv-showcase-action ktv-showcase-action-primary">
+                <Link
+                  href={mainBooking}
+                  className="ktv-showcase-action ktv-showcase-action-primary"
+                >
                   <CalendarClock size={18} />
                   <span>Yêu cầu đặt lịch</span>
                   <ArrowUpRight size={17} />

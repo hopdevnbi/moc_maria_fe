@@ -14,8 +14,7 @@ export const ownerProvidedKtvProfiles: Provider[] = [
   {
     id: "ktv-thanh-thanh",
     publicName: "Thanh Thanh",
-    introduction:
-      "Lực tay khỏe, kỹ năng giải cơ sâu tốt. Nhiệt tình và hiền hòa. Sinh năm 1999.",
+    introduction: "Lực tay khỏe, kỹ năng giải cơ sâu tốt. Nhiệt tình và hiền hòa. Sinh năm 1999.",
     serviceArea: "Hà Nội",
     title: "Kỹ thuật viên giải cơ sâu",
     avatarUrl: "/media/ktv/thanh-thanh-20261108.webp",

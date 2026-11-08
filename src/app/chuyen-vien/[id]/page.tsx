@@ -6,6 +6,7 @@ import { DemoKtvDetail } from "@/features/mobile/demo-detail";
 import { findNamedProfile } from "@/features/mobile/provider-slugs";
 import { ownerProvidedKtvProfiles } from "@/features/mobile/owner-provided-ktvs";
 import { ownerProvidedKtvShowcase } from "@/features/mobile/owner-provided-ktv-showcase";
+import type { PublicDisplay } from "@/features/provider-display/display-policy";
 import { approvedDescriptions } from "@/features/mobile/presentation-data";
 import { KtvPublicDetail } from "@/features/mobile/ktv-showcase";
 import type { KtvShowcase } from "@/features/mobile/ktv-showcase-types";
@@ -44,7 +45,7 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
       );
     }
 
-    const [profile, showcase] = await Promise.all([
+    const [profile, storedShowcase] = await Promise.all([
       approvedDescriptions([
         {
           ...named,
@@ -60,12 +61,49 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
       showcaseFor(receiver.id),
     ]);
     if (!profile[0]) notFound();
+    // The original owner-provided introduction remains visible after creating
+    // a real account, until the admin first saves a CDN-backed showcase.
+    const preview = ownerProvidedKtvShowcase(named.id);
+    const showcase = storedShowcase.version === 0 && preview ? preview : storedShowcase;
     return <DemoKtvDetail provider={profile[0]} showcase={showcase} />;
   }
 
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const result = await publicRead<Provider>("/providers/" + encodeURIComponent(id));
-  if (!result.ok && result.status === 404) notFound();
+  if (!result.ok && result.status === 404) {
+    const [chat, display, showcase] = await Promise.all([
+      publicRead<ChatProvider[]>("/ktv-chat/providers"),
+      publicRead<PublicDisplay>("/provider-display"),
+      showcaseFor(id),
+    ]);
+    const receiver = chat.ok ? chat.data.find((entry) => entry.id === id) : undefined;
+    const publicRow = display.ok
+      ? display.data.rows.find((entry) => entry.providerId === id && entry.visible)
+      : undefined;
+    if (!receiver || !publicRow) notFound();
+    const profile: Provider = {
+      id: receiver.id,
+      chatProviderId: receiver.id,
+      isDemo: true,
+      bookable: false,
+      chatEnabled: true,
+      publicName: publicRow.publicName || receiver.publicName,
+      title: publicRow.title || receiver.title,
+      introduction: publicRow.introduction ?? null,
+      serviceArea: publicRow.serviceArea ?? receiver.serviceArea,
+      avatarUrl: receiver.avatarUrl,
+      age: publicRow.age ?? undefined,
+      yearsExperience: publicRow.yearsExperience ?? null,
+      demoServices: receiver.services.map((service) => ({
+        ...service,
+        durationMinutes: 0,
+        priceVnd: 0,
+      })),
+      scheduleOpen: false,
+      weeklySchedule: null,
+    };
+    return <DemoKtvDetail provider={profile} showcase={showcase} />;
+  }
   const [profiles, showcase] = await Promise.all([
     result.ok ? approvedDescriptions([result.data]) : Promise.resolve([]),
     result.ok ? showcaseFor(id) : Promise.resolve(EMPTY_KTV_SHOWCASE),
