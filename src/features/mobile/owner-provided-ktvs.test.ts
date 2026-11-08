@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import type { ChatProvider, Provider } from "@/features/marketplace/types";
 import { ktvAvatarUrl } from "./ktv-avatar";
 import { findNamedProfile, providerProfileHref } from "./provider-slugs";
+import demoProfiles from "./demo-ktvs.json";
+import { officialDemoKtvOffers } from "./official-ktv-offers";
 import {
   ownerProvidedKtvProfiles,
   pendingOwnerProvidedKtvProfiles,
@@ -28,8 +30,25 @@ describe("Owner-provided KTV Thanh Thanh", () => {
     expect(profile.introduction).toContain("Lực tay khỏe");
     expect(profile.introduction).toContain("giải cơ sâu");
     expect(profile.age).toBeUndefined();
-    expect(profile.demoServices).toEqual([]);
+    const nguyenHoan = demoProfiles.find((item) => item.id === "demo-ktv-06");
+    expect(nguyenHoan).toBeDefined();
+    expect(profile.demoServices).toEqual(nguyenHoan?.demoServices);
     expect(profile.eligibleServices).toEqual([]);
+  });
+
+  it("displays the same five services and official prices as Nguyen Hoan", () => {
+    const nguyenHoan = demoProfiles.find((item) => item.id === "demo-ktv-06")!;
+    const actual = officialDemoKtvOffers(profile);
+    expect(actual).toEqual(officialDemoKtvOffers(nguyenHoan));
+    expect(actual.map(({ name, price }) => [name, price])).toEqual([
+      ["Chăm sóc giải cảm", 299000],
+      ["Massage chân", 159000],
+      ["Chăm sóc cổ vai gáy lưng eo", 299000],
+      ["Chăm sóc giấc ngủ", 299000],
+      ["Chăm sóc vùng đầu", 299000],
+    ]);
+    expect(profile.bookable).toBe(false);
+    expect(profile.chatEnabled).toBe(false);
   });
 
   it("has a valid site-owned image and named profile URL", () => {

@@ -713,6 +713,18 @@
 .ktv-showcase-service-action a:hover {
   background: #e4f0e3;
 }
+.ktv-showcase-service-unavailable {
+  display: inline-flex;
+  align-items: center;
+  min-height: 41px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  border: 1px solid #e1e8e1;
+  background: #f3f6f2;
+  color: #72877a;
+  font-size: 12px;
+  font-weight: 700;
+}
 .ktv-showcase-services-empty {
   display: flex;
   gap: 16px;

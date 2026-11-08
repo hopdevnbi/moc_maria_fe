@@ -20,6 +20,13 @@ To activate staff sign-in, private chat and editable provider information, use t
 
 This task changes the frontend presentation only. Production DB and website deployments are separate operations; do not claim they occurred from a successful local build.
 
+## Owner follow-up — care menu parity with Nguyen Hoan (2026-11-08)
+
+- Reuse the five existing service IDs of historical KTV-06 (Nguyen Hoan) from `demo-ktvs.json`: deep-muscle relief `demo-pressure`, foot massage `demo-neck`, neck/back `demo-hot-stone`, sleep care `demo-thai`, and head care `demo-back`.
+- The menu, price labels and ordering are resolved through `officialLegacyCareItem` / `careMenu`, so both KTV cards display the same five published price points.
+- Presentation and pricing are not account verification or service eligibility. Until her distinct KTV account exists, Thanh Thanh's homepage chat/booking actions remain disabled, and detail service rows display a non-clickable pending state. No fake bookings, approvals, testimonials or scheduled shifts.
+- Verification: 25 scoped Vitest assertions PASS; TypeScript typecheck, ESLint and Next.js production build PASS. Local production HTTP checks of home, Thanh Thanh and Nguyen Hoan profiles returned 200 and included all five identical official menu names. The Thanh Thanh detail continues to display the non-clickable pending state.
+
 ## Local validation
 
 - Frontend `npm.cmd run typecheck`, scoped ESLint and production `npm.cmd run build`: PASS.

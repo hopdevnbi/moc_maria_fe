@@ -1,8 +1,15 @@
 import type { ChatProvider, Provider } from "@/features/marketplace/types";
+import existingKtvProfiles from "./demo-ktvs.json";
+
+// Nguyen Hoan's currently displayed care menu uses the historical KTV-06 slot.
+// Reuse its service IDs rather than duplicating prices or changing her own profile.
+const nguyenHoanServices =
+  existingKtvProfiles.find((entry) => entry.id === "demo-ktv-06")?.demoServices ?? [];
 
 // Owner-supplied information and photo (2026-11-08).
 // These profiles are introduction-only until a distinct backend KTV account is provisioned.
-// Never infer credentials, verified qualifications, services, shifts, ratings or bookings.
+// The owner requested Thanh Thanh to display the same care menu as Nguyen Hoan.
+// Displayed services are not booking eligibility; that remains enforced by the backend.
 export const ownerProvidedKtvProfiles: Provider[] = [
   {
     id: "ktv-thanh-thanh",
@@ -17,7 +24,7 @@ export const ownerProvidedKtvProfiles: Provider[] = [
     bookable: false,
     chatEnabled: false,
     eligibleServices: [],
-    demoServices: [],
+    demoServices: nguyenHoanServices.map((service) => ({ ...service })),
     yearsExperience: null,
     scheduleOpen: false,
     weeklySchedule: null,

@@ -313,16 +313,20 @@ export function KtvPublicDetail({
                   </div>
                   <div className="ktv-showcase-service-action">
                     {offer.price != null && <strong>{formatPrice(offer.price)}</strong>}
-                    <Link
-                      href={
-                        offer.consultationServiceId && canChat
-                          ? chatHref(reviewId, offer.consultationServiceId)
-                          : bookingHref({ provider: profileId, service: offer.bookingServiceId })
-                      }
-                    >
-                      {offer.consultationServiceId && canChat ? "Tư vấn dịch vụ" : "Gửi yêu cầu"}
-                      <ArrowUpRight size={16} />
-                    </Link>
+                    {introductionOnly ? (
+                      <span className="ktv-showcase-service-unavailable">Chưa mở nhận lịch</span>
+                    ) : (
+                      <Link
+                        href={
+                          offer.consultationServiceId && canChat
+                            ? chatHref(reviewId, offer.consultationServiceId)
+                            : bookingHref({ provider: profileId, service: offer.bookingServiceId })
+                        }
+                      >
+                        {offer.consultationServiceId && canChat ? "Tư vấn dịch vụ" : "Gửi yêu cầu"}
+                        <ArrowUpRight size={16} />
+                      </Link>
+                    )}
                   </div>
                 </article>
               ))}
