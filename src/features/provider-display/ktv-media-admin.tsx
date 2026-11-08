@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { mutationMessage, usePrivateData } from "@/features/marketplace/private-api";
 import type { KtvShowcase, KtvShowcaseMedia } from "@/features/mobile/ktv-showcase-types";
@@ -12,12 +13,25 @@ const maxImages = 8;
 const maxVideos = 1;
 const endpoint = (id: string) => `/provider-showcase/${id}`;
 
-export function KtvMediaAdmin({ providerId }: { providerId: string }) {
+export function KtvMediaAdmin({
+  providerId,
+  currentAvatarUrl,
+  providerName,
+  onAvatarChanged,
+}: {
+  providerId: string;
+  currentAvatarUrl?: string | null;
+  providerName?: string;
+  onAvatarChanged?: (url: string) => void;
+}) {
   const { authFetch } = useAuth();
   const query = usePrivateData<KtvShowcase>(endpoint(providerId) + "/editor");
   const [removed, setRemoved] = useState<string[]>([]);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState(currentAvatarUrl ?? "");
+  const [fileRevision, setFileRevision] = useState(0);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -29,17 +43,24 @@ export function KtvMediaAdmin({ providerId }: { providerId: string }) {
     if (busy || !query.data) return;
     setError("");
     setNotice("");
-    if ((photoFiles.length || videoFile) && !consent) {
+    if ((avatarFile || photoFiles.length || videoFile) && !consent) {
       setError("Bạn cần xác nhận quyền sử dụng và công khai ảnh/video trước khi tải lên.");
       return;
     }
-    const imageCount = media.filter((item) => item.kind === "IMAGE").length + photoFiles.length;
+    const imageCount =
+      media.filter((item) => item.kind === "IMAGE").length +
+      photoFiles.length +
+      Number(!!avatarFile);
     const videoCount = media.filter((item) => item.kind === "VIDEO").length + Number(!!videoFile);
     if (imageCount > maxImages || videoCount > maxVideos) {
       setError("Mỗi hồ sơ được tối đa 8 ảnh và 1 video. Hãy xóa bớt trước khi lưu.");
       return;
     }
-    const files = [...photoFiles, ...(videoFile ? [videoFile] : [])];
+    const files = [
+      ...(avatarFile ? [avatarFile] : []),
+      ...photoFiles,
+      ...(videoFile ? [videoFile] : []),
+    ];
     if (
       files.some(
         (file) =>
@@ -79,7 +100,13 @@ export function KtvMediaAdmin({ providerId }: { providerId: string }) {
           media: next,
         }),
       });
-      const newAvatar = uploaded.find((item) => item.kind === "IMAGE");
+      // An explicitly selected avatar wins. Gallery uploads do not overwrite an
+      // existing avatar; a new profile without an avatar gets its first photo.
+      const newAvatar = avatarFile
+        ? uploaded[0]
+        : !avatarUrl
+          ? uploaded.find((item) => item.kind === "IMAGE")
+          : undefined;
       if (newAvatar) {
         try {
           await authFetch(`/admin/provider-display/${providerId}/avatar`, {
@@ -88,13 +115,17 @@ export function KtvMediaAdmin({ providerId }: { providerId: string }) {
             body: JSON.stringify({ mediaId: newAvatar.id }),
             cache: "no-store",
           });
+          setAvatarUrl(newAvatar.url);
+          onAvatarChanged?.(newAvatar.url);
         } catch {
           setNotice("Media đã lưu, nhưng ảnh đại diện chưa cập nhật. Có thể chọn lại bên dưới.");
         }
       }
       setRemoved([]);
+      setAvatarFile(null);
       setPhotoFiles([]);
       setVideoFile(null);
+      setFileRevision((value) => value + 1);
       await query.refetch();
       setNotice((current) => current || "Đã lưu ảnh/video trên CDN và cập nhật hồ sơ công khai.");
     } catch (caught) {
@@ -104,16 +135,19 @@ export function KtvMediaAdmin({ providerId }: { providerId: string }) {
     }
   }
 
-  async function setAvatar(mediaId: string) {
+  async function setAvatar(item: KtvShowcaseMedia) {
     setBusy(true);
     setError("");
+    setNotice("");
     try {
       await authFetch(`/admin/provider-display/${providerId}/avatar`, {
         method: "PATCH",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mediaId }),
+        body: JSON.stringify({ mediaId: item.id }),
       });
+      setAvatarUrl(item.url);
+      onAvatarChanged?.(item.url);
       setNotice("Đã đổi ảnh đại diện của kỹ thuật viên.");
     } catch (caught) {
       setError(mutationMessage(caught));
@@ -127,26 +161,88 @@ export function KtvMediaAdmin({ providerId }: { providerId: string }) {
   return (
     <section className="ktv-create-media" aria-label="Quản lý ảnh và video KTV">
       <div className="ktv-create-media-heading">
-        <strong>Ảnh & video hồ sơ</strong>
-        <span>8 ảnh WebP / 1 video MP4 · lưu trên Bunny CDN</span>
+        <strong>Ảnh đại diện & thư viện KTV</strong>
+        <span>Avatar dùng trên danh sách KTV và trang cá nhân · ảnh/video lưu Bunny CDN</span>
+      </div>
+      <div className="ktv-create-avatar-preview">
+        <div className="ktv-create-avatar-portrait">
+          {avatarUrl ? (
+            <Image
+              src={avatarUrl}
+              alt={`Ảnh đại diện hiện tại của ${providerName || "KTV"}`}
+              width={90}
+              height={104}
+              unoptimized
+            />
+          ) : (
+            <span aria-label="Chưa có ảnh đại diện">{(providerName || "K").slice(0, 1)}</span>
+          )}
+        </div>
+        <div>
+          <strong>Ảnh đại diện đang hiển thị</strong>
+          <small>
+            {avatarUrl
+              ? "Có thể thay bằng ảnh mới hoặc chọn một ảnh trong thư viện bên dưới."
+              : "Chưa có avatar. Upload ảnh mới để hiển thị trên thẻ KTV và trang hồ sơ."}
+          </small>
+        </div>
+      </div>
+      <label className="ktv-create-file ktv-create-avatar-upload">
+        <ImagePlus size={19} /> Upload ảnh đại diện mới
+        <input
+          key={`avatar-${fileRevision}`}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          aria-label="Upload ảnh đại diện mới"
+          disabled={busy}
+          onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+        />
+      </label>
+      {avatarFile && (
+        <small>Avatar mới: {avatarFile.name} (sẽ áp dụng khi bấm Lưu ảnh/video)</small>
+      )}
+      <div className="ktv-create-media-subhead">
+        <strong>Ảnh & video trên trang hồ sơ</strong>
+        <small>Tối đa 8 ảnh và 1 video MP4</small>
       </div>
       {media.length > 0 && (
         <div className="ktv-create-media-items">
           {media.map((item, index) => (
             <div className="ktv-create-media-item" key={item.id}>
-              <span>{item.kind === "VIDEO" ? <Film size={18} /> : <ImagePlus size={18} />}</span>
+              <span className="ktv-create-media-thumb">
+                {item.kind === "VIDEO" ? (
+                  <Film size={20} aria-label="Video giới thiệu" />
+                ) : (
+                  <Image
+                    src={item.url}
+                    alt={`Ảnh thư viện KTV ${index + 1}`}
+                    width={62}
+                    height={66}
+                    unoptimized
+                  />
+                )}
+              </span>
               <div>
                 <strong>{item.kind === "VIDEO" ? "Video giới thiệu" : `Ảnh ${index + 1}`}</strong>
-                <small>{item.caption || "Ảnh/video đã công khai"}</small>
+                <small>
+                  {item.url === avatarUrl
+                    ? "Đang làm ảnh đại diện"
+                    : item.caption || "Đã công khai"}
+                </small>
               </div>
               {item.kind === "IMAGE" && (
-                <button type="button" disabled={busy} onClick={() => void setAvatar(item.id)}>
-                  <Star size={15} /> Đại diện
+                <button
+                  type="button"
+                  disabled={busy || item.url === avatarUrl}
+                  onClick={() => void setAvatar(item)}
+                  aria-label={`Đặt ảnh ${index + 1} làm đại diện`}
+                >
+                  <Star size={15} /> {item.url === avatarUrl ? "Đang dùng" : "Đại diện"}
                 </button>
               )}
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || item.url === avatarUrl}
                 aria-label={`Gỡ media ${index + 1}`}
                 onClick={() => setRemoved((prev) => [...prev, item.id])}
               >
@@ -157,12 +253,14 @@ export function KtvMediaAdmin({ providerId }: { providerId: string }) {
         </div>
       )}
       <label className="ktv-create-file">
-        <ImagePlus size={19} /> Chọn ảnh (tối đa 8 MB/ảnh)
+        <ImagePlus size={19} /> Thêm ảnh vào thư viện (tối đa 8 MB/ảnh)
         <input
+          key={`photos-${fileRevision}`}
           type="file"
           accept="image/jpeg,image/png,image/webp"
           multiple
           disabled={busy}
+          aria-label="Thêm ảnh vào thư viện"
           onChange={(e) => setPhotoFiles(Array.from(e.target.files || []))}
         />
       </label>
@@ -170,6 +268,7 @@ export function KtvMediaAdmin({ providerId }: { providerId: string }) {
       <label className="ktv-create-file">
         <Film size={19} /> Chọn video MP4 (tối đa 40 MB)
         <input
+          key={`video-${fileRevision}`}
           type="file"
           accept="video/mp4"
           disabled={busy}

@@ -146,7 +146,14 @@ export function AdminKtvDetail({ id }: { id: string }) {
             <strong>{item.publicName}</strong>
           </div>
           {user?.permissions.includes("roles.manage") && <PublicAgeEditor id={item.id} />}
-          {user?.roles?.includes("SUPER_ADMIN") && <KtvMediaAdmin providerId={item.id} />}
+          {user?.roles?.includes("SUPER_ADMIN") && (
+            <KtvMediaAdmin
+              providerId={item.id}
+              currentAvatarUrl={item.avatarUrl}
+              providerName={item.publicName}
+              onAvatarChanged={() => void applications.refetch()}
+            />
+          )}
           {user?.roles?.includes("SUPER_ADMIN") && <KtvAccountAdmin providerId={item.id} />}
           {courses.isPending ? (
             <p role="status" className="mm-ktv-loading">

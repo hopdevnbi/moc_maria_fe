@@ -6,6 +6,7 @@ const state = vi.hoisted(() => ({
   fetch: vi.fn(),
   cache: vi.fn(),
   refetch: vi.fn(),
+  superAdmin: false,
   rows: [
     {
       id: "a",
@@ -36,7 +37,26 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
-  useAuth: () => ({ user: { id: "admin" }, authFetch: state.fetch }),
+  useAuth: () => ({
+    user: { id: "admin", roles: state.superAdmin ? ["SUPER_ADMIN"] : ["ADMIN"] },
+    authFetch: state.fetch,
+  }),
+}));
+vi.mock("./ktv-media-admin", () => ({
+  KtvMediaAdmin: ({
+    providerId,
+    onAvatarChanged,
+  }: {
+    providerId: string;
+    onAvatarChanged: (url: string) => void;
+  }) => (
+    <button type="button" onClick={() => onAvatarChanged("https://cdn.example/avatar.webp")}>
+      Kiểm tra quản lý ảnh {providerId}
+    </button>
+  ),
+}));
+vi.mock("./ktv-account-admin", () => ({
+  KtvAccountAdmin: () => <span>Quản lý tài khoản KTV</span>,
 }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ setQueryData: state.cache }) }));
 vi.mock("@/features/marketplace/private-api", () => ({
@@ -51,6 +71,7 @@ vi.mock("@/features/marketplace/private-api", () => ({
 afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
+  state.superAdmin = false;
   state.fetch.mockResolvedValue({ version: 8, rows: state.rows });
 });
 describe("Homepage KTV management", () => {
@@ -97,5 +118,22 @@ describe("Homepage KTV management", () => {
       age: 25,
       yearsExperience: 3,
     });
+  });
+  it("shows avatar management in the edit modal only for Super Admin and refreshes the directory", () => {
+    state.superAdmin = true;
+    render(<ProviderDisplayAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: "Sửa thông tin Linh Anh" }));
+    expect(screen.getByRole("dialog", { name: "Cập nhật KTV" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Kiểm tra quản lý ảnh a" }));
+    expect(state.refetch).toHaveBeenCalled();
+    expect(screen.getByText("Quản lý tài khoản KTV")).toBeVisible();
+  });
+  it("hides avatar editing from a regular admin", () => {
+    render(<ProviderDisplayAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: "Sửa thông tin Linh Anh" }));
+    expect(
+      screen.queryByRole("button", { name: "Kiểm tra quản lý ảnh a" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Quản lý tài khoản KTV")).not.toBeInTheDocument();
   });
 });

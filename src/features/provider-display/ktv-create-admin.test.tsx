@@ -66,6 +66,6 @@ describe("Super Admin KTV creation", () => {
     expect(mock.created).toHaveBeenCalled();
     expect(screen.getByText("thanh.thanh.abcdef12@mocmaria.com")).toBeVisible();
     expect(screen.getByText("Mm9-my-secure-temporary-pass")).toBeVisible();
-    expect(screen.getByText("Ảnh & video hồ sơ")).toBeVisible();
+    expect(screen.getByText("Ảnh đại diện & thư viện KTV")).toBeVisible();
   });
 });

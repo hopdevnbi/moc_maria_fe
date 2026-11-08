@@ -30,6 +30,7 @@ import {
 } from "./display-policy";
 import { KtvCreateAdmin } from "./ktv-create-admin";
 import { KtvAccountAdmin } from "./ktv-account-admin";
+import { KtvMediaAdmin } from "./ktv-media-admin";
 import "./provider-display.css";
 
 const path = "/admin/provider-display";
@@ -574,7 +575,21 @@ export function ProviderDisplayAdmin() {
                   </div>
                 </form>
                 {user?.roles?.includes("SUPER_ADMIN") && (
-                  <KtvAccountAdmin providerId={editing.id} />
+                  <>
+                    <KtvMediaAdmin
+                      key={editing.id}
+                      providerId={editing.id}
+                      providerName={editing.publicName}
+                      currentAvatarUrl={editing.avatarUrl}
+                      onAvatarChanged={(url) => {
+                        setEditing((current) =>
+                          current?.id === editing.id ? { ...current, avatarUrl: url } : current,
+                        );
+                        void query.refetch();
+                      }}
+                    />
+                    <KtvAccountAdmin providerId={editing.id} />
+                  </>
                 )}
               </>
             ) : (

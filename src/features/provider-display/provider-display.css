@@ -388,7 +388,7 @@
   padding: 20px;
 }
 .pd-modal {
-  width: min(550px, 100%);
+  width: min(640px, 100%);
   background: white;
   border-radius: 20px;
   padding: 25px;
@@ -441,6 +441,28 @@
 .pd-modal textarea {
   resize: vertical;
   line-height: 1.7;
+}
+.pd-modal .ktv-create-file,
+.pd-modal .ktv-create-consent {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.pd-modal .ktv-create-file input[type="file"] {
+  flex: 1 1 190px;
+  width: auto;
+  padding: 0;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+}
+.pd-modal .ktv-create-consent input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  flex: 0 0 17px;
 }
 .pd-form-pair {
   display: grid;

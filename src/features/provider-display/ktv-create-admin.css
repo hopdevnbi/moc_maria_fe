@@ -216,6 +216,64 @@
   font-size: 12px;
   color: #648071;
 }
+.ktv-create-avatar-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #d5e5d0;
+  border-radius: 13px;
+}
+.ktv-create-avatar-portrait {
+  flex: 0 0 90px;
+  width: 90px;
+  height: 104px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #e7efe5;
+  display: grid;
+  place-items: center;
+  color: #346448;
+  font:
+    700 31px Georgia,
+    serif;
+}
+.ktv-create-avatar-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ktv-create-avatar-preview > div:last-child {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.ktv-create-avatar-preview strong,
+.ktv-create-media-subhead strong {
+  font-size: 13px;
+  color: #23513a;
+}
+.ktv-create-avatar-preview small,
+.ktv-create-media-subhead small {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #698675;
+}
+.ktv-create-avatar-upload {
+  border: 1px dashed #aecfb5;
+  border-radius: 12px;
+  background: #f0f7ed;
+  padding: 13px;
+}
+.ktv-create-media-subhead {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  border-top: 1px solid #d9e8d9;
+  padding-top: 14px;
+}
 .ktv-create-file {
   display: flex;
   flex-wrap: wrap;
@@ -243,6 +301,22 @@
   border: 1px solid #e1eadb;
   border-radius: 12px;
 }
+.ktv-create-media-thumb {
+  width: 62px;
+  height: 66px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: #e6f1e5;
+  color: #4c7c5d;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.ktv-create-media-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .ktv-create-media-item > div {
   flex: 1;
   min-width: 0;
@@ -264,6 +338,10 @@
   padding: 6px 8px;
   min-height: 35px;
 }
+.ktv-create-media-item button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 @media (max-width: 610px) {
   .ktv-create-backdrop {
     padding: 0;
@@ -284,5 +362,16 @@
   }
   .ktv-create-media {
     padding: 13px;
+  }
+  .ktv-create-media-item {
+    flex-wrap: wrap;
+  }
+  .ktv-create-avatar-preview {
+    gap: 10px;
+  }
+  .ktv-create-avatar-portrait {
+    flex-basis: 74px;
+    width: 74px;
+    height: 88px;
   }
 }
