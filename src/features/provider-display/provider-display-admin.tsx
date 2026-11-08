@@ -29,6 +29,7 @@ import {
   type DisplayVisibility,
 } from "./display-policy";
 import { KtvCreateAdmin } from "./ktv-create-admin";
+import { KtvAccountAdmin } from "./ktv-account-admin";
 import "./provider-display.css";
 
 const path = "/admin/provider-display";
@@ -314,7 +315,18 @@ export function ProviderDisplayAdmin() {
                       )}
                     </span>
                     <div>
-                      <strong>{row.publicName}</strong>
+                      <button
+                        type="button"
+                        className="pd-person-edit"
+                        aria-label={`Mở chỉnh sửa KTV ${row.publicName}`}
+                        disabled={pending || dirty}
+                        onClick={() => {
+                          setError("");
+                          setEditing(row);
+                        }}
+                      >
+                        <strong>{row.publicName}</strong>
+                      </button>
                       <span>{row.serviceArea || "Chưa cập nhật khu vực"}</span>
                       <span className={`pd-status is-${row.visibility.toLowerCase()}`}>
                         {row.visibility === "VISIBLE" && !row.publishable
@@ -496,70 +508,75 @@ export function ProviderDisplayAdmin() {
               </p>
             )}
             {editing ? (
-              <form onSubmit={saveInfo}>
-                <label>
-                  Tên hiển thị
-                  <input
-                    name="publicName"
-                    defaultValue={editing.publicName}
-                    required
-                    maxLength={160}
-                    autoFocus
-                  />
-                </label>
-                <label>
-                  Chức danh
-                  <input name="title" defaultValue={editing.title || ""} maxLength={160} />
-                </label>
-                <div className="pd-form-pair">
+              <>
+                <form onSubmit={saveInfo}>
                   <label>
-                    Tuổi
+                    Tên hiển thị
                     <input
-                      name="age"
-                      type="number"
-                      min={18}
-                      max={100}
-                      defaultValue={editing.age ?? ""}
+                      name="publicName"
+                      defaultValue={editing.publicName}
+                      required
+                      maxLength={160}
+                      autoFocus
                     />
                   </label>
                   <label>
-                    Số năm kinh nghiệm
+                    Chức danh
+                    <input name="title" defaultValue={editing.title || ""} maxLength={160} />
+                  </label>
+                  <div className="pd-form-pair">
+                    <label>
+                      Tuổi
+                      <input
+                        name="age"
+                        type="number"
+                        min={18}
+                        max={100}
+                        defaultValue={editing.age ?? ""}
+                      />
+                    </label>
+                    <label>
+                      Số năm kinh nghiệm
+                      <input
+                        name="yearsExperience"
+                        type="number"
+                        min={0}
+                        max={80}
+                        defaultValue={editing.yearsExperience ?? ""}
+                      />
+                    </label>
+                  </div>
+                  <label>
+                    Khu vực
                     <input
-                      name="yearsExperience"
-                      type="number"
-                      min={0}
-                      max={80}
-                      defaultValue={editing.yearsExperience ?? ""}
+                      name="serviceArea"
+                      defaultValue={editing.serviceArea || ""}
+                      maxLength={160}
                     />
                   </label>
-                </div>
-                <label>
-                  Khu vực
-                  <input
-                    name="serviceArea"
-                    defaultValue={editing.serviceArea || ""}
-                    maxLength={160}
-                  />
-                </label>
-                <label>
-                  Giới thiệu
-                  <textarea
-                    name="introduction"
-                    rows={4}
-                    maxLength={500}
-                    defaultValue={editing.introduction || ""}
-                  />
-                </label>
-                <div className="pd-modal-actions">
-                  <Link href={`/quan-tri/ktv/${editing.id}`}>
-                    Mở hồ sơ đầy đủ <ExternalLink size={14} />
-                  </Link>
-                  <button className="pd-primary" disabled={pending}>
-                    <Save size={17} />
-                    {pending ? "Đang lưu..." : "Lưu thông tin"}
-                  </button>
-                </div>
-              </form>
+                  <label>
+                    Giới thiệu
+                    <textarea
+                      name="introduction"
+                      rows={4}
+                      maxLength={500}
+                      defaultValue={editing.introduction || ""}
+                    />
+                  </label>
+                  <div className="pd-modal-actions">
+                    <Link href={`/quan-tri/ktv/${editing.id}`}>
+                      Mở hồ sơ đầy đủ <ExternalLink size={14} />
+                    </Link>
+                    <button className="pd-primary" disabled={pending}>
+                      <Save size={17} />
+                      {pending ? "Đang lưu..." : "Lưu thông tin"}
+                    </button>
+                  </div>
+                </form>
+                {user?.roles?.includes("SUPER_ADMIN") && (
+                  <KtvAccountAdmin providerId={editing.id} />
+                )}
+              </>
             ) : (
               <>
                 <p>

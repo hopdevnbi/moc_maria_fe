@@ -167,6 +167,17 @@
   font-size: 13px;
   overflow-wrap: anywhere;
 }
+.pd-person .pd-person-edit {
+  text-align: left;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.pd-person .pd-person-edit:hover {
+  text-decoration: underline;
+}
 .pd-person > div > span:not(.pd-status) {
   color: #849b89;
   font-size: 11px;

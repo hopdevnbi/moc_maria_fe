@@ -86,7 +86,7 @@ describe("Homepage KTV management", () => {
   });
   it("edits actual display fields and posts numeric values", async () => {
     render(<ProviderDisplayAdmin />);
-    fireEvent.click(screen.getByRole("button", { name: "Sửa thông tin Linh Anh" }));
+    fireEvent.click(screen.getByRole("button", { name: "Mở chỉnh sửa KTV Linh Anh" }));
     fireEvent.change(screen.getByLabelText("Tên hiển thị"), { target: { value: "Linh Anh mới" } });
     fireEvent.change(screen.getByLabelText("Tuổi"), { target: { value: "25" } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu thông tin" }));
