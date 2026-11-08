@@ -5,6 +5,7 @@ import type { Provider, ChatProvider } from "@/features/marketplace/types";
 import { DemoKtvDetail } from "@/features/mobile/demo-detail";
 import { findNamedProfile } from "@/features/mobile/provider-slugs";
 import { ownerProvidedKtvProfiles } from "@/features/mobile/owner-provided-ktvs";
+import { ownerProvidedKtvShowcase } from "@/features/mobile/owner-provided-ktv-showcase";
 import { approvedDescriptions } from "@/features/mobile/presentation-data";
 import { KtvPublicDetail } from "@/features/mobile/ktv-showcase";
 import type { KtvShowcase } from "@/features/mobile/ktv-showcase-types";
@@ -35,7 +36,12 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
     if (!receiver) {
       // Owner-supplied introduction: never borrow another KTV's chat identity.
       if (!ownerProvidedKtvProfiles.some((profile) => profile.id === named.id)) notFound();
-      return <DemoKtvDetail provider={{ ...named, chatEnabled: false, bookable: false }} />;
+      return (
+        <DemoKtvDetail
+          provider={{ ...named, chatEnabled: false, bookable: false }}
+          showcase={ownerProvidedKtvShowcase(named.id) ?? undefined}
+        />
+      );
     }
 
     const [profile, showcase] = await Promise.all([

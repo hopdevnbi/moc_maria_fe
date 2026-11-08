@@ -6,6 +6,7 @@ import { ktvAvatarUrl } from "./ktv-avatar";
 import { findNamedProfile, providerProfileHref } from "./provider-slugs";
 import demoProfiles from "./demo-ktvs.json";
 import { officialDemoKtvOffers } from "./official-ktv-offers";
+import { ownerProvidedKtvShowcase } from "./owner-provided-ktv-showcase";
 import {
   ownerProvidedKtvProfiles,
   pendingOwnerProvidedKtvProfiles,
@@ -58,6 +59,16 @@ describe("Owner-provided KTV Thanh Thanh", () => {
     ).toBe(true);
     expect(providerProfileHref(profile)).toBe("/chuyen-vien/thanh-thanh");
     expect(findNamedProfile("thanh-thanh")?.id).toBe(profile.id);
+  });
+
+  it("includes the owner's image and video in the existing gallery format", () => {
+    const showcase = ownerProvidedKtvShowcase("ktv-thanh-thanh");
+    expect(showcase?.media.map((m) => m.kind)).toEqual(["IMAGE", "VIDEO"]);
+    for (const media of showcase?.media ?? []) {
+      expect(media.url.startsWith("/media/ktv/")).toBe(true);
+      expect(existsSync(resolve(process.cwd(), "public" + media.url))).toBe(true);
+    }
+    expect(ownerProvidedKtvShowcase("demo-ktv-06")).toBeNull();
   });
 
   it("only shows the introduction while its own backend identity is absent", () => {
