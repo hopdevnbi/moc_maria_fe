@@ -101,9 +101,10 @@ describe("appointment request flow", () => {
     expect(screen.getByLabelText("Dịch vụ chăm sóc")).toHaveValue(choices.at(-1)!.service.id);
   });
   it.each([
-    ["2026-10-13T16:30:20Z", "2026-10-14T00:31"],
-    ["2026-12-31T16:00:00Z", "2027-01-01T00:00"],
-  ])("defaults to now plus one hour in Hanoi, including day rollover (%s)", (now, expected) => {
+    ["2026-10-13T16:30:20Z", "2026-10-14T00:01"],
+    ["2026-12-31T16:45:00Z", "2027-01-01T00:15"],
+    ["2026-11-08T11:00:00Z", "2026-11-08T18:30"],
+  ])("defaults to now plus 30 minutes in Hanoi, including day rollover (%s)", (now, expected) => {
     vi.spyOn(Date, "now").mockReturnValue(Date.parse(now));
     mount();
     expect(screen.getByLabelText("Ngày & giờ mong muốn (giờ Hà Nội)")).toHaveValue(expected);
@@ -111,6 +112,21 @@ describe("appointment request flow", () => {
       "min",
       expected,
     );
+  });
+  it("allows customers to change the proposed booking time", () => {
+    vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-08T11:00:00Z"));
+    render(
+      <AppointmentRequest
+        providers={providers}
+        services={demoServices}
+        initial={{ provider: providers[0].id }}
+      />,
+    );
+    const input = screen.getByLabelText("Ngày & giờ mong muốn (giờ Hà Nội)");
+    expect(input).toHaveValue("2026-11-08T18:30");
+    fireEvent.change(input, { target: { value: "2026-11-08T19:15" } });
+    expect(input).toHaveValue("2026-11-08T19:15");
+    expect(screen.getByRole("button", { name: "Gửi yêu cầu đặt lịch" })).toBeEnabled();
   });
   it("keeps an expired draft time from replacing the fresh default and rejects earlier times", async () => {
     vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-10-13T03:00:00Z"));
@@ -132,10 +148,10 @@ describe("appointment request flow", () => {
     );
     await waitFor(() => expect(sessionStorage.getItem("mocmaria.booking.signin-draft")).toBeNull());
     expect(screen.getByLabelText("Ngày & giờ mong muốn (giờ Hà Nội)")).toHaveValue(
-      "2026-10-13T11:00",
+      "2026-10-13T10:30",
     );
     fireEvent.change(screen.getByLabelText("Ngày & giờ mong muốn (giờ Hà Nội)"), {
-      target: { value: "2026-10-13T10:30" },
+      target: { value: "2026-10-13T10:15" },
     });
     expect(screen.getByRole("button", { name: "Gửi yêu cầu đặt lịch" })).toBeDisabled();
   });

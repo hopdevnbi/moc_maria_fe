@@ -75,7 +75,7 @@ export function AppointmentRequest({
   const [dateLimits] = useState(() => {
     const now = Date.now();
     return {
-      min: hanoiDateTime(Math.ceil((now + 3600000) / 60000) * 60000),
+      min: hanoiDateTime(Math.ceil((now + 30 * 60000) / 60000) * 60000),
       max: hanoiDateTime(now + 60 * 86400000),
     };
   });
