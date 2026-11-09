@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiRequest, parseApiResponse } from "../auth-api";
+import { apiRequest, parseApiResponse, withAuthRequestDeadline } from "../auth-api";
 import type { AuthResponse, AuthStatus, AuthUser } from "../auth.types";
 import {
   AuthContext,
@@ -22,6 +22,7 @@ function jsonInit(method: string, body: unknown): RequestInit {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const authenticatedId = useRef<string | null>(null);
+  const authRevision = useRef(0);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const applyAuth = useCallback(
     (auth: AuthResponse | null) => {
+      authRevision.current += 1;
       const nextId = auth?.user.id ?? null;
       if (authenticatedId.current !== nextId) queryClient.clear();
       authenticatedId.current = nextId;
@@ -42,14 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async (): Promise<AuthResponse | null> => {
     if (refreshPromise.current) return refreshPromise.current;
 
+    const startedAtRevision = authRevision.current;
     refreshPromise.current = (async () => {
-      const response = await apiRequest("/auth/refresh", { method: "POST" });
-      if (response.status === 401) {
-        applyAuth(null);
-        return null;
-      }
-      const auth = await parseApiResponse<AuthResponse>(response);
-      applyAuth(auth);
+      const auth = await withAuthRequestDeadline(async (signal) => {
+        const response = await apiRequest("/auth/refresh", { method: "POST", signal });
+        if (response.status === 401) return null;
+        return parseApiResponse<AuthResponse>(response);
+      });
+      // A slow refresh started before login/logout must not overwrite the
+      // newer result, especially on high-latency Safari connections.
+      if (authRevision.current === startedAtRevision) applyAuth(auth);
       return auth;
     })().finally(() => {
       refreshPromise.current = null;
@@ -58,14 +62,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return refreshPromise.current;
   }, [applyAuth]);
 
+  const retrySession = useCallback(async (): Promise<void> => {
+    setStatus((previous) => (previous === "authenticated" ? previous : "loading"));
+    try {
+      await refresh();
+    } catch {
+      // Network and CORS failures are not proof that a session expired.
+      // Let the user retry rather than redirecting them to login forever.
+      setStatus((previous) => (previous === "authenticated" ? previous : "unavailable"));
+    }
+  }, [refresh]);
+
   useEffect(() => {
-    void refresh().catch(() => applyAuth(null));
-  }, [applyAuth, refresh]);
+    void refresh().catch(() =>
+      setStatus((previous) => (previous === "authenticated" ? previous : "unavailable")),
+    );
+  }, [refresh]);
 
   const login = useCallback(
     async (input: LoginInput): Promise<AuthResponse> => {
-      const response = await apiRequest("/auth/login", jsonInit("POST", input));
-      const auth = await parseApiResponse<AuthResponse>(response);
+      const auth = await withAuthRequestDeadline(async (signal) => {
+        const response = await apiRequest("/auth/login", { ...jsonInit("POST", input), signal });
+        return parseApiResponse<AuthResponse>(response);
+      }, 15_000);
       applyAuth(auth);
       return auth;
     },
@@ -74,8 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (input: RegisterInput): Promise<AuthResponse> => {
-      const response = await apiRequest("/auth/register", jsonInit("POST", input));
-      const auth = await parseApiResponse<AuthResponse>(response);
+      const auth = await withAuthRequestDeadline(async (signal) => {
+        const response = await apiRequest("/auth/register", { ...jsonInit("POST", input), signal });
+        return parseApiResponse<AuthResponse>(response);
+      }, 20_000);
       applyAuth(auth);
       return auth;
     },
@@ -137,9 +158,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       logoutAll,
       refresh,
+      retrySession,
       authFetch,
     }),
-    [status, user, accessToken, login, register, logout, logoutAll, refresh, authFetch],
+    [
+      status,
+      user,
+      accessToken,
+      login,
+      register,
+      logout,
+      logoutAll,
+      refresh,
+      retrySession,
+      authFetch,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

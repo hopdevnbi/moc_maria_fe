@@ -84,7 +84,7 @@ export const statusLabels: Record<GiftEventStatus, string> = {
 
 export function eligibilityCopy(
   campaign: EventCampaign | null,
-  state: "loading" | "anonymous" | "authenticated",
+  state: "loading" | "anonymous" | "authenticated" | "unavailable",
   me?: EventMe,
 ): { tone: "success" | "muted" | "warning"; heading: string; detail: string } {
   if (!campaign)
@@ -116,6 +116,12 @@ export function eligibilityCopy(
       tone: "muted",
       heading: "Đang xác thực tài khoản",
       detail: "Vui lòng đợi trong giây lát.",
+    };
+  if (state === "unavailable")
+    return {
+      tone: "warning",
+      heading: "Chưa thể kết nối để xác thực tài khoản",
+      detail: "Hãy kiểm tra mạng rồi tải lại trang. Lượt quà của bạn vẫn được giữ nguyên.",
     };
   if (state === "anonymous")
     return {

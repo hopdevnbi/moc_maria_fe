@@ -24,4 +24,4 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
-export type AuthStatus = "loading" | "authenticated" | "anonymous";
+export type AuthStatus = "loading" | "authenticated" | "anonymous" | "unavailable";

@@ -11,6 +11,34 @@ export class ApiError extends Error {
   }
 }
 
+export class AuthRequestTimeoutError extends Error {
+  constructor() {
+    super("Không thể kết nối để kiểm tra phiên đăng nhập. Vui lòng thử lại.");
+    this.name = "AuthRequestTimeoutError";
+  }
+}
+
+// Safari can leave a fetch (or its response body) pending indefinitely. A
+// deadline around the whole request keeps the app from being stuck on auth.
+export async function withAuthRequestDeadline<T>(
+  task: (signal: AbortSignal) => Promise<T>,
+  timeoutMs = 12_000,
+): Promise<T> {
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => {
+      controller.abort();
+      reject(new AuthRequestTimeoutError());
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([task(controller.signal), deadline]);
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+  }
+}
+
 export async function apiRequest(
   path: string,
   init: RequestInit = {},

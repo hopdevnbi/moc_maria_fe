@@ -22,6 +22,7 @@ export interface AuthContextValue {
   logout(): Promise<void>;
   logoutAll(): Promise<void>;
   refresh(): Promise<AuthResponse | null>;
+  retrySession(): Promise<void>;
   authFetch<T>(path: string, init?: RequestInit): Promise<T>;
 }
 
