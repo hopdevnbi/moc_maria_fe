@@ -32,12 +32,13 @@ const labels: Record<string, string> = {
   IN_SERVICE: "Đang phục vụ",
   COMPLETED: "Đã hoàn thành",
 };
-export function AppointmentInquiries() {
+export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean }) {
   const { user, authFetch } = useAuth();
   const [items, setItems] = useState<Inquiry[]>([]);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
+  const visibleItems = onlySent ? items.filter((item) => item.customerId === user?.id) : items;
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -78,19 +79,21 @@ export function AppointmentInquiries() {
   return (
     <section className="mm-account-profile mm-inquiries" id="yeu-cau-dat-lich">
       <div className="mm-inquiry-heading">
-        <h2>Yêu cầu đặt lịch</h2>
+        <h2>{onlySent ? "Yêu cầu tôi đã gửi" : "Yêu cầu đặt lịch"}</h2>
         <button className="mm-outline-cta" disabled={loading} onClick={() => void load()}>
           Tải lại
         </button>
       </div>
       {notice && <p role="alert">{notice}</p>}
-      {loading && items.length > 0 && <RefreshNotice label="Đang cập nhật yêu cầu đặt lịch…" />}
-      {loading && items.length === 0 ? (
+      {loading && visibleItems.length > 0 && (
+        <RefreshNotice label="Đang cập nhật yêu cầu đặt lịch…" />
+      )}
+      {loading && visibleItems.length === 0 ? (
         <LoadingState compact title="Đang tải yêu cầu đặt lịch…" description="" shape="list" />
-      ) : !items.length ? (
+      ) : !visibleItems.length ? (
         <p>Bạn chưa có yêu cầu đặt lịch nào.</p>
       ) : (
-        items.map((item) => (
+        visibleItems.map((item) => (
           <article key={item.id} className="mm-inquiry-card">
             <strong>
               {item.serviceName} ·{" "}

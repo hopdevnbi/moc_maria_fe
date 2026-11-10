@@ -54,6 +54,11 @@ export function AccountShortcuts({ technician, signingOut, onSignOut }: AccountS
           <h2 id="mm-account-security-heading">Tài khoản & bảo mật</h2>
         </div>
         <div className="mm-account-security-links">
+          <Link href="/lich-hen">
+            <CalendarDays size={18} aria-hidden="true" />
+            <span>Yêu cầu đặt lịch của tôi</span>
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
           <Link href="#thong-tin-tai-khoan">
             <UserRound size={20} aria-hidden="true" />
             <span>Thông tin của tôi</span>

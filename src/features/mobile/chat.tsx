@@ -1,4 +1,5 @@
 "use client";
+import { canUsePersonalBooking } from "@/features/auth/personal-booking";
 import { providerProfileHref } from "./provider-slugs";
 
 import Link from "next/link";
@@ -312,7 +313,7 @@ export function KtvChatPage({
   const inFlight = useRef(new Set<string>());
   const previewUrls = useRef(new Set<string>());
   const enabled = status === "authenticated" && !!user;
-  const customer = !!user?.permissions.includes("customer.portal");
+  const canStartChat = canUsePersonalBooking(user);
   const key = ["ktv-chat", user?.id];
   const threads = useQuery({
     queryKey: [...key, "threads"],
@@ -329,7 +330,7 @@ export function KtvChatPage({
         ...provider,
         services: (provider.services || []).map(officialServiceLabel),
       })),
-    enabled: enabled && customer,
+    enabled: enabled && canStartChat,
     staleTime: 60_000,
     retry: 1,
   });
@@ -654,7 +655,7 @@ export function KtvChatPage({
   });
   const { mutate: openThread } = open;
   useEffect(() => {
-    if (!enabled || !customer || !provider) return;
+    if (!enabled || !canStartChat || !provider) return;
     // Wait for the directory before resolving public aliases. Never POST a
     // presentation slug/demo ID to a PostgreSQL UUID field.
     if (!receiverId) return;
@@ -667,7 +668,7 @@ export function KtvChatPage({
     return () => {
       if (navigation.current === version) ++navigation.current;
     };
-  }, [enabled, customer, provider, receiverId, user?.id, deepLinkAttempt, openThread]);
+  }, [enabled, canStartChat, provider, receiverId, user?.id, deepLinkAttempt, openThread]);
   useEffect(() => {
     const shell = shellRef.current;
     if (!shell) return;
@@ -990,9 +991,14 @@ export function KtvChatPage({
   }, [draft, selectedId, choosing]);
   // Background refresh errors must not hide a usable cached inbox/history.
   const unresolvedProvider =
-    enabled && customer && !!provider && !receiverId && !directory.isPending && !directory.isError;
+    enabled &&
+    canStartChat &&
+    !!provider &&
+    !receiverId &&
+    !directory.isPending &&
+    !directory.isError;
   const error =
-    (enabled && !customer && provider
+    (enabled && !canStartChat && provider
       ? "Tài khoản này dùng để trả lời khách hàng, chưa có quyền bắt đầu trò chuyện với KTV khác. Hãy dùng tài khoản khách hàng để nhận tư vấn."
       : "") ||
     actionError ||
@@ -1050,9 +1056,15 @@ export function KtvChatPage({
         <div className="ktv-chat-heading">
           <div>
             <span>CHĂM SÓC BẮT ĐẦU TỪ LẮNG NGHE</span>
-            <h1>{user && !customer ? "Tin nhắn khách hàng" : "Trò chuyện cùng KTV"}</h1>
+            <h1>
+              {user &&
+              !user.permissions.includes("customer.portal") &&
+              current?.customer_user_id !== user.id
+                ? "Tin nhắn của bạn"
+                : "Trò chuyện cùng KTV"}
+            </h1>
             <p>
-              {user && !customer
+              {user && !canStartChat
                 ? "Trả lời và tư vấn cho khách hàng. Mỗi khách, một cuộc trò chuyện riêng."
                 : "Chọn kỹ thuật viên bạn tin tưởng. Mỗi người, một cuộc trò chuyện riêng."}
             </p>
@@ -1100,7 +1112,7 @@ export function KtvChatPage({
                 >
                   {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
                 </button>
-                {customer && (
+                {canStartChat && (
                   <button
                     className="ktv-chat-icon-button"
                     aria-label="Chọn KTV để chat riêng"
@@ -1117,15 +1129,17 @@ export function KtvChatPage({
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder={
-                    showDirectory && customer ? "Tìm tên KTV, khu vực..." : "Tìm cuộc trò chuyện..."
+                    showDirectory && canStartChat
+                      ? "Tìm tên KTV, khu vực..."
+                      : "Tìm cuộc trò chuyện..."
                   }
                   aria-label={
-                    showDirectory && customer ? "Tìm kỹ thuật viên" : "Tìm cuộc trò chuyện"
+                    showDirectory && canStartChat ? "Tìm kỹ thuật viên" : "Tìm cuộc trò chuyện"
                   }
                   type="search"
                 />
               </label>
-              {customer && (
+              {canStartChat && (
                 <div className="ktv-chat-tabs">
                   <button
                     className={!choosing ? "active" : ""}
@@ -1146,13 +1160,13 @@ export function KtvChatPage({
               {error && (
                 <div className="ktv-chat-error" role="alert">
                   <p>{error}</p>
-                  {(customer || !provider) && <button onClick={retry}>Thử kết nối lại</button>}
+                  {(canStartChat || !provider) && <button onClick={retry}>Thử kết nối lại</button>}
                 </div>
               )}
               <div className="ktv-chat-contacts">
                 {threads.isPending ? (
                   <LoadingState compact title="Đang tải hội thoại…" description="" shape="list" />
-                ) : showDirectory && customer ? (
+                ) : showDirectory && canStartChat ? (
                   <>
                     <p className="ktv-chat-list-note">
                       {choosing
@@ -1268,7 +1282,7 @@ export function KtvChatPage({
                     <MessageCircle size={28} />
                     <b>{search ? "Không tìm thấy hội thoại" : "Chưa có cuộc trò chuyện"}</b>
                     <p>
-                      {customer
+                      {canStartChat
                         ? "Chọn KTV để gửi lời chào đầu tiên."
                         : "Tin nhắn sẽ xuất hiện khi khách hàng liên hệ với bạn."}
                     </p>
@@ -1359,7 +1373,7 @@ export function KtvChatPage({
                       {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                     </button>
                   </header>
-                  {customer && current.customer_user_id === user.id && (
+                  {canStartChat && current.customer_user_id === user.id && (
                     <ChatPrivacyControls
                       key={current.id}
                       thread={{ ...current, history_locked: locked }}
@@ -1369,42 +1383,43 @@ export function KtvChatPage({
                   )}
                   {!locked && (
                     <>
-                      {customer && !!currentProvider?.services?.length && (
-                        <label className="ktv-chat-service">
-                          <span>Dịch vụ cần tư vấn</span>
-                          <select
-                            aria-label="Chọn dịch vụ để tư vấn"
-                            value={selectedService}
-                            onChange={(e) =>
-                              setServiceSelections((old) => ({
-                                ...old,
-                                [current.id]: e.target.value,
-                              }))
-                            }
-                          >
-                            <option value="">Tư vấn chung</option>
-                            {currentProvider.services.map((s) => (
-                              <option key={s.id} value={s.id}>
-                                {s.name}
-                              </option>
-                            ))}
-                          </select>
-                          {consultationService && (
-                            <button
-                              type="button"
-                              disabled={paused}
-                              onClick={() =>
-                                setDrafts((old) => ({
+                      {current.customer_user_id === user.id &&
+                        !!currentProvider?.services?.length && (
+                          <label className="ktv-chat-service">
+                            <span>Dịch vụ cần tư vấn</span>
+                            <select
+                              aria-label="Chọn dịch vụ để tư vấn"
+                              value={selectedService}
+                              onChange={(e) =>
+                                setServiceSelections((old) => ({
                                   ...old,
-                                  [current.id]: `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}. Bạn giúp tôi chọn thời gian phù hợp nhé.`,
+                                  [current.id]: e.target.value,
                                 }))
                               }
                             >
-                              Soạn câu hỏi
-                            </button>
-                          )}
-                        </label>
-                      )}
+                              <option value="">Tư vấn chung</option>
+                              {currentProvider.services.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.name}
+                                </option>
+                              ))}
+                            </select>
+                            {consultationService && (
+                              <button
+                                type="button"
+                                disabled={paused}
+                                onClick={() =>
+                                  setDrafts((old) => ({
+                                    ...old,
+                                    [current.id]: `Chào ${recipient(current)}, tôi muốn được tư vấn về ${consultationService.name}. Bạn giúp tôi chọn thời gian phù hợp nhé.`,
+                                  }))
+                                }
+                              >
+                                Soạn câu hỏi
+                              </button>
+                            )}
+                          </label>
+                        )}
                       <div className="ktv-chat-block-status">
                         <ChatBlockControls
                           key={current.id}
@@ -1499,7 +1514,7 @@ export function KtvChatPage({
                               <p>
                                 Bạn có thể hỏi về dịch vụ, nhu cầu chăm sóc hoặc thời gian phù hợp.
                               </p>
-                              {customer && !paused && (
+                              {current.customer_user_id === user.id && !paused && (
                                 <button
                                   className="ktv-chat-suggestion"
                                   onClick={() => {
@@ -1721,11 +1736,11 @@ export function KtvChatPage({
                     thêm một kết nối.
                   </h2>
                   <p>
-                    {customer
+                    {canStartChat
                       ? "Chọn một kỹ thuật viên để trao đổi về nhu cầu của bạn. Mỗi cuộc trò chuyện được lưu riêng để bạn dễ dàng tiếp tục bất cứ lúc nào."
                       : "Chọn hội thoại để trả lời khách hàng và trao đổi về dịch vụ."}
                   </p>
-                  {customer && (
+                  {canStartChat && (
                     <button className="ktv-chat-primary" onClick={pick}>
                       Chọn KTV để trò chuyện <ArrowRight size={18} />
                     </button>

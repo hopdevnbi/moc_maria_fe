@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
   register: vi.fn(),
   login: vi.fn(),
   guest: false,
+  role: "",
 }));
 const customerAuth = {
   accessToken: "new-customer-access",
@@ -18,7 +19,14 @@ const customerAuth = {
 };
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
-    user: state.guest ? null : { id: "customer", permissions: ["customer.portal"] },
+    user: state.guest
+      ? null
+      : {
+          id: "customer",
+          permissions: state.role ? [] : ["customer.portal"],
+          roles: state.role ? [state.role] : ["CUSTOMER"],
+          isActive: true,
+        },
     status: state.guest ? "anonymous" : "authenticated",
     authFetch: state.fetch,
     register: state.register,
@@ -37,6 +45,7 @@ vi.mock("next/image", () => ({
 }));
 beforeEach(() => {
   state.guest = false;
+  state.role = "";
   state.fetch.mockReset().mockResolvedValue({ id: "inquiry" });
   state.register.mockReset().mockImplementation(async () => {
     state.guest = false;
@@ -73,6 +82,35 @@ function mount() {
   render(<AppointmentRequest providers={providers} services={demoServices} initial={{}} />);
 }
 describe("appointment request flow", () => {
+  it.each(["THERAPIST", "ADMIN", "SUPER_ADMIN"])(
+    "lets %s request another KTV without customer.portal",
+    async (role) => {
+      state.role = role;
+      render(
+        <AppointmentRequest
+          providers={providers}
+          services={demoServices}
+          initial={{ provider: providers[0].id }}
+        />,
+      );
+      const button = screen.getByRole("button", { name: "Gửi yêu cầu đặt lịch" });
+      expect(button).toBeEnabled();
+      fireEvent.click(button);
+      await waitFor(() =>
+        expect(state.fetch).toHaveBeenCalledWith(
+          "/appointment-inquiries",
+          expect.objectContaining({ method: "POST" }),
+        ),
+      );
+      expect(await screen.findByRole("link", { name: /Theo dõi yêu cầu/ })).toHaveAttribute(
+        "href",
+        "/lich-hen",
+      );
+      const body = JSON.parse(state.fetch.mock.calls[0][1].body);
+      expect(body).not.toHaveProperty("customerId");
+      expect(body.providerId).toBe(providers[0].chatProviderId);
+    },
+  );
   it("selects the first compatible service for a linked KTV without sending automatically", () => {
     render(
       <AppointmentRequest

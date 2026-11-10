@@ -7,7 +7,11 @@ import { ApiError } from "@/features/auth/auth-api";
 const state = vi.hoisted(() => ({
   fetch: vi.fn(),
   status: "authenticated",
-  user: { id: "customer", permissions: ["customer.portal"] },
+  user: { id: "customer", permissions: ["customer.portal"], roles: [] as string[] } as {
+    id: string;
+    permissions: string[];
+    roles?: string[];
+  },
 }));
 vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => ({
@@ -56,7 +60,7 @@ function mount(provider?: string, service?: string) {
 }
 beforeEach(() => {
   state.status = "authenticated";
-  state.user = { id: "customer", permissions: ["customer.portal"] };
+  state.user = { id: "customer", permissions: ["customer.portal"], roles: [] };
   state.fetch.mockReset().mockImplementation(async (path: string, init?: RequestInit) => {
     if (path === "/ktv-chat/threads") return init?.method === "POST" ? first : [first, second];
     if (path === "/ktv-chat/providers")
@@ -76,6 +80,16 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it.each(["THERAPIST", "ADMIN"])("lets %s continue its own buyer thread", async (role) => {
+    state.user = { id: "customer", permissions: [], roles: [role] };
+    mount("demo-ktv-01", "neck");
+    expect(await screen.findByRole("textbox", { name: "Nội dung tin nhắn" })).toHaveAttribute(
+      "placeholder",
+      "Nhắn cho Ngọc Mai...",
+    );
+    expect(screen.getByRole("combobox", { name: "Chọn dịch vụ để tư vấn" })).toHaveValue("neck");
+    expect(screen.getByRole("heading", { name: "Trò chuyện cùng KTV" })).toBeInTheDocument();
+  });
   it("opens an existing selected provider immediately and keeps the chosen service without another create request", async () => {
     mount("demo-ktv-01", "neck");
     await screen.findByRole("textbox", { name: "Nội dung tin nhắn" });
@@ -197,10 +211,10 @@ describe("private KTV chat interactions", () => {
   });
 
   it("explains a provider-only account instead of silently ignoring its selected-KTV link", async () => {
-    state.user = { id: "provider", permissions: ["provider.portal"] };
+    state.user = { id: "provider", permissions: ["provider.portal"], roles: [] };
     mount("11111111-1111-4111-8111-111111111111");
     await screen.findByText(/chưa có quyền bắt đầu trò chuyện với KTV khác/);
-    expect(screen.getByRole("heading", { name: "Tin nhắn khách hàng" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Tin nhắn của bạn" })).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Tìm cuộc trò chuyện" })).toHaveAttribute(
       "placeholder",
       "Tìm cuộc trò chuyện...",
@@ -350,7 +364,11 @@ describe("private KTV chat interactions", () => {
     ).toHaveLength(1);
   });
   it("keeps customer password controls off a provider's chat even with dual-role permissions", async () => {
-    state.user = { id: "provider", permissions: ["customer.portal", "provider.portal"] };
+    state.user = {
+      id: "provider",
+      permissions: ["customer.portal", "provider.portal"],
+      roles: ["THERAPIST"],
+    };
     state.fetch.mockImplementation(async (path: string) => {
       if (path === "/ktv-chat/threads")
         return [{ ...first, provider_user_id: "provider", customer_name: "Khách hội thoại" }];

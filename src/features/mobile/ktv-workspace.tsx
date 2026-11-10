@@ -610,6 +610,9 @@ export function TechnicianWorkspace() {
             <Link href="/ktv/dao-tao">
               <GraduationCap size={18} /> Đào tạo & chứng nhận <ArrowUpRight size={15} />
             </Link>
+            <Link href="/lich-hen">
+              <CalendarDays size={18} /> Yêu cầu đặt lịch của tôi <ArrowUpRight size={15} />
+            </Link>
             {user.permissions.includes("admin.portal") && (
               <Link href="/quan-tri">
                 Khu vực quản trị <ArrowUpRight size={15} />

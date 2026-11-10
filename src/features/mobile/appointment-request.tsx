@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { CalendarDays, CheckCircle2, MapPin, ArrowRight, UserRound } from "lucide-react";
 import { apiRequest, parseApiResponse } from "@/features/auth/auth-api";
 import type { AuthResponse } from "@/features/auth/auth.types";
+import { canUsePersonalBooking } from "@/features/auth/personal-booking";
 import { BookingAccountDialog } from "./booking-account-dialog";
 import "./booking-quick-signup.css";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -171,8 +172,8 @@ export function AppointmentRequest({
   async function sendInquiry(auth?: AuthResponse) {
     const actor = auth?.user ?? user;
     if (sending.current || !actor) return;
-    if (!actor.permissions.includes("customer.portal")) {
-      setError("Hãy dùng tài khoản khách hàng để gửi yêu cầu đặt lịch.");
+    if (!canUsePersonalBooking(actor)) {
+      setError("Tài khoản này chưa thể gửi yêu cầu đặt lịch.");
       return;
     }
     const requestedTime = new Date(requestedAt + ":00+07:00").getTime();
@@ -251,7 +252,7 @@ export function AppointmentRequest({
               KTV sẽ trao đổi để xác nhận khả năng phục vụ, thời gian và giá. Bạn có thể xem yêu cầu
               trong tài khoản.
             </p>
-            <Link className="mm-primary-cta" href="/tai-khoan#yeu-cau-dat-lich">
+            <Link className="mm-primary-cta" href="/lich-hen">
               Theo dõi yêu cầu <ArrowRight size={17} />
             </Link>
             <Link
@@ -453,7 +454,7 @@ export function AppointmentRequest({
                     status === "loading" ||
                     busy ||
                     !canSend ||
-                    (!!user && !user.permissions.includes("customer.portal"))
+                    (!!user && !canUsePersonalBooking(user))
                   }
                 >
                   {status === "loading"
@@ -466,10 +467,9 @@ export function AppointmentRequest({
                   <ArrowRight size={17} />
                 </button>
               </div>
-              {user && !user.permissions.includes("customer.portal") && (
+              {user && !canUsePersonalBooking(user) && (
                 <p>
-                  Tài khoản KTV dùng để nhận yêu cầu. Hãy đăng nhập tài khoản khách hàng để đặt
-                  lịch.
+                  Tài khoản này chưa thể gửi yêu cầu đặt lịch. Vui lòng liên hệ Mộc để được hỗ trợ.
                 </p>
               )}
               {error && (

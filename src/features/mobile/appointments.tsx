@@ -14,6 +14,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { LoadingState, RefreshNotice } from "@/shared/loading/loading-state";
 import { formatPrice } from "@/features/marketplace/format";
 import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
+import { AppointmentInquiries } from "./inquiries";
 import "@/features/mobile/mobile.css";
 
 interface Appointment {
@@ -124,8 +125,9 @@ export default function AppointmentsPage() {
           <h1>
             Lịch hẹn <em>của tôi.</em>
           </h1>
-          <p>Theo dõi yêu cầu, phản hồi KTV và xác nhận báo giá trước khi lịch được chốt.</p>
+          <p>Theo dõi yêu cầu bạn đã gửi và phản hồi từ KTV.</p>
         </div>
+        {status === "authenticated" && user && <AppointmentInquiries onlySent />}
         {status === "loading" ? (
           <LoadingState
             title="Đang mở lịch hẹn của bạn"
@@ -139,9 +141,7 @@ export default function AppointmentsPage() {
               Đăng nhập <ArrowRight size={17} />
             </Link>
           </div>
-        ) : !user.permissions.includes("customer.portal") ? (
-          <div className="mm-empty">Tài khoản này chưa có quyền xem lịch hẹn của khách hàng.</div>
-        ) : (
+        ) : !user.permissions.includes("customer.portal") ? null : (
           <>
             <div className="mm-results-heading">
               <h3>Yêu cầu & lịch đã đặt</h3>
