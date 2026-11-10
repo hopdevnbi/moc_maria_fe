@@ -30,4 +30,21 @@ describe("Safari-safe authentication deadline", () => {
     await vi.advanceTimersByTimeAsync(2_000);
     expect(signal?.aborted).toBe(false);
   });
+
+  it.each(["pageshow", "visibilitychange"])(
+    "expires a suspended iPhone request on %s even before frozen timers run",
+    async (event) => {
+      vi.useFakeTimers();
+      let signal: AbortSignal | undefined;
+      const result = withAuthRequestDeadline((requestSignal) => {
+        signal = requestSignal;
+        return new Promise(() => undefined);
+      }, 1_000);
+      const assertion = expect(result).rejects.toBeInstanceOf(AuthRequestTimeoutError);
+      vi.setSystemTime(Date.now() + 30_000);
+      (event === "pageshow" ? window : document).dispatchEvent(new Event(event));
+      await assertion;
+      expect(signal?.aborted).toBe(true);
+    },
+  );
 });

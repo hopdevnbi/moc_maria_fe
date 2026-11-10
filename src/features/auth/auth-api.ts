@@ -25,17 +25,33 @@ export async function withAuthRequestDeadline<T>(
   timeoutMs = 12_000,
 ): Promise<T> {
   const controller = new AbortController();
+  const expiresAt = Date.now() + timeoutMs;
   let timeout: ReturnType<typeof setTimeout> | undefined;
+  let checkOnResume: (() => void) | undefined;
   const deadline = new Promise<never>((_, reject) => {
-    timeout = setTimeout(() => {
-      controller.abort();
+    const expire = () => {
       reject(new AuthRequestTimeoutError());
-    }, timeoutMs);
+      controller.abort();
+    };
+    timeout = setTimeout(expire, timeoutMs);
+    // iOS freezes timers while a Safari tab/PWA is in the background.
+    // Check wall time as soon as it resumes rather than waiting on a stale fetch.
+    checkOnResume = () => {
+      if (Date.now() >= expiresAt) expire();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("pageshow", checkOnResume);
+      document.addEventListener("visibilitychange", checkOnResume);
+    }
   });
   try {
     return await Promise.race([task(controller.signal), deadline]);
   } finally {
     if (timeout !== undefined) clearTimeout(timeout);
+    if (typeof window !== "undefined" && checkOnResume) {
+      window.removeEventListener("pageshow", checkOnResume);
+      document.removeEventListener("visibilitychange", checkOnResume);
+    }
   }
 }
 

@@ -4,6 +4,8 @@ import { Be_Vietnam_Pro, Noto_Serif } from "next/font/google";
 import { AppProviders } from "@/app/providers/AppProviders";
 import { ChristmasWelcome } from "@/shared/seasonal/christmas-welcome";
 import { GoogleAnalytics } from "@/shared/analytics/google-analytics";
+import { StartupRecovery } from "@/shared/startup/startup-recovery";
+import { IOS_COMPATIBILITY_SCRIPT } from "@/shared/startup/ios-compatibility";
 import "./globals.css";
 import "@/shared/seasonal/christmas.css";
 
@@ -48,10 +50,18 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
+      <head>
+        {/* The compatibility marker is set before React starts on old iOS. */}
+        <script
+          id="moc-ios-compatibility"
+          dangerouslySetInnerHTML={{ __html: IOS_COMPATIBILITY_SCRIPT }}
+        />
+      </head>
       <body className={`${sans.variable} ${serif.variable} christmas-season`}>
         <ChristmasWelcome />
         <AppProviders>{children}</AppProviders>
+        <StartupRecovery />
         <Suspense fallback={null}>
           <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
         </Suspense>

@@ -28,6 +28,8 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+  // Recovery must bypass this worker, including on Safari/PWA startup failures.
+  if (url.pathname === "/pwa/recover.html" || url.pathname === "/pwa/recover.js") return;
 
   // Serve only the generic icon from cache; never store personal HTML or API responses.
   if (url.pathname === "/pwa/icon-192.png") {

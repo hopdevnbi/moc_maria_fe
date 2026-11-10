@@ -28,6 +28,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const refreshPromise = useRef<Promise<AuthResponse | null> | null>(null);
 
+  useEffect(() => {
+    // Only suppress the independent HTML/CSS recovery after bootstrap has
+    // actually settled. A hydration failure leaves the recovery link usable.
+    if (status !== "loading") document.body.setAttribute("data-moc-auth-settled", "");
+    else document.body.removeAttribute("data-moc-auth-settled");
+    return () => document.body.removeAttribute("data-moc-auth-settled");
+  }, [status]);
+
   const applyAuth = useCallback(
     (auth: AuthResponse | null) => {
       authRevision.current += 1;

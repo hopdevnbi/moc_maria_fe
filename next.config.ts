@@ -40,6 +40,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/pwa/recover.:extension(html|js)",
+        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
+      },
+      {
         source: "/sw.js",
         headers: [
           { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },

@@ -39,6 +39,14 @@ export function RequireAuth({
           description="Mộc đang kiểm tra phiên đăng nhập của bạn."
           shape="form"
         />
+        <p className="mt-5 text-center text-sm">
+          <a
+            href={"/pwa/recover.html?returnTo=" + encodeURIComponent(pathname)}
+            className="inline-block min-h-12 px-4 py-3 underline"
+          >
+            Trang tải quá lâu? Mở công cụ khôi phục
+          </a>
+        </p>
       </div>
     );
   }
@@ -65,6 +73,12 @@ export function RequireAuth({
           >
             Đăng nhập
           </Link>
+          <a
+            href={"/pwa/recover.html?returnTo=" + encodeURIComponent(pathname)}
+            className="flex min-h-12 items-center rounded-xl border px-5 font-semibold"
+          >
+            Khôi phục ứng dụng
+          </a>
         </div>
       </main>
     );

@@ -76,6 +76,7 @@ describe("session bootstrap on a new iPhone/Safari", () => {
     mocks.parseApiResponse.mockResolvedValue(loggedIn);
     renderProtectedPage();
     expect(await screen.findByText("Trang của KTV")).toBeInTheDocument();
+    await waitFor(() => expect(document.body).toHaveAttribute("data-moc-auth-settled"));
     expect(mocks.replace).not.toHaveBeenCalled();
   });
 
@@ -115,6 +116,10 @@ describe("session bootstrap on a new iPhone/Safari", () => {
     mocks.parseApiResponse.mockResolvedValueOnce(loggedIn);
     renderProtectedPage();
     expect(screen.getByText("Đang mở không gian của bạn")).toBeInTheDocument();
+    expect(document.body).not.toHaveAttribute("data-moc-auth-settled");
+    expect(
+      screen.getByRole("link", { name: "Trang tải quá lâu? Mở công cụ khôi phục" }),
+    ).toHaveAttribute("href", "/pwa/recover.html?returnTo=%2Ftai-khoan");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(12_100);
     });
