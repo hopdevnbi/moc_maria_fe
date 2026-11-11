@@ -24,7 +24,7 @@ async function MessagesContent({
   const clean = cleanPublicQuery(query);
   if (clean !== null) permanentRedirect("/tin-nhan?" + clean);
   if (typeof query.inquiry === "string" && /^[a-f0-9]{64}$/.test(query.inquiry))
-    return <InquiryChatEntry inquiryId={query.inquiry} />;
+    return <InquiryChatEntry inquiryId={query.inquiry} support={query.support === "1"} />;
   const provider =
     typeof query.provider === "string" ? internalProviderParam(query.provider) : undefined;
   const service =
@@ -34,6 +34,7 @@ async function MessagesContent({
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(query.thread)
       ? query.thread
       : undefined;
+  if (threadId && query.support === "1") return <InquiryChatEntry threadId={threadId} support />;
   return <KtvChatPage provider={provider} service={service} threadId={threadId} />;
 }
 export default function MessagesPage({

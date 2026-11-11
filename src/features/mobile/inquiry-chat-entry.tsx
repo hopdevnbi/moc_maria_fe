@@ -5,13 +5,26 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { KtvChatPage } from "./chat";
 
-export function InquiryChatEntry({ inquiryId }: { inquiryId: string }) {
+export function InquiryChatEntry({
+  inquiryId,
+  threadId,
+  support = false,
+}: {
+  inquiryId?: string;
+  threadId?: string;
+  support?: boolean;
+}) {
   const { status, user, authFetch } = useAuth();
   const client = useQueryClient();
   const entry = useQuery({
-    queryKey: ["ktv-inquiry-chat", user?.id, inquiryId],
+    queryKey: ["ktv-inquiry-chat", user?.id, inquiryId, threadId, support],
     queryFn: async () => {
-      const thread = await authFetch<{ id: string }>(`/ktv-chat/inquiries/${inquiryId}/thread`, {
+      const endpoint = support
+        ? threadId
+          ? `/ktv-chat/inquiries/support/threads/${threadId}`
+          : `/ktv-chat/inquiries/${inquiryId}/support-thread`
+        : `/ktv-chat/inquiries/${inquiryId}/thread`;
+      const thread = await authFetch<{ id: string }>(endpoint, {
         method: "POST",
         cache: "no-store",
       });
@@ -25,14 +38,23 @@ export function InquiryChatEntry({ inquiryId }: { inquiryId: string }) {
     refetchOnReconnect: false,
   });
   if (entry.data && status === "authenticated") return <KtvChatPage threadId={entry.data.id} />;
-  const returnTo = "/tin-nhan?inquiry=" + encodeURIComponent(inquiryId);
+  const returnTo =
+    "/tin-nhan?" +
+    (threadId
+      ? "thread=" + encodeURIComponent(threadId)
+      : "inquiry=" + encodeURIComponent(inquiryId || "")) +
+    (support ? "&support=1" : "");
   return (
     <main className="mobile-experience">
       <section className="ktv-chat-empty" aria-live="polite">
-        <h1>Trò chuyện với khách đặt lịch</h1>
+        <h1>{support ? "Hỗ trợ khách và KTV" : "Trò chuyện với khách đặt lịch"}</h1>
         {status === "anonymous" ? (
           <>
-            <p>Đăng nhập bằng tài khoản KTV được đặt lịch để mở đúng cuộc trò chuyện.</p>
+            <p>
+              {support
+                ? "Đăng nhập tài khoản super admin để hỗ trợ đúng cuộc trò chuyện."
+                : "Đăng nhập bằng tài khoản KTV được đặt lịch để mở đúng cuộc trò chuyện."}
+            </p>
             <Link href={"/dang-nhap?returnTo=" + encodeURIComponent(returnTo)}>
               Đăng nhập để nhắn tin
             </Link>
@@ -40,8 +62,9 @@ export function InquiryChatEntry({ inquiryId }: { inquiryId: string }) {
         ) : entry.isError ? (
           <>
             <p>
-              Chưa mở được cuộc trò chuyện. Hãy kiểm tra kết nối và dùng đúng tài khoản KTV được đặt
-              lịch.
+              {support
+                ? "Chưa mở được hỗ trợ. Hãy dùng tài khoản super admin. Hội thoại có mật khẩu riêng không mở hỗ trợ quản trị."
+                : "Chưa mở được cuộc trò chuyện. Hãy kiểm tra kết nối và dùng đúng tài khoản KTV được đặt lịch."}
             </p>
             <button onClick={() => void entry.refetch()}>Thử lại</button>
             <Link href="/lich-hen">Xem lịch hẹn của tôi</Link>

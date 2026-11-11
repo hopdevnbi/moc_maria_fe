@@ -24,12 +24,16 @@ vi.mock("next/link", () => ({
   ),
 }));
 const id = "ab".repeat(32);
-function mount() {
+function mount(support = false, threadId?: string) {
   return render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <InquiryChatEntry inquiryId={id} />
+      <InquiryChatEntry
+        inquiryId={threadId ? undefined : id}
+        support={support}
+        threadId={threadId}
+      />
     </QueryClientProvider>,
   );
 }
@@ -39,6 +43,31 @@ beforeEach(() => {
   state.fetch.mockReset().mockResolvedValue({ id: "own-thread" });
 });
 afterEach(cleanup);
+it("retains the support locator through login and opens the explicit super-admin inquiry entry", async () => {
+  state.status = "anonymous";
+  const view = mount(true);
+  expect(screen.getByRole("link", { name: "Đăng nhập để nhắn tin" })).toHaveAttribute(
+    "href",
+    "/dang-nhap?returnTo=" + encodeURIComponent("/tin-nhan?inquiry=" + id + "&support=1"),
+  );
+  expect(state.fetch).not.toHaveBeenCalled();
+  view.unmount();
+  state.status = "authenticated";
+  mount(true);
+  expect(await screen.findByTestId("thread")).toHaveTextContent("own-thread");
+  expect(state.fetch).toHaveBeenCalledWith(`/ktv-chat/inquiries/${id}/support-thread`, {
+    method: "POST",
+    cache: "no-store",
+  });
+});
+it("opens a chat alert through the exact support thread entry", async () => {
+  mount(true, "11111111-1111-4111-8111-111111111111");
+  expect(await screen.findByTestId("thread")).toBeInTheDocument();
+  expect(state.fetch).toHaveBeenCalledWith(
+    "/ktv-chat/inquiries/support/threads/11111111-1111-4111-8111-111111111111",
+    { method: "POST", cache: "no-store" },
+  );
+});
 it("preserves the exact inquiry through guest login and makes no anonymous POST", () => {
   state.status = "anonymous";
   mount();

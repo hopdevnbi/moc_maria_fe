@@ -68,11 +68,14 @@ type Thread = ChatBlockState &
     provider_application_id: string;
     provider_name?: string;
     customer_name?: string;
+    support_access?: boolean;
     updated_at: string;
     last_message?: string | null;
     unread_count?: number;
   };
 type ChatMessage = {
+  sender_name?: string;
+  sender_is_support?: boolean;
   id: string;
   thread_id: string;
   sender_user_id: string;
@@ -175,6 +178,11 @@ const ChatMessageRow = memo(function ChatMessageRow({
       <div
         className={`ktv-chat-bubble${own ? " own" : ""}${item.delivery === "sending" ? " is-sending" : ""}`}
       >
+        {item.sender_is_support && (
+          <small className="ktv-chat-delivery">
+            {item.sender_name || "Quản trị viên"} · Hỗ trợ Mộc Maria
+          </small>
+        )}
         {item.body && <p>{item.body}</p>}
         {item.image_url && !imageBroken && (
           <button
@@ -452,9 +460,11 @@ export function KtvChatPage({
   const paused =
     current?.can_send === false || !!current?.blocked_by_me || !!current?.blocked_by_other;
   const recipient = (thread: Thread) =>
-    user?.id === thread.customer_user_id
-      ? thread.provider_name || "KTV Mộc Maria"
-      : thread.customer_name || "Khách hàng";
+    thread.support_access
+      ? `${thread.customer_name || "Khách"} · ${thread.provider_name || "KTV"}`
+      : user?.id === thread.customer_user_id
+        ? thread.provider_name || "KTV Mộc Maria"
+        : thread.customer_name || "Khách hàng";
   const history = useInfiniteQuery({
     queryKey: [...key, "messages", selectedId],
     initialPageParam: undefined as string | undefined,
@@ -1346,8 +1356,10 @@ export function KtvChatPage({
                     <div>
                       <strong>{recipient(current)}</strong>
                       <small>
-                        <ShieldCheck size={12} /> Hội thoại riêng giữa bạn và{" "}
-                        {user.id === current.customer_user_id ? "KTV" : "khách hàng"}
+                        <ShieldCheck size={12} />{" "}
+                        {current.support_access
+                          ? "Hỗ trợ khách hàng và KTV"
+                          : "Hội thoại khách hàng và KTV"}
                       </small>
                     </div>
                     {user.id === current.customer_user_id && (
@@ -1421,11 +1433,19 @@ export function KtvChatPage({
                           </label>
                         )}
                       <div className="ktv-chat-block-status">
-                        <ChatBlockControls
-                          key={current.id}
-                          thread={current}
-                          name={recipient(current)}
-                        />
+                        {!current.support_access && (
+                          <ChatBlockControls
+                            key={current.id}
+                            thread={current}
+                            name={recipient(current)}
+                          />
+                        )}
+                        {current.support_access && (
+                          <p role="status">
+                            Bạn đang hỗ trợ cuộc trò chuyện dưới tên {user.displayName}. Tin nhắn sẽ
+                            hiển thị nhãn Hỗ trợ Mộc Maria.
+                          </p>
+                        )}
                         {paused ? (
                           <p>
                             {current.blocked_by_me
@@ -1442,7 +1462,7 @@ export function KtvChatPage({
                             Bạn vẫn xem được lịch sử.
                           </p>
                         ) : (
-                          <small>Quản lý chặn hội thoại</small>
+                          !current.support_access && <small>Quản lý chặn hội thoại</small>
                         )}
                       </div>
                       <div

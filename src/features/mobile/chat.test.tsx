@@ -80,6 +80,40 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it.each([false, true])(
+    "labels support messages honestly for participants and supporting admins (%s)",
+    async (support) => {
+      if (support) state.user = { id: "admin", permissions: [], roles: ["SUPER_ADMIN"] };
+      const original = state.fetch.getMockImplementation()!;
+      state.fetch.mockImplementation((path: string, init?: RequestInit) => {
+        if (path === "/ktv-chat/threads" && !init?.method)
+          return Promise.resolve([
+            { ...first, support_access: support, customer_name: "Khách QA" },
+          ]);
+        if (path.endsWith("/messages") && !init?.method)
+          return Promise.resolve([
+            {
+              id: "reply",
+              thread_id: "a",
+              sender_user_id: "admin",
+              sender_name: "Nguyễn Quản Trị",
+              sender_is_support: true,
+              body: "Mộc hỗ trợ bạn",
+              created_at: "2026-11-11T10:00:00Z",
+            },
+          ]);
+        return original(path, init);
+      });
+      mount();
+      fireEvent.click(
+        await screen.findByRole("button", { name: support ? /Khách QA · Ngọc Mai/ : /Ngọc Mai/ }),
+      );
+      expect(await screen.findByText("Nguyễn Quản Trị · Hỗ trợ Mộc Maria")).toBeInTheDocument();
+      expect(screen.getByText("Mộc hỗ trợ bạn")).toBeInTheDocument();
+      if (support)
+        expect(screen.queryByRole("button", { name: "Chặn hội thoại" })).not.toBeInTheDocument();
+    },
+  );
   it.each(["THERAPIST", "ADMIN"])("lets %s continue its own buyer thread", async (role) => {
     state.user = { id: "customer", permissions: [], roles: [role] };
     mount("demo-ktv-01", "neck");
