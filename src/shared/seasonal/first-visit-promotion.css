@@ -1,0 +1,102 @@
+.mm-first-visit {
+  box-sizing: border-box;
+  width: min(620px, calc(100vw - 24px), max(200px, calc(100vh - 132px)));
+  width: min(
+    620px,
+    calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+    max(
+      200px,
+      calc(100dvh - 132px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+    )
+  );
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  max-height: calc(
+    100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+  );
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  color: #164d30;
+  box-shadow: 0 16px 60px #102b2355;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mm-first-visit[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.mm-first-visit::backdrop {
+  background: #102c2699;
+}
+
+.mm-first-visit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  padding: 2px 6px 2px 12px;
+  gap: 6px;
+}
+
+.mm-first-visit-header h2 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.mm-first-visit-header button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #edf5eb;
+  color: #164d30;
+  cursor: pointer;
+}
+
+.mm-first-visit-poster {
+  display: block;
+  flex: none;
+  width: 100%;
+}
+
+.mm-first-visit-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.mm-first-visit-book {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: none;
+  min-height: 48px;
+  margin: 6px 8px 8px;
+  padding: 8px;
+  border-radius: 12px;
+  background: #176038;
+  color: #fff;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.mm-first-visit :is(a, button):focus-visible {
+  outline: 3px solid #b9974d;
+  outline-offset: -3px;
+}
