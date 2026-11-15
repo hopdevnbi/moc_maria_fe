@@ -86,10 +86,11 @@ describe("standalone recovery without the application bundle", () => {
     expect(document.querySelector("noscript")!.textContent).toContain("JavaScript");
   });
 
-  it("explains the minimum iOS version without identifying an account", () => {
+  it("offers core functions on old iOS without requiring an OS upgrade", () => {
     start();
     expect(document.getElementById("device-info")!.textContent).toContain("iOS 16.1.2");
-    expect(document.getElementById("ios-help")!.textContent).toContain("cũ hơn");
+    expect(document.getElementById("ios-help")!.textContent).toContain("không yêu cầu nâng cấp");
+    expect(document.querySelector('a[href="/compat/index.html"]')).not.toBeNull();
     const sections = Array.from(document.querySelectorAll("section"));
     expect(sections[0].id).toBe("browser-check");
     start({ ios: "16_4" });

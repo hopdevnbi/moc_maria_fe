@@ -2,5 +2,11 @@
   "semi": true,
   "singleQuote": false,
   "printWidth": 100,
-  "endOfLine": "auto"
+  "endOfLine": "auto",
+  "overrides": [
+    {
+      "files": ["public/compat/*.js", "public/pwa/recover.js"],
+      "options": { "trailingComma": "es5" }
+    }
+  ]
 }

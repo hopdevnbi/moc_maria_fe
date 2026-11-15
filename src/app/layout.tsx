@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Suspense, type ReactNode } from "react";
 import { Be_Vietnam_Pro, Noto_Serif } from "next/font/google";
 import { AppProviders } from "@/app/providers/AppProviders";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
+        <Script src="/compat/runtime.js" strategy="beforeInteractive" />
         {/* The compatibility marker is set before React starts on old iOS. */}
         <script
           id="moc-ios-compatibility"

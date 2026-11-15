@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#123f2b" />
+    <title>Mộc Maria · Chế độ tương thích</title>
+    <link rel="stylesheet" href="/compat/styles.css" />
+    <script src="/compat/app.js" defer></script>
+  </head>
+  <body>
+    <header><a href="/">Mộc Maria</a><span>Chế độ tương thích</span></header>
+    <main>
+      <h1>Không gian chăm sóc của bạn</h1>
+      <p>
+        Đăng nhập, tạo tài khoản và gửi yêu cầu đặt lịch trên trình duyệt cũ. KTV sẽ trao đổi để xác
+        nhận thời gian và chi phí.
+      </p>
+      <p id="session-status" role="status" aria-live="polite">
+        Đang kiểm tra phiên đăng nhập… Bạn vẫn có thể dùng các biểu mẫu bên dưới.
+      </p>
+      <nav aria-label="Điều hướng">
+        <a href="#login">Đăng nhập</a><a href="#register">Đăng ký</a><a href="#booking">Đặt lịch</a
+        ><a href="#requests">Yêu cầu của tôi</a>
+      </nav>
+      <p id="notice" role="status" aria-live="polite"></p>
+      <section id="login">
+        <h2>Đăng nhập</h2>
+        <form id="login-form" method="post">
+          <label for="identifier">Email hoặc số điện thoại</label
+          ><input
+            id="identifier"
+            name="identifier"
+            autocomplete="username"
+            required
+            maxlength="320"
+          />
+          <label for="login-password">Mật khẩu</label
+          ><input
+            id="login-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="128"
+          />
+          <button type="submit">Đăng nhập</button>
+        </form>
+      </section>
+      <section id="register">
+        <h2>Tạo tài khoản</h2>
+        <form id="register-form" method="post">
+          <label for="display-name">Họ và tên</label
+          ><input
+            id="display-name"
+            name="displayName"
+            autocomplete="name"
+            required
+            minlength="2"
+            maxlength="160"
+          />
+          <label for="email">Email (nhập email hoặc số điện thoại)</label
+          ><input id="email" name="email" type="email" autocomplete="email" maxlength="320" />
+          <label for="phone">Số điện thoại</label
+          ><input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="32" />
+          <label for="register-password">Mật khẩu</label
+          ><input
+            id="register-password"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            required
+            minlength="10"
+            maxlength="128"
+            aria-describedby="password-help"
+          />
+          <p id="password-help">Ít nhất 10 ký tự, có chữ thường, chữ hoa và chữ số.</p>
+          <button type="submit">Đăng ký</button>
+        </form>
+      </section>
+      <section id="booking">
+        <h2>Gửi yêu cầu đặt lịch</h2>
+        <p id="catalog-status" role="status">Đang tải kỹ thuật viên và dịch vụ…</p>
+        <button id="reload-catalog" type="button">Tải lại danh sách</button>
+        <form id="booking-form" method="post">
+          <label for="provider">Kỹ thuật viên</label
+          ><select id="provider" name="providerId" required>
+            <option value="">Chọn kỹ thuật viên</option>
+          </select>
+          <label for="service">Dịch vụ</label
+          ><select id="service" name="serviceId" required>
+            <option value="">Chọn dịch vụ</option>
+          </select>
+          <label for="location">Nơi phục vụ</label
+          ><select id="location" name="location">
+            <option value="AT_BRANCH">Tại cơ sở</option>
+            <option value="AT_HOME">Tại nhà</option>
+          </select>
+          <label for="address">Địa chỉ</label
+          ><input id="address" name="address" required minlength="12" maxlength="300" readonly />
+          <label for="requested-at">Thời gian mong muốn (giờ Việt Nam)</label
+          ><input id="requested-at" name="requestedAt" type="datetime-local" required />
+          <label for="notes">Ghi chú</label
+          ><textarea id="notes" name="notes" maxlength="500" rows="3"></textarea>
+          <button id="send-booking" type="submit" disabled>Đăng nhập để đặt lịch</button>
+        </form>
+      </section>
+      <section id="requests">
+        <h2>Yêu cầu của tôi</h2>
+        <button id="load-requests" type="button">Tải yêu cầu đã gửi</button>
+        <p id="requests-status" role="status"></p>
+        <div id="request-list"></div>
+      </section>
+      <button id="logout" type="button" hidden>Đăng xuất</button>
+      <p class="note">
+        Thông báo đẩy và tiện ích nâng cao phụ thuộc khả năng của thiết bị. Các thao tác ở đây dùng
+        tài khoản và dữ liệu Mộc hiện có.
+      </p>
+      <a href="/tai-khoan">Mở giao diện đầy đủ</a> ·
+      <a href="/pwa/recover.html">Khôi phục ứng dụng</a>
+      <noscript><p>Hãy bật JavaScript trong cài đặt Safari để sử dụng các biểu mẫu.</p></noscript>
+    </main>
+  </body>
+</html>

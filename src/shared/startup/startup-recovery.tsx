@@ -10,12 +10,10 @@ export function StartupRecovery() {
         <p>Bạn có thể mở công cụ khôi phục để tải lại Mộc và kiểm tra trình duyệt.</p>
       </div>
       <div className="moc-startup-old-ios">
-        <strong>Hãy cập nhật iOS để mở Mộc</strong>
-        <p>
-          Máy đang dùng iOS cũ hơn 16.4. Vào Cài đặt → Cài đặt chung → Cập nhật phần mềm, rồi mở lại
-          Mộc.
-        </p>
+        <strong>Mở Mộc trên trình duyệt của bạn</strong>
+        <p>Nếu trang vẫn đang chờ, chế độ tương thích giúp bạn đăng nhập, đăng ký và đặt lịch.</p>
       </div>
+      <a href="/compat/index.html">Dùng chế độ tương thích</a>{" "}
       <a href="/pwa/recover.html">Khôi phục ứng dụng</a>
     </aside>
   );

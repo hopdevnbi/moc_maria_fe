@@ -40,9 +40,9 @@
       : "Thiết bị đang có kết nối mạng");
   if (ios && (Number(ios[1]) < 16 || (Number(ios[1]) === 16 && Number(ios[2]) < 4))) {
     document.getElementById("intro").textContent =
-      "Phiên bản iOS trên máy này cần được cập nhật để Mộc hoạt động đầy đủ.";
+      "Bạn có thể dùng chế độ tương thích để đăng nhập, đăng ký và đặt lịch trên iOS này.";
     document.getElementById("ios-help").textContent =
-      "Phiên bản iOS này cũ hơn mức Mộc hỗ trợ (Safari 16.4). Hãy cập nhật iOS trong Cài đặt → Cài đặt chung → Cập nhật phần mềm, rồi mở lại Mộc.";
+      "Một số tiện ích mới chưa có trên trình duyệt này. Chế độ tương thích giữ các thao tác tài khoản và đặt lịch, không yêu cầu nâng cấp iOS.";
     var check = document.getElementById("browser-check");
     check.parentNode.insertBefore(check, document.getElementById("restore-controls"));
   }
@@ -108,7 +108,7 @@
               })
           );
         });
-      })
+      }),
     ]).then(finish, function () {
       complete = false;
       finish();

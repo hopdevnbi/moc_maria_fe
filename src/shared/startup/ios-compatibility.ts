@@ -1,3 +1,3 @@
 // Classic inline JavaScript: runs from the initial HTML even when the Next.js
-// bundle cannot start. No polyfills, storage access, network calls or telemetry.
-export const IOS_COMPATIBILITY_SCRIPT = `(function(){var m=/(?:CPU (?:iPhone )?OS|iPhone OS) (\\d+)[_.](\\d+)/.exec(navigator.userAgent);if(m&&(Number(m[1])<16||(Number(m[1])===16&&Number(m[2])<4))){document.documentElement.setAttribute('data-moc-old-ios','');}})();`;
+// bundle cannot start. Never clear cookies or interrupt an active form.
+export const IOS_COMPATIBILITY_SCRIPT = `(function(){var m=/(?:CPU (?:iPhone )?OS|iPhone OS) (\\d+)[_.](\\d+)/.exec(navigator.userAgent);if(m&&(Number(m[1])<16||(Number(m[1])===16&&Number(m[2])<4))){document.documentElement.setAttribute('data-moc-old-ios','');if(typeof window!=='undefined'){window.setTimeout(function(){if(document.body&&document.body.hasAttribute('data-moc-auth-settled'))return;var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;var p=window.location.pathname;var h=p==='/dang-ky'?'register':p==='/dat-lich'?'booking':p==='/lich-hen'?'requests':'login';window.location.replace('/compat/index.html#'+h);},18000);}}})();`;
