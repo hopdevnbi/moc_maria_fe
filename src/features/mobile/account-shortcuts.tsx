@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
+  Gamepad2,
   KeyRound,
   LogOut,
   MessageCircle,
@@ -67,6 +68,11 @@ export function AccountShortcuts({ technician, signingOut, onSignOut }: AccountS
           <Link href="#doi-mat-khau">
             <KeyRound size={20} aria-hidden="true" />
             <span>Đổi mật khẩu</span>
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+          <Link href="/tro-choi/tai-khoan">
+            <Gamepad2 size={20} aria-hidden="true" />
+            <span>Vòng xoay may mắn</span>
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
           <PwaInstallShortcut />

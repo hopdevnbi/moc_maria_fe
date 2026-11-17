@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleDot, Headset, MapPinCheck, X } from "lucide-react";
+import { CircleDot, Gamepad2, Headset, MapPinCheck, X } from "lucide-react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { EventSupport } from "@/features/gift-events/event-support";
@@ -102,6 +102,16 @@ function ContactMenu() {
               </span>
               <span>Check-in</span>
             </Link>
+            <Link
+              className="mm-contact-item is-game"
+              href="/tro-choi"
+              onClick={() => setPanel(null)}
+            >
+              <span className="mm-contact-icon">
+                <Gamepad2 size={24} aria-hidden="true" />
+              </span>
+              <span>Vòng xoay may mắn</span>
+            </Link>
           </div>
         </nav>
       )}
@@ -127,7 +137,7 @@ function ContactMenu() {
               ? "mm-event-support-content"
               : undefined
         }
-        title="Support · Facebook · Check-in"
+        title="Support · Facebook · Check-in · Trò chơi"
         onClick={() => setPanel((value) => (value ? null : "actions"))}
       >
         {panel ? (
@@ -135,7 +145,7 @@ function ContactMenu() {
         ) : (
           <CircleDot size={32} strokeWidth={1.5} aria-hidden="true" />
         )}
-        <span className="sr-only">Support, Facebook và Check-in</span>
+        <span className="sr-only">Support, Facebook, Check-in và Trò chơi</span>
       </button>
     </div>
   );

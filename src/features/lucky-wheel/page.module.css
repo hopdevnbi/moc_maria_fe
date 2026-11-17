@@ -1,0 +1,100 @@
+.page {
+  min-height: 100svh;
+  padding: 28px max(20px, calc((100vw - 1160px) / 2)) 110px;
+  background: radial-gradient(ellipse at 90% 0%, #dce9d5, transparent 48%), #f8f6ee;
+  color: #234b3a;
+  font-family: var(--font-wellness-sans), sans-serif;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+}
+.nav a {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 0;
+  text-decoration: none;
+  color: #234b3a;
+}
+.intro {
+  padding: 42px 0 32px;
+  max-width: 640px;
+}
+.intro > span {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #8b7445;
+}
+.intro h1 {
+  margin: 18px 0;
+  font:
+    500 clamp(32px, 4.5vw, 52px) / 1.22 var(--font-wellness-serif),
+    Georgia,
+    serif;
+  letter-spacing: -1px;
+}
+.intro em {
+  color: #9a7938;
+  font-style: normal;
+}
+.intro p {
+  max-width: 540px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #56715e;
+}
+.access {
+  border: 1px solid #d9e1d3;
+  border-radius: 24px;
+  background: #fffdf7;
+  padding: 32px;
+}
+.access h2 {
+  font-size: 22px;
+}
+.access p {
+  font-size: 14px;
+  line-height: 1.8;
+}
+.access a,
+.access button {
+  display: inline-flex;
+  margin: 12px 12px 0 0;
+  padding: 13px 18px;
+  background: #234b3a;
+  color: white;
+  border: 0;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 13px;
+}
+.page :is(a, button, input, summary):focus-visible {
+  outline: 3px solid #ae8c40;
+  outline-offset: 4px;
+}
+@media (max-width: 600px) {
+  .page {
+    padding: 16px 12px 100px;
+  }
+  .intro {
+    padding: 26px 8px 20px;
+  }
+  .intro p {
+    font-size: 13px;
+  }
+  .nav {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  .access {
+    padding: 22px;
+  }
+}
