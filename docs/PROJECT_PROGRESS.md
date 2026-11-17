@@ -1,3 +1,7 @@
+# 2026-11-17 — P19-T01 frontend RELEASED
+
+CODE: game implementation a3a5a51 on main; follow-up removes duplicate brand suffix from page metadata. TEST: GitHub Frontend Quality 44052231912 SUCCESS; 537 tests, lint/typecheck/format/build and runtime dependency audit pass. DEPLOY: first verified production dpl_B2mpdrxjvnxVz29M8cvmbdabMVpD READY, /tro-choi and /tro-choi/tai-khoan HTTP200, /api/release matches a3a5a51. Final follow-up deployment state is tracked in workspace Plan/P19_LUCKY_WHEEL.md. BUSINESS_DATA: no production fixtures or wagers. Visual browser/device acceptance remains pending because Windows browser execution and IAB attach were unavailable.
+
 # 2026-11-17 — P19-T01 lucky wheel
 
 CODE/TEST: implemented in isolated codex/lucky-wheel-20261117 worktree; see docs/LUCKY_WHEEL.md. COMMIT/DEPLOY: pending release at this entry; exact final evidence will be added after verification. BUSINESS_DATA: no production fixtures. Browser visual QA unavailable in this Windows session.
