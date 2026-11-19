@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import { menuName } from "@/shared/i18n/menu-names";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -45,6 +47,8 @@ const photoNames: Record<string, string> = {
 };
 
 function CareCard({ item, real }: { item: MenuItem; real?: ServiceItem }) {
+  const { locale, t } = useLocale();
+  const name = menuName(locale, item.name);
   const canBook = Boolean(
     real?.service.isPublished &&
       real.variants.some((v) => v.isActive && Number(v.priceVnd) === item.priceVnd),
@@ -69,7 +73,7 @@ function CareCard({ item, real }: { item: MenuItem; real?: ServiceItem }) {
                   ? photo
                   : "https://giangxa-media-cdn.b-cdn.net/moc-maria/services/photos-v1/" + photo
               }
-              alt={"Hình ảnh chăm sóc tại Mộc Maria: " + item.name}
+              alt={t("menu.photo", { name })}
               width={960}
               height={600}
               sizes="(max-width: 680px) 100vw, (max-width: 900px) 50vw, 33vw"
@@ -83,19 +87,25 @@ function CareCard({ item, real }: { item: MenuItem; real?: ServiceItem }) {
         )}
       </div>
       <div className="official-care-info">
-        <span className="official-eyebrow">CHĂM SÓC SỨC KHỎE</span>
-        <h3>{item.name}</h3>
-        <p>{item.description}</p>
+        <span className="official-eyebrow">{t("menu.careUpper")}</span>
+        <h3>{name}</h3>
+        <p>
+          {item.description === "Chăm sóc và thư giãn theo bảng giá Mộc Maria."
+            ? t("menu.careDescription")
+            : item.description === "Thức uống tươi ngon từ menu Mộc Maria."
+              ? t("menu.drinkDescription")
+              : item.description}
+        </p>
         <div className="official-care-bottom">
           <div>
-            <small>Giá niêm yết</small>
+            <small>{t("menu.price")}</small>
             <strong>{formatPrice(item.priceVnd)}</strong>
           </div>
           <Link
             className="official-cta"
             href={canBook ? bookingHref({ service: real!.service.id }) : "/chuyen-vien"}
           >
-            {canBook ? "Đặt lịch" : "Xem KTV"} <ArrowRight size={16} />
+            {canBook ? t("nav.booking") : t("menu.therapists")} <ArrowRight size={16} />
           </Link>
         </div>
       </div>
@@ -104,15 +114,20 @@ function CareCard({ item, real }: { item: MenuItem; real?: ServiceItem }) {
 }
 
 export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
+  const { locale, t } = useLocale();
   const [tab, setTab] = useState<Tab>("care");
   const [query, setQuery] = useState("");
   const search = normalize(query.trim());
   const realBySlug = useMemo(() => new Map(services.map((s) => [s.service.slug, s])), [services]);
-  const visibleCare = careMenu.filter((item) => matches(item, search));
+  const visibleCare = careMenu.filter(
+    (item) => matches(item, search) || normalize(menuName(locale, item.name)).includes(search),
+  );
   const visibleDrinks = drinkMenu
     .map((section) => ({
       ...section,
-      items: section.items.filter((item) => matches(item, search)),
+      items: section.items.filter(
+        (item) => matches(item, search) || normalize(menuName(locale, item.name)).includes(search),
+      ),
     }))
     .filter((section) => section.items.length);
   const drinkCount = visibleDrinks.reduce((total, section) => total + section.items.length, 0);
@@ -121,15 +136,15 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
   return (
     <div className="mobile-experience">
       <MobileHeader />
-      <main id="noi-dung" className="mm-main mm-container official-menu">
+      <main id="noi-dung" className="mm-main mm-container official-menu" lang={locale}>
         <header className="official-intro">
           <span className="official-eyebrow">MỘC MARIA · WELLNESS & CARE</span>
           <h1>
-            Chọn điều <em>cơ thể cần.</em>
+            {t("menu.hero1")} <em>{t("menu.hero2")}</em>
           </h1>
-          <p>Khám phá dịch vụ chăm sóc và thức uống Mộc Maria theo bảng giá chính thức.</p>
+          <p>{t("menu.intro")}</p>
         </header>
-        <div className="official-tabs" aria-label="Nhóm sản phẩm và dịch vụ">
+        <div className="official-tabs" aria-label={t("menu.tabs")}>
           <button
             type="button"
             aria-pressed={tab === "care"}
@@ -139,7 +154,7 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
               setQuery("");
             }}
           >
-            <Heart size={18} /> Dịch vụ chăm sóc <span>{careMenu.length}</span>
+            <Heart size={18} /> {t("menu.services")} <span>{careMenu.length}</span>
           </button>
           <button
             type="button"
@@ -150,33 +165,30 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
               setQuery("");
             }}
           >
-            <Coffee size={18} /> Đồ uống{" "}
+            <Coffee size={18} /> {t("menu.drinks")}{" "}
             <span>{drinkMenu.reduce((n, section) => n + section.items.length, 0)}</span>
           </button>
         </div>
         <div className="official-search">
           <Search size={19} />
           <input
-            aria-label="Tìm trong bảng giá"
-            placeholder={tab === "care" ? "Tìm dịch vụ chăm sóc..." : "Tìm trà, nước ép, detox..."}
+            aria-label={t("menu.search")}
+            placeholder={tab === "care" ? t("menu.searchCare") : t("menu.searchDrinks")}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
         </div>
         <div className="official-result-heading">
           <div>
-            <span className="official-eyebrow">BẢNG GIÁ MỘC MARIA</span>
-            <h2>{tab === "care" ? "Chăm sóc sức khỏe" : "Trà, nước ép & detox"}</h2>
+            <span className="official-eyebrow">{t("menu.title")}</span>
+            <h2>{tab === "care" ? t("menu.care") : t("menu.drinkTitle")}</h2>
           </div>
-          <span>
-            {count} {tab === "care" ? "dịch vụ" : "thức uống"}
-          </span>
+          <span>{t(tab === "care" ? "menu.serviceCount" : "menu.drinkCount", { n: count })}</span>
         </div>
         {tab === "care" ? (
           <>
             <p className="official-note">
-              <Sparkles size={16} /> Bảng giá chính thức. Đặt lịch trực tuyến chỉ khả dụng khi dịch
-              vụ đã được kích hoạt trong hệ thống.
+              <Sparkles size={16} /> {t("menu.note")}
             </p>
             <div className="official-care-grid">
               {visibleCare.map((item) => (
@@ -187,8 +199,7 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
         ) : (
           <>
             <p className="official-note">
-              <Leaf size={16} /> Đồ uống được giới thiệu riêng, không thuộc quy trình đặt lịch kỹ
-              thuật viên.
+              <Leaf size={16} /> {t("menu.drinkNote")}
             </p>
             {visibleDrinks.map((section) => (
               <section
@@ -199,8 +210,20 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
                 <div className="official-drink-heading">
                   <GlassWater size={24} />
                   <div>
-                    <h3 id={section.id}>{section.title}</h3>
-                    <p>{section.subtitle}</p>
+                    <h3 id={section.id}>
+                      {section.id === "tra-thao-moc"
+                        ? t("menu.herbal")
+                        : section.id === "nuoc-ep-tuoi"
+                          ? t("menu.juice")
+                          : section.title}
+                    </h3>
+                    <p>
+                      {section.id === "tra-thao-moc"
+                        ? "69.000đ " + t("menu.perPot")
+                        : section.id === "nuoc-ep-tuoi"
+                          ? t("menu.fresh")
+                          : t("menu.detoxSubtitle")}
+                    </p>
                   </div>
                 </div>
                 <div className="official-drink-grid">
@@ -210,12 +233,18 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
                         <Leaf size={20} />
                       </div>
                       <div>
-                        <h4>{item.name}</h4>
-                        <p>{item.description}</p>
+                        <h4>{menuName(locale, item.name)}</h4>
+                        <p>
+                          {item.description === "Chăm sóc và thư giãn theo bảng giá Mộc Maria."
+                            ? t("menu.careDescription")
+                            : item.description === "Thức uống tươi ngon từ menu Mộc Maria."
+                              ? t("menu.drinkDescription")
+                              : item.description}
+                        </p>
                       </div>
                       <strong>
                         {formatPrice(item.priceVnd)}
-                        {section.id === "tra-thao-moc" ? "/ấm" : ""}
+                        {section.id === "tra-thao-moc" ? t("menu.perPot") : ""}
                       </strong>
                     </div>
                   ))}
@@ -224,9 +253,7 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
             ))}
           </>
         )}
-        {!count && (
-          <p className="official-no-results">Không tìm thấy mục phù hợp. Hãy thử từ khóa khác.</p>
-        )}
+        {!count && <p className="official-no-results">{t("menu.empty")}</p>}
       </main>
       <MobileNavigation active="services" />
     </div>

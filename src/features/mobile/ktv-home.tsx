@@ -1,5 +1,6 @@
 "use client";
 
+import { menuName } from "@/shared/i18n/menu-names";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import { providerProfileHref } from "./provider-slugs";
 
@@ -92,7 +93,7 @@ function initials(name: string) {
 }
 
 function MassageKtvCard({ provider, offers }: { provider: Provider; offers: ServiceOffer[] }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const avatar = ktvAvatarUrl(provider.avatarUrl, provider.isDemo);
   const canBook = !provider.isDemo && provider.bookable !== false && offers.length > 0;
   return (
@@ -155,7 +156,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
             {offers.map((item) => (
               <li key={item.id}>
                 <div className="ktv-offer-info">
-                  <strong>{item.name}</strong>
+                  <strong>{menuName(locale, item.name)}</strong>
                   {item.duration != null && (
                     <span>
                       <Clock3 size={12} /> {t("home.duration", { n: item.duration })}
@@ -174,7 +175,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
                     <Link
                       href={bookingHref({ provider: provider.id, service: item.id })}
                       aria-label={t("home.bookService", {
-                        service: item.name,
+                        service: menuName(locale, item.name),
                         name: provider.publicName,
                       })}
                     >
@@ -261,7 +262,7 @@ export function KtvFirstHomepage({
         provider.publicName,
         provider.title,
         provider.serviceArea,
-        ...offers.map((offer) => offer.name),
+        ...offers.flatMap((offer) => [offer.name, menuName(locale, offer.name)]),
       ]
         .filter(Boolean)
         .join(" "),
@@ -362,7 +363,7 @@ export function KtvFirstHomepage({
                   className={serviceId === service.id ? "active" : ""}
                   onClick={() => setServiceId(service.id)}
                 >
-                  {service.name}
+                  {menuName(locale, service.name)}
                 </button>
               ))}
             </div>
