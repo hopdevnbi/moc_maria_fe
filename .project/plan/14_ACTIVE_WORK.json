@@ -571,6 +571,7 @@
     "ownedPaths":  [
                        "src/shared/i18n/**",
                            "src/app/api/locale/**",
+                           "src/app/providers/AppProviders.tsx", "src/features/mobile/mobile-navigation.tsx", "src/features/mobile/experience.tsx (header only)", "src/features/mobile/ktv-home.tsx", "src/features/auth/components/AccountNav.tsx",
                        "docs/I18N_ROADMAP.md",
                        "AGENTS.md (i18n rules only)"
                    ],

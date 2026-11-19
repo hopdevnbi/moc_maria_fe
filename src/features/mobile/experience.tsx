@@ -36,6 +36,8 @@ import { BrandLogo } from "./brand-logo";
 import { SiteReleaseUpdate } from "@/shared/release/site-release-update";
 import { useCatalogRealtime } from "./useCatalogRealtime";
 import { ktvAvatarUrl } from "./ktv-avatar";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import { LanguageSelector } from "@/shared/i18n/language-selector";
 import { MobileNavigation } from "./mobile-navigation";
 export { MobileNavigation };
 
@@ -67,6 +69,7 @@ function normalized(value: string) {
 }
 
 function MobileAccountLink() {
+  const { t } = useLocale();
   const profile = useCustomerSelfProfile();
   const vip = isActiveVip(profile.data);
   return (
@@ -74,7 +77,9 @@ function MobileAccountLink() {
       href="/tai-khoan"
       className="mm-account-mobile"
       aria-label={
-        vip ? `Tài khoản hội viên ${vipLabel(profile.data?.membership.level)}` : "Tài khoản"
+        vip
+          ? t("nav.vipAccount", { level: vipLabel(profile.data?.membership.level) })
+          : t("nav.account")
       }
     >
       {vip ? <Crown size={23} fill="currentColor" color="#b58a42" /> : <UserRound size={22} />}
@@ -83,10 +88,11 @@ function MobileAccountLink() {
 }
 
 export function MobileHeader() {
+  const { locale, t } = useLocale();
   return (
-    <header className="mm-header">
+    <header className="mm-header" lang={locale}>
       <div className="mm-container mm-header-inner">
-        <Link className="mm-logo" href="/" aria-label="Mộc Maria — trang chủ">
+        <Link className="mm-logo" href="/" aria-label={t("nav.brandHome")}>
           <span className="mm-brand-mark" aria-hidden="true">
             <BrandLogo alt="" width={65} height={65} priority />
           </span>
@@ -95,19 +101,20 @@ export function MobileHeader() {
             <small>WELLNESS LOUNGE</small>
           </span>
         </Link>
-        <nav className="mm-desktop-menu" aria-label="Điều hướng chính">
-          <Link href="/chuyen-vien">Kỹ thuật viên</Link>
-          <Link href="/dich-vu">Dịch vụ</Link>
-          <Link href="/tin-nhan">Chat KTV</Link>
-          <Link href="/tro-thanh-ktv">Trở thành KTV</Link>
-          <Link href="/hoi-vien">Hội viên</Link>
+        <nav className="mm-desktop-menu" aria-label={t("nav.main")}>
+          <Link href="/chuyen-vien">{t("nav.therapists")}</Link>
+          <Link href="/dich-vu">{t("nav.services")}</Link>
+          <Link href="/tin-nhan">{t("nav.chatKtv")}</Link>
+          <Link href="/tro-thanh-ktv">{t("nav.join")}</Link>
+          <Link href="/hoi-vien">{t("nav.members")}</Link>
           <Link href="/dat-lich" className="mm-header-booking">
-            <CalendarDays size={17} /> Đặt lịch ngay
+            <CalendarDays size={17} /> {t("nav.bookNow")}
           </Link>
         </nav>
         <div className="mm-account">
           <AccountNav />
         </div>
+        <LanguageSelector />
         <MobileAccountLink />
       </div>
       <Suspense fallback={null}>

@@ -1,7 +1,7 @@
 "use client";
-
-import { LOCALE_COOKIE, LOCALES, normalizeLocale, type Locale } from "./locale";
-import { translate } from "./messages";
+import { LOCALES, normalizeLocale, type Locale } from "./locale";
+import { useLocale } from "./locale-provider";
+import "./language-selector.css";
 
 const names: Record<Locale, string> = {
   vi: "🇻🇳 Tiếng Việt",
@@ -11,30 +11,36 @@ const names: Record<Locale, string> = {
   "zh-CN": "🇨🇳 简体中文",
   ru: "🇷🇺 Русский",
 };
-
-export function LanguageSelector({
-  locale,
-  onChange,
-}: {
-  locale: Locale;
-  onChange: (locale: Locale) => void;
-}) {
+const flags: Record<Locale, string> = {
+  vi: "🇻🇳",
+  en: "🇬🇧",
+  ko: "🇰🇷",
+  ja: "🇯🇵",
+  "zh-CN": "🇨🇳",
+  ru: "🇷🇺",
+};
+export function LanguageSelector() {
+  const { locale, enabled, setLocale, resetLocale, t } = useLocale();
+  if (!enabled) return null;
   return (
-    <label>
-      <span>{translate(locale, "language.label")}</span>
+    <label className="moc-language-selector" lang={locale}>
+      <span aria-hidden="true">
+        {flags[locale]}{" "}
+        <span className="moc-language-code">
+          {locale === "zh-CN" ? "ZH" : locale.toUpperCase()}
+        </span>{" "}
+        ▾
+      </span>
       <select
+        aria-label={t("language.label")}
         value={locale}
         onChange={(event) => {
+          if (event.target.value === "auto") {
+            resetLocale();
+            return;
+          }
           const next = normalizeLocale(event.target.value);
-          if (!next) return;
-          const secure = window.location.protocol === "https:" ? "; Secure" : "";
-          document.cookie =
-            LOCALE_COOKIE +
-            "=" +
-            encodeURIComponent(next) +
-            "; Path=/; Max-Age=31536000; SameSite=Lax" +
-            secure;
-          onChange(next);
+          if (next) setLocale(next);
         }}
       >
         {LOCALES.map((key) => (
@@ -42,6 +48,7 @@ export function LanguageSelector({
             {names[key]}
           </option>
         ))}
+        <option value="auto">{t("language.automatic")}</option>
       </select>
     </label>
   );

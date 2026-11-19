@@ -1,4 +1,6 @@
 import { type Locale } from "./locale";
+import { navMessage, type NavKey } from "./nav-messages";
+import { homeMessage, type HomeKey } from "./home-messages";
 
 const vi = {
   "language.label": "Ngôn ngữ",
@@ -9,8 +11,9 @@ const vi = {
   "common.loading": "Đang tải...",
   "common.retry": "Thử lại",
 } as const;
-export type MessageKey = keyof typeof vi;
-export const messages: Record<Locale, Record<MessageKey, string>> = {
+type CommonKey = keyof typeof vi;
+export type MessageKey = CommonKey | NavKey | HomeKey;
+export const messages: Record<Locale, Record<CommonKey, string>> = {
   vi,
   en: {
     "language.label": "Language",
@@ -59,5 +62,10 @@ export const messages: Record<Locale, Record<MessageKey, string>> = {
   },
 };
 export function translate(locale: Locale, key: MessageKey): string {
-  return messages[locale]?.[key] ?? vi[key];
+  return (
+    homeMessage(locale, key as HomeKey) ??
+    navMessage(locale, key as NavKey) ??
+    messages[locale]?.[key as CommonKey] ??
+    vi[key as CommonKey]
+  );
 }

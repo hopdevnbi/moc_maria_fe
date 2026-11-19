@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
+import { LocaleProvider } from "@/shared/i18n/locale-provider";
 import { AuthProvider } from "@/features/auth/context/AuthProvider";
 import { GlobalContactActions } from "@/shared/contact/global-contact-actions";
 import { PwaInstallAssistant } from "@/shared/pwa/pwa-install-assistant";
@@ -23,12 +24,14 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {children}
-        <GlobalContactActions />
-        <PwaInstallAssistant />
-        <ChatNotificationListener />
-      </AuthProvider>
+      <LocaleProvider>
+        <AuthProvider>
+          {children}
+          <GlobalContactActions />
+          <PwaInstallAssistant />
+          <ChatNotificationListener />
+        </AuthProvider>
+      </LocaleProvider>
     </QueryClientProvider>
   );
 }

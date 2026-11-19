@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import { Crown, LogOut, UserRound } from "lucide-react";
+import { useLocale } from "@/shared/i18n/locale-provider";
 import { useAuth } from "../hooks/useAuth";
 import { isActiveVip, useCustomerSelfProfile } from "@/features/mobile/customer-account-profile";
 import { vipLabel } from "@/features/membership/vip-level";
 
 export function AccountNav() {
+  const { t } = useLocale();
   const { status, user, logout } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -27,13 +29,13 @@ export function AccountNav() {
           href="/dang-nhap"
           className="rounded-full border border-[var(--moc-border)] bg-white/80 px-4 py-2 text-sm font-semibold text-[var(--moc-green)]"
         >
-          Đăng nhập
+          {t("auth.login")}
         </Link>
         <Link
           href="/dang-ky"
           className="rounded-full bg-[var(--moc-green)] px-4 py-2 text-sm font-semibold text-white"
         >
-          Đăng ký
+          {t("auth.register")}
         </Link>
       </div>
     );
@@ -61,7 +63,7 @@ export function AccountNav() {
         {vip && (
           <span
             className="inline-flex items-center gap-1 rounded-full bg-[#fff0c9] px-2 py-0.5 text-[10px] font-extrabold text-[#9b712b]"
-            title={`Hội viên ${vipLabel(customer.data?.membership.level)} đang hiệu lực`}
+            title={t("auth.vipActive", { level: vipLabel(customer.data?.membership.level) })}
           >
             <Crown size={12} fill="currentColor" />
             {vipLabel(customer.data?.membership.level)}
@@ -77,18 +79,19 @@ export function AccountNav() {
           try {
             await logout();
           } catch {
-            setError("Chưa đăng xuất được. Thử lại.");
+            setError("logout");
           } finally {
             setBusy(false);
           }
         }}
-        aria-label="Đăng xuất"
+        data-moc-logout
+        aria-label={t("auth.logout")}
         className="rounded-full border border-[var(--moc-border)] bg-white/85 p-2.5 text-[var(--moc-muted)]"
       >
         <LogOut size={16} />
-        <span>{busy ? "Đang thoát..." : "Đăng xuất"}</span>
+        <span>{busy ? t("auth.loggingOut") : t("auth.logout")}</span>
       </button>
-      {error && <span role="alert">{error}</span>}
+      {error && <span role="alert">{t("auth.logoutError")}</span>}
     </div>
   );
 }

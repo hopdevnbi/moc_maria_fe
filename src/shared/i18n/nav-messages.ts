@@ -1,0 +1,118 @@
+import type { Locale } from "./locale";
+const rows = [
+  ["nav.home", "KTV", "Therapists", "테라피스트", "セラピスト", "理疗师", "Мастера"],
+  ["nav.services", "Dịch vụ", "Services", "서비스", "サービス", "服务", "Услуги"],
+  ["nav.booking", "Đặt lịch", "Book", "예약", "予約", "预约", "Запись"],
+  ["nav.chat", "Chat", "Chat", "채팅", "チャット", "聊天", "Чат"],
+  ["nav.account", "Tài khoản", "Account", "계정", "アカウント", "账户", "Профиль"],
+  [
+    "nav.quick",
+    "Điều hướng nhanh",
+    "Quick navigation",
+    "빠른 메뉴",
+    "クイックナビ",
+    "快捷导航",
+    "Быстрая навигация",
+  ],
+  [
+    "nav.main",
+    "Điều hướng chính",
+    "Main navigation",
+    "주 메뉴",
+    "メインナビ",
+    "主导航",
+    "Главное меню",
+  ],
+  [
+    "nav.therapists",
+    "Kỹ thuật viên",
+    "Therapists",
+    "테라피스트",
+    "セラピスト",
+    "理疗师",
+    "Мастера",
+  ],
+  [
+    "nav.chatKtv",
+    "Chat KTV",
+    "Therapist chat",
+    "테라피스트 채팅",
+    "セラピストとチャット",
+    "联系理疗师",
+    "Чат с мастером",
+  ],
+  [
+    "nav.join",
+    "Trở thành KTV",
+    "Join our team",
+    "테라피스트 지원",
+    "スタッフ募集",
+    "加入团队",
+    "Стать мастером",
+  ],
+  ["nav.members", "Hội viên", "Membership", "회원", "会員", "会员", "Участники"],
+  ["nav.bookNow", "Đặt lịch ngay", "Book now", "지금 예약", "今すぐ予約", "立即预约", "Записаться"],
+  [
+    "nav.brandHome",
+    "Mộc Maria — trang chủ",
+    "Mộc Maria — home",
+    "Mộc Maria — 홈",
+    "Mộc Maria — ホーム",
+    "Mộc Maria — 首页",
+    "Mộc Maria — главная",
+  ],
+  [
+    "nav.vipAccount",
+    "Tài khoản hội viên {level}",
+    "{level} member account",
+    "{level} 회원 계정",
+    "{level} 会員アカウント",
+    "{level} 会员账户",
+    "Аккаунт участника {level}",
+  ],
+  ["auth.login", "Đăng nhập", "Sign in", "로그인", "ログイン", "登录", "Войти"],
+  ["auth.register", "Đăng ký", "Sign up", "회원가입", "新規登録", "注册", "Регистрация"],
+  ["auth.logout", "Đăng xuất", "Sign out", "로그아웃", "ログアウト", "退出登录", "Выйти"],
+  [
+    "auth.loggingOut",
+    "Đang thoát...",
+    "Signing out...",
+    "로그아웃 중...",
+    "ログアウト中...",
+    "正在退出...",
+    "Выход...",
+  ],
+  [
+    "auth.logoutError",
+    "Chưa đăng xuất được. Thử lại.",
+    "Unable to sign out. Try again.",
+    "로그아웃하지 못했습니다. 다시 시도하세요.",
+    "ログアウトできませんでした。再試行してください。",
+    "退出失败，请重试。",
+    "Не удалось выйти. Повторите попытку.",
+  ],
+  [
+    "auth.vipActive",
+    "Hội viên {level} đang hiệu lực",
+    "Active {level} membership",
+    "{level} 회원 이용 중",
+    "{level} 会員資格有効",
+    "{level} 会员资格有效",
+    "Активное членство {level}",
+  ],
+] as const;
+export type NavKey = (typeof rows)[number][0];
+const index: Record<Locale, 1 | 2 | 3 | 4 | 5 | 6> = {
+  vi: 1,
+  en: 2,
+  ko: 3,
+  ja: 4,
+  "zh-CN": 5,
+  ru: 6,
+};
+export function navMessage(locale: Locale, key: NavKey) {
+  const row = rows.find((r) => r[0] === key);
+  return row?.[index[locale]] ?? row?.[1];
+}
+
+export const navMessageKeys = rows.map((row) => row[0]);

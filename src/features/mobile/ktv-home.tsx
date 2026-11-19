@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "@/shared/i18n/locale-provider";
 import { providerProfileHref } from "./provider-slugs";
 
 import Image from "next/image";
@@ -91,6 +92,7 @@ function initials(name: string) {
 }
 
 function MassageKtvCard({ provider, offers }: { provider: Provider; offers: ServiceOffer[] }) {
+  const { t } = useLocale();
   const avatar = ktvAvatarUrl(provider.avatarUrl, provider.isDemo);
   const canBook = !provider.isDemo && provider.bookable !== false && offers.length > 0;
   return (
@@ -99,7 +101,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
         <Link
           href={providerProfileHref(provider)}
           className="ktv-avatar"
-          aria-label={"Xem hồ sơ " + provider.publicName}
+          aria-label={t("home.profile", { name: provider.publicName })}
         >
           {avatar ? (
             <Image
@@ -107,7 +109,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
               width={88}
               height={100}
               sizes="88px"
-              alt={provider.avatarAlt || "KTV " + provider.publicName}
+              alt={provider.avatarAlt || t("home.avatar", { name: provider.publicName })}
               unoptimized={provider.isDemo}
             />
           ) : (
@@ -117,19 +119,19 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
         <div className="ktv-identity">
           {!provider.isDemo && (
             <p className="ktv-approved">
-              <CheckCircle2 size={13} /> KTV đã xác minh
+              <CheckCircle2 size={13} /> {t("home.verified")}
             </p>
           )}
           <Link href={providerProfileHref(provider)} className="ktv-name">
             {provider.publicName}
           </Link>
-          <p className="ktv-role">{provider.title || "Kỹ thuật viên massage"}</p>
+          <p className="ktv-role">{provider.title || t("home.role")}</p>
           <ProviderRating providerId={provider.id} isDemo={provider.isDemo} />
           <div className="ktv-facts">
-            {provider.age != null && <span>{provider.age} tuổi</span>}
+            {provider.age != null && <span>{t("home.age", { n: provider.age })}</span>}
             {provider.yearsExperience != null && (
               <span>
-                <Sparkles size={13} /> {provider.yearsExperience} năm kinh nghiệm
+                <Sparkles size={13} /> {t("home.experience", { n: provider.yearsExperience })}
               </span>
             )}
             {provider.serviceArea && (
@@ -143,9 +145,9 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
 
       <div className="ktv-offers">
         <div className="ktv-offers-heading">
-          <strong>{provider.isDemo ? "Kỹ năng chăm sóc" : "Dịch vụ massage"}</strong>
+          <strong>{provider.isDemo ? t("home.skills") : t("home.massage")}</strong>
           <Link href={providerProfileHref(provider)}>
-            Tất cả <ArrowRight size={13} />
+            {t("home.all")} <ArrowRight size={13} />
           </Link>
         </div>
         {offers.length ? (
@@ -156,20 +158,25 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
                   <strong>{item.name}</strong>
                   {item.duration != null && (
                     <span>
-                      <Clock3 size={12} /> Từ {item.duration} phút
+                      <Clock3 size={12} /> {t("home.duration", { n: item.duration })}
                     </span>
                   )}
                 </div>
                 <div className="ktv-offer-end">
                   <span>
                     {item.price != null
-                      ? (provider.isDemo ? "" : "Từ ") + formatPrice(item.price)
-                      : "Liên hệ"}
+                      ? provider.isDemo
+                        ? formatPrice(item.price)
+                        : t("home.from", { price: formatPrice(item.price) })
+                      : t("home.contact")}
                   </span>
                   {canBook && (
                     <Link
                       href={bookingHref({ provider: provider.id, service: item.id })}
-                      aria-label={"Đặt " + item.name + " với " + provider.publicName}
+                      aria-label={t("home.bookService", {
+                        service: item.name,
+                        name: provider.publicName,
+                      })}
                     >
                       <ArrowRight size={15} />
                     </Link>
@@ -179,35 +186,35 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
             ))}
           </ul>
         ) : (
-          <p className="ktv-offers-empty">Chưa có dịch vụ được mở đặt lịch.</p>
+          <p className="ktv-offers-empty">{t("home.noServices")}</p>
         )}
       </div>
 
       <div className="ktv-card-actions">
         {canBook ? (
           <Link className="ktv-book-btn" href={bookingHref({ provider: provider.id })}>
-            <CalendarClock size={17} /> Đặt lịch nhanh <ArrowRight size={16} />
+            <CalendarClock size={17} /> {t("home.quickBook")} <ArrowRight size={16} />
           </Link>
         ) : provider.chatEnabled ? (
           <Link className="ktv-book-btn" href={bookingHref({ provider: provider.id })}>
-            <CalendarClock size={17} /> Yêu cầu đặt lịch <ArrowRight size={16} />
+            <CalendarClock size={17} /> {t("home.requestBook")} <ArrowRight size={16} />
           </Link>
         ) : (
           <span className="ktv-book-btn ktv-disabled">
-            <CalendarClock size={17} /> Chưa mở lịch
+            <CalendarClock size={17} /> {t("home.closed")}
           </span>
         )}
         {provider.isDemo && !provider.chatEnabled ? (
-          <span className="ktv-chat-btn ktv-demo-disabled" title="Chưa mở nhận tin nhắn">
-            <MessageCircle size={17} /> Chat
+          <span className="ktv-chat-btn ktv-demo-disabled" title={t("home.chatClosed")}>
+            <MessageCircle size={17} /> {t("nav.chat")}
           </span>
         ) : (
           <Link
             className="ktv-chat-btn"
             href={chatHref(provider.chatProviderId || provider.id)}
-            aria-label={"Chat với " + provider.publicName}
+            aria-label={t("home.chatWith", { name: provider.publicName })}
           >
-            <MessageCircle size={17} /> Chat
+            <MessageCircle size={17} /> {t("nav.chat")}
           </Link>
         )}
       </div>
@@ -221,6 +228,7 @@ export function KtvFirstHomepage({
   providersUnavailable,
   catalogUnavailable,
 }: HomeProps) {
+  const { locale, t } = useLocale();
   useCatalogRealtime();
   const [search, setSearch] = useState("");
   const [serviceId, setServiceId] = useState("");
@@ -263,34 +271,32 @@ export function KtvFirstHomepage({
   return (
     <div className="mobile-experience ktv-home">
       <MobileHeader />
-      <main className="mm-container ktv-home-main">
+      <main className="mm-container ktv-home-main" lang={locale}>
         <section className="ktv-home-top" aria-label="Mộc Maria Wellness Lounge">
           <div className="ktv-home-heading">
             <span className="ktv-kicker">
               <Leaf size={14} /> MỘC MARIA · WELLNESS LOUNGE
             </span>
             <h1>
-              Một chút an yên.
+              {t("home.hero1")}
               <br />
-              <em>Một ngày nhẹ nhàng.</em>
+              <em>{t("home.hero2")}</em>
             </h1>
-            <p>
-              Chọn dịch vụ chăm sóc phù hợp, tìm KTV bạn tin tưởng và trò chuyện trước khi đặt lịch.
-            </p>
+            <p>{t("home.intro")}</p>
             <div className="ktv-hero-actions">
               <a href="#chon-ktv" className="ktv-hero-primary">
-                Chọn KTV <ArrowRight size={17} />
+                {t("home.choose")} <ArrowRight size={17} />
               </a>
               <Link href="/dich-vu" className="ktv-hero-secondary">
-                Khám phá dịch vụ <ArrowUpRight size={17} />
+                {t("home.explore")} <ArrowUpRight size={17} />
               </Link>
             </div>
             <div className="ktv-hero-note">
               <span>
-                <Heart size={13} /> Chăm sóc theo nhu cầu
+                <Heart size={13} /> {t("home.personal")}
               </span>
               <span>
-                <MessageCircle size={13} /> Trò chuyện riêng cùng KTV
+                <MessageCircle size={13} /> {t("home.privateChat")}
               </span>
             </div>
           </div>
@@ -304,29 +310,33 @@ export function KtvFirstHomepage({
               priority
               unoptimized
             />
-            <span className="ktv-hero-brand-caption">CHẠM ĐẾN SỰ AN YÊN</span>
+            <span className="ktv-hero-brand-caption">{t("home.peace")}</span>
           </div>
         </section>
 
-        <section id="chon-ktv" className="ktv-explore" aria-label="Danh sách kỹ thuật viên massage">
+        <section id="chon-ktv" className="ktv-explore" aria-label={t("home.directory")}>
           <div className="ktv-search">
             <Search size={20} />
             <input
               type="search"
-              aria-label="Tìm KTV hoặc dịch vụ massage"
+              aria-label={t("home.searchLabel")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Tìm KTV, dịch vụ, khu vực..."
+              placeholder={t("home.search")}
             />
             {search && (
-              <button type="button" onClick={() => setSearch("")} aria-label="Xóa tìm kiếm">
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label={t("home.clearSearch")}
+              >
                 <X size={17} />
               </button>
             )}
             <button
               type="button"
               className="ktv-filter-toggle"
-              aria-label="Hiển thị bộ lọc dịch vụ"
+              aria-label={t("home.showFilters")}
               onClick={() => setShowAllFilters(!showAllFilters)}
               aria-expanded={showAllFilters}
             >
@@ -336,14 +346,14 @@ export function KtvFirstHomepage({
           {serviceFilters.length > 0 && (
             <div
               className={"ktv-filter-row" + (showAllFilters ? " show-all" : "")}
-              aria-label="Lọc theo dịch vụ"
+              aria-label={t("home.filter")}
             >
               <button
                 type="button"
                 className={!serviceId ? "active" : ""}
                 onClick={() => setServiceId("")}
               >
-                Tất cả KTV
+                {t("home.allTherapists")}
               </button>
               {serviceFilters.map((service) => (
                 <button
@@ -359,11 +369,11 @@ export function KtvFirstHomepage({
           )}
           <div className="ktv-list-head">
             <div>
-              <span className="ktv-list-overline">CHỌN NGƯỜI ĐỒNG HÀNH</span>
-              <h2>Danh sách KTV massage</h2>
+              <span className="ktv-list-overline">{t("home.companion")}</span>
+              <h2>{t("home.list")}</h2>
             </div>
             <span className="ktv-result-count">
-              <Users size={14} /> {visible.length} hồ sơ
+              <Users size={14} /> {t("home.count", { n: visible.length })}
             </span>
           </div>
           {(providersUnavailable || catalogUnavailable) && !visible.length ? (
@@ -371,14 +381,14 @@ export function KtvFirstHomepage({
               <span className="ktv-empty-icon">
                 <Users size={30} />
               </span>
-              <h3>Đang kết nối danh sách KTV</h3>
-              <p>Chưa lấy được dữ liệu KTV hoặc dịch vụ. Bạn hãy tải lại trang sau ít phút.</p>
+              <h3>{t("home.connecting")}</h3>
+              <p>{t("home.unavailable")}</p>
               <button
                 type="button"
                 onClick={() => window.location.reload()}
                 className="ktv-empty-action"
               >
-                Tải lại trang <ArrowRight size={16} />
+                {t("home.reload")} <ArrowRight size={16} />
               </button>
             </div>
           ) : visible.length ? (
@@ -396,14 +406,8 @@ export function KtvFirstHomepage({
               <span className="ktv-empty-icon">
                 <Heart size={28} />
               </span>
-              <h3>
-                {search || serviceId ? "Không tìm thấy KTV phù hợp" : "Chưa có KTV mở nhận lịch"}
-              </h3>
-              <p>
-                {search || serviceId
-                  ? "Thử tên KTV hoặc dịch vụ khác."
-                  : "Danh sách chỉ hiện KTV đã được duyệt và có thông tin công khai. Mộc đang cập nhật đội ngũ."}
-              </p>
+              <h3>{search || serviceId ? t("home.noMatch") : t("home.noOpen")}</h3>
+              <p>{search || serviceId ? t("home.tryOther") : t("home.updating")}</p>
               {search || serviceId ? (
                 <button
                   type="button"
@@ -413,11 +417,11 @@ export function KtvFirstHomepage({
                     setServiceId("");
                   }}
                 >
-                  Hiện tất cả KTV <ArrowRight size={16} />
+                  {t("home.showAll")} <ArrowRight size={16} />
                 </button>
               ) : (
                 <Link className="ktv-empty-action" href="/tro-thanh-ktv">
-                  Đăng ký trở thành KTV <ArrowRight size={16} />
+                  {t("home.join")} <ArrowRight size={16} />
                 </Link>
               )}
             </div>
@@ -425,10 +429,10 @@ export function KtvFirstHomepage({
         </section>
         <div className="ktv-home-bottom">
           <span>
-            <Users size={16} /> Tìm hiểu hồ sơ và dịch vụ trước khi chọn KTV.
+            <Users size={16} /> {t("home.learn")}
           </span>
           <Link href="/dich-vu">
-            Xem tất cả dịch vụ <ArrowRight size={15} />
+            {t("home.seeServices")} <ArrowRight size={15} />
           </Link>
         </div>
       </main>
