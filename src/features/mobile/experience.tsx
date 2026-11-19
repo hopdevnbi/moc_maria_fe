@@ -37,6 +37,7 @@ import { SiteReleaseUpdate } from "@/shared/release/site-release-update";
 import { useCatalogRealtime } from "./useCatalogRealtime";
 import { ktvAvatarUrl } from "./ktv-avatar";
 import { useLocale } from "@/shared/i18n/locale-provider";
+import { providerTitle } from "@/shared/i18n/provider-titles";
 import { LanguageSelector } from "@/shared/i18n/language-selector";
 import { MobileNavigation } from "./mobile-navigation";
 export { MobileNavigation };
@@ -125,6 +126,7 @@ export function MobileHeader() {
 }
 
 export function ProviderTile({ provider }: { provider: Provider }) {
+  const { locale, t } = useLocale();
   const safeAvatar = ktvAvatarUrl(provider.avatarUrl, provider.isDemo);
   return (
     <article className="mm-provider-card">
@@ -149,7 +151,9 @@ export function ProviderTile({ provider }: { provider: Provider }) {
             <CheckCircle2 size={13} /> Hồ sơ được phê duyệt
           </span>
           <h3>{provider.publicName}</h3>
-          <p className="mm-provider-title">{provider.title || "Kỹ thuật viên chăm sóc"}</p>
+          <p className="mm-provider-title">
+            {providerTitle(locale, provider.title) || t("home.role")}
+          </p>
           <div className="mm-provider-facts">
             {provider.yearsExperience != null && (
               <span>

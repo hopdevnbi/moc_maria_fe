@@ -5,12 +5,21 @@ import providers from "./demo-ktvs.json";
 import { careMenu } from "./official-menu";
 import { officialDemoKtvOffers } from "./official-ktv-offers";
 import { formatPrice } from "@/features/marketplace/format";
+import { LocaleProvider } from "@/shared/i18n/locale-provider";
+import { LanguageSelector } from "@/shared/i18n/language-selector";
+import { officialKtvProfiles } from "./official-ktv-roster";
+import { ownerProvidedKtvProfiles } from "./owner-provided-ktvs";
+import { LOCALES } from "@/shared/i18n/locale";
+import { providerTitle } from "@/shared/i18n/provider-titles";
 
 vi.mock("./experience", () => ({ MobileHeader: () => null, MobileNavigation: () => null }));
 vi.mock("./useCatalogRealtime", () => ({ useCatalogRealtime: () => undefined }));
 vi.mock("@/features/provider-reviews/reviews", () => ({ ProviderRating: () => null }));
 vi.mock("next/image", () => ({ default: () => null }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  document.cookie = "moc_locale=; Path=/; Max-Age=0";
+});
 function mount() {
   return render(
     <KtvFirstHomepage
@@ -23,6 +32,33 @@ function mount() {
 }
 
 describe("KTV cards and service filters", () => {
+  it.each(LOCALES)(
+    "localizes all eight KTV specialties in %s without changing names",
+    async (locale) => {
+      document.cookie = "moc_locale=" + locale + "; Path=/";
+      const roster = [...officialKtvProfiles(providers), ...ownerProvidedKtvProfiles];
+      const { container } = render(
+        <LocaleProvider enabled>
+          <LanguageSelector />
+          <KtvFirstHomepage
+            providers={roster}
+            services={[]}
+            providersUnavailable={false}
+            catalogUnavailable={false}
+          />
+        </LocaleProvider>,
+      );
+      await screen.findByText(providerTitle(locale, roster[0].title));
+      const cards = container.querySelectorAll<HTMLElement>(".ktv-card");
+      expect(cards).toHaveLength(8);
+      roster.forEach((p, index) => {
+        expect(within(cards[index]).getByText(p.publicName)).toBeInTheDocument();
+        expect(cards[index].querySelector(".ktv-role")?.textContent).toBe(
+          providerTitle(locale, p.title),
+        );
+      });
+    },
+  );
   it("shows every assigned service and its menu price, including fourth and fifth rows", () => {
     const { container } = mount();
     const cards = container.querySelectorAll(".ktv-card");

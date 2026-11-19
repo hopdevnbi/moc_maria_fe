@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import { menuName } from "@/shared/i18n/menu-names";
+import { providerTitle } from "@/shared/i18n/provider-titles";
 import { useShowcaseTranslation } from "@/shared/i18n/use-showcase-translation";
 import { useCatalogTranslations } from "@/shared/i18n/use-catalog-translation";
 import Link from "next/link";
@@ -196,7 +197,9 @@ export function KtvPublicDetail({
               </div>
             )}
             <p className="ktv-showcase-profession">
-              {translation?.headline || showcase.headline || provider.title || t("profile.role")}
+              {translation?.headline ||
+                providerTitle(locale, showcase.headline || provider.title) ||
+                t("profile.role")}
             </p>
             <div className="ktv-showcase-facts">
               {provider.serviceArea && (

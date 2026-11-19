@@ -1,6 +1,7 @@
 "use client";
 
 import { menuName } from "@/shared/i18n/menu-names";
+import { providerTitle } from "@/shared/i18n/provider-titles";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import { providerProfileHref } from "./provider-slugs";
 
@@ -126,7 +127,7 @@ function MassageKtvCard({ provider, offers }: { provider: Provider; offers: Serv
           <Link href={providerProfileHref(provider)} className="ktv-name">
             {provider.publicName}
           </Link>
-          <p className="ktv-role">{provider.title || t("home.role")}</p>
+          <p className="ktv-role">{providerTitle(locale, provider.title) || t("home.role")}</p>
           <ProviderRating providerId={provider.id} isDemo={provider.isDemo} />
           <div className="ktv-facts">
             {provider.age != null && <span>{t("home.age", { n: provider.age })}</span>}
@@ -261,6 +262,7 @@ export function KtvFirstHomepage({
       [
         provider.publicName,
         provider.title,
+        providerTitle(locale, provider.title),
         provider.serviceArea,
         ...offers.flatMap((offer) => [offer.name, menuName(locale, offer.name)]),
       ]

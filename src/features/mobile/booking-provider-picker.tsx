@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { Check, MapPin, Search, UserRound, X } from "lucide-react";
 import type { Provider } from "@/features/marketplace/types";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import { providerTitle } from "@/shared/i18n/provider-titles";
 import "./booking-provider-picker.css";
 
 export function BookingProviderPicker({
@@ -22,6 +24,7 @@ export function BookingProviderPicker({
   onQuery: (query: string) => void;
   showSearch: boolean;
 }) {
+  const { locale, t } = useLocale();
   return (
     <div className="mm-care-picker">
       {showSearch && (
@@ -73,7 +76,7 @@ export function BookingProviderPicker({
               <span className="mm-care-picker-info">
                 <strong>{provider.publicName}</strong>
                 <span className="mm-care-picker-specialty">
-                  {provider.title || "Kỹ thuật viên Mộc Maria"}
+                  {providerTitle(locale, provider.title) || t("home.role")}
                 </span>
                 <span className="mm-care-picker-area">
                   <MapPin size={12} aria-hidden="true" /> {provider.serviceArea || "Hà Nội"}

@@ -2,6 +2,7 @@
 import { DEFAULT_BOOKING_NOTE } from "@/shared/booking/inquiry-status";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import { menuName } from "@/shared/i18n/menu-names";
+import { providerTitle } from "@/shared/i18n/provider-titles";
 import { useCatalogTranslations } from "@/shared/i18n/use-catalog-translation";
 
 import Link from "next/link";
@@ -495,7 +496,7 @@ export function BookingWizard({
                         <small>
                           {provider.yearsExperience != null
                             ? t("home.experience", { n: provider.yearsExperience })
-                            : provider.title || t("nav.therapists")}
+                            : providerTitle(locale, provider.title) || t("nav.therapists")}
                         </small>
                       </span>
                       {providerId === provider.id && <CheckCircle2 size={16} />}
