@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { publicProviderDirectory } from "@/features/mobile/data";
 import { KtvFirstHomepage } from "@/features/mobile/ktv-home";
@@ -22,8 +22,8 @@ export default function ProvidersPage() {
       fallback={
         <PublicPageLoading
           page="providers"
-          title="Tìm người đồng hành cùng bạn"
-          description="Đang tải danh sách kỹ thuật viên và thông tin dịch vụ mới nhất."
+          titleKey="loading.directory"
+          descriptionKey="loading.directoryDesc"
         />
       }
     >

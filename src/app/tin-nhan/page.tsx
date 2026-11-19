@@ -45,11 +45,7 @@ export default function MessagesPage({
   return (
     <Suspense
       fallback={
-        <PublicPageLoading
-          page="chat"
-          title="Đang mở không gian trò chuyện"
-          description="Chuẩn bị hội thoại riêng giữa bạn và kỹ thuật viên."
-        />
+        <PublicPageLoading page="chat" titleKey="loading.chat" descriptionKey="loading.chatDesc" />
       }
     >
       <MessagesContent searchParams={searchParams} />

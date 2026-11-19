@@ -6,6 +6,7 @@ import { detailMessage, type DetailKey } from "./detail-messages";
 import { editorMessage, type EditorKey } from "./editor-messages";
 import { workspaceMessage, type WorkspaceKey } from "./workspace-messages";
 import { accountAdminMessage, type AccountAdminKey } from "./account-admin-messages";
+import { loadingMessage, type LoadingKey } from "./loading-messages";
 
 const vi = {
   "language.label": "Ngôn ngữ",
@@ -25,7 +26,8 @@ export type MessageKey =
   | DetailKey
   | EditorKey
   | WorkspaceKey
-  | AccountAdminKey;
+  | AccountAdminKey
+  | LoadingKey;
 export const messages: Record<Locale, Record<CommonKey, string>> = {
   vi,
   en: {
@@ -76,6 +78,7 @@ export const messages: Record<Locale, Record<CommonKey, string>> = {
 };
 export function translate(locale: Locale, key: MessageKey): string {
   return (
+    loadingMessage(locale, key as LoadingKey) ??
     workspaceMessage(locale, key as WorkspaceKey) ??
     accountAdminMessage(locale, key as AccountAdminKey) ??
     editorMessage(locale, key as EditorKey) ??

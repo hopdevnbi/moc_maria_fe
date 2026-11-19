@@ -1085,8 +1085,8 @@ export function KtvChatPage({
         </div>
         {status === "loading" ? (
           <LoadingState
-            title="Đang mở không gian trò chuyện"
-            description="Mộc đang kiểm tra tài khoản và chuẩn bị hội thoại của bạn."
+            titleKey="loading.chat"
+            descriptionKey="loading.chatAccountDesc"
             shape="messages"
           />
         ) : !user ? (
@@ -1175,7 +1175,12 @@ export function KtvChatPage({
               )}
               <div className="ktv-chat-contacts">
                 {threads.isPending ? (
-                  <LoadingState compact title="Đang tải hội thoại…" description="" shape="list" />
+                  <LoadingState
+                    compact
+                    titleKey="loading.conversations"
+                    description=""
+                    shape="list"
+                  />
                 ) : showDirectory && canStartChat ? (
                   <>
                     <p className="ktv-chat-list-note">
@@ -1186,7 +1191,7 @@ export function KtvChatPage({
                     {directory.isPending ? (
                       <LoadingState
                         compact
-                        title="Đang tìm KTV của bạn…"
+                        titleKey="loading.findKtv"
                         description=""
                         shape="list"
                       />
@@ -1319,8 +1324,9 @@ export function KtvChatPage({
                     <ArrowLeft size={22} />
                   </button>
                   <LoadingState
-                    title={`Đang mở trò chuyện với ${openingProvider.name}`}
-                    description="Chuẩn bị hội thoại riêng của bạn…"
+                    titleKey="loading.chatWith"
+                    values={{ name: openingProvider.name }}
+                    descriptionKey="loading.privateChatDesc"
                     shape="messages"
                   />
                 </div>
@@ -1497,7 +1503,7 @@ export function KtvChatPage({
                             }}
                           >
                             {history.isFetchingNextPage ? (
-                              <PendingLabel>Đang tải tin nhắn trước…</PendingLabel>
+                              <PendingLabel message="loading.olderMessages" />
                             ) : (
                               "Xem tin nhắn trước"
                             )}
@@ -1506,8 +1512,8 @@ export function KtvChatPage({
                         {history.isPending ? (
                           <LoadingState
                             compact
-                            title="Đang tải tin nhắn…"
-                            description="Chuẩn bị lịch sử trò chuyện của bạn."
+                            titleKey="loading.messages"
+                            descriptionKey="loading.messagesDesc"
                             shape="messages"
                           />
                         ) : messages.length ? (

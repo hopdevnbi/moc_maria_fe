@@ -2,22 +2,21 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import type { LoadingKey } from "@/shared/i18n/loading-messages";
 import "./loading.css";
 
 type LoadingShape = "cards" | "list" | "messages" | "form" | "none";
 
 function SlowConnectionHint() {
+  const { t } = useLocale();
   const [slow, setSlow] = useState(false);
   useEffect(() => {
     const timer = window.setTimeout(() => setSlow(true), 8_000);
     return () => window.clearTimeout(timer);
   }, []);
   return (
-    <span className="moc-loading-patience">
-      {slow
-        ? "Kết nối đang chậm hơn thường lệ. Bạn có thể tiếp tục chờ hoặc thử tải lại trang."
-        : "Mộc chăm chút từng trải nghiệm của bạn."}
-    </span>
+    <span className="moc-loading-patience">{slow ? t("loading.slow") : t("loading.patience")}</span>
   );
 }
 
@@ -60,23 +59,31 @@ export function LoadingSkeleton({ shape = "cards" }: { shape?: LoadingShape }) {
 }
 
 export function LoadingState({
-  title = "Mộc đang chuẩn bị cho bạn",
-  description = "Đang tải thông tin mới nhất từ Mộc Maria.",
+  title,
+  description,
+  titleKey = "loading.default",
+  descriptionKey = "loading.defaultDesc",
+  values,
   shape = "none",
   compact = false,
 }: {
   title?: string;
   description?: string;
+  titleKey?: LoadingKey;
+  descriptionKey?: LoadingKey;
+  values?: Record<string, string | number>;
   shape?: LoadingShape;
   compact?: boolean;
 }) {
+  const { locale, t } = useLocale();
+  const resolvedDescription = description ?? t(descriptionKey, values);
   return (
-    <div className={`moc-loading${compact ? " moc-loading-compact" : ""}`}>
+    <div className={`moc-loading${compact ? " moc-loading-compact" : ""}`} lang={locale}>
       <div className="moc-loading-status" role="status" aria-live="polite" aria-atomic="true">
         <LoadingMark />
         <span className="moc-loading-eyebrow">MỘC MARIA · WELLNESS LOUNGE</span>
-        <p className="moc-loading-title">{title}</p>
-        {description && <p className="moc-loading-description">{description}</p>}
+        <p className="moc-loading-title">{title ?? t(titleKey, values)}</p>
+        {resolvedDescription && <p className="moc-loading-description">{resolvedDescription}</p>}
         <span className="moc-loading-track" aria-hidden="true">
           <i />
         </span>
@@ -88,11 +95,18 @@ export function LoadingState({
 }
 
 // Background reads leave the current content and controls available.
-export function RefreshNotice({ label = "Đang cập nhật thông tin mới nhất…" }: { label?: string }) {
+export function RefreshNotice({
+  label,
+  labelKey = "loading.refresh",
+}: {
+  label?: string;
+  labelKey?: LoadingKey;
+}) {
+  const { locale, t } = useLocale();
   return (
-    <div className="moc-loading-refresh" role="status" aria-live="polite">
+    <div className="moc-loading-refresh" role="status" aria-live="polite" lang={locale}>
       <LoadingMark small />
-      <span>{label}</span>
+      <span>{label ?? t(labelKey)}</span>
       <span className="moc-loading-dots" aria-hidden="true">
         <i />
         <i />
@@ -102,11 +116,18 @@ export function RefreshNotice({ label = "Đang cập nhật thông tin mới nh�
   );
 }
 
-export function PendingLabel({ children }: { children: React.ReactNode }) {
+export function PendingLabel({
+  children,
+  message,
+}: {
+  children?: React.ReactNode;
+  message?: LoadingKey;
+}) {
+  const { locale, t } = useLocale();
   return (
-    <span className="moc-loading-action">
+    <span className="moc-loading-action" lang={locale}>
       <span className="moc-loading-action-ring" aria-hidden="true" />
-      {children}
+      {message ? t(message) : children}
     </span>
   );
 }

@@ -22,8 +22,8 @@ export default function ServicesPage() {
       fallback={
         <PublicPageLoading
           page="services"
-          title="Chọn một khoảng nghỉ cho mình"
-          description="Đang cập nhật dịch vụ, thời lượng và bảng giá của Mộc Maria."
+          titleKey="loading.services"
+          descriptionKey="loading.servicesDesc"
         />
       }
     >

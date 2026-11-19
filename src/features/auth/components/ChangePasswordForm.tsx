@@ -78,7 +78,7 @@ export function ChangePasswordForm() {
         disabled={state === "saving"}
         className="rounded-xl bg-[var(--moc-green)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
       >
-        {state === "saving" ? <PendingLabel>Đang lưu…</PendingLabel> : "Đổi mật khẩu"}
+        {state === "saving" ? <PendingLabel message="loading.saving" /> : "Đổi mật khẩu"}
       </button>
     </form>
   );

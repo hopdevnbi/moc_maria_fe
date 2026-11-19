@@ -21,7 +21,7 @@ async function EventConsoleEntry({ searchParams }: EventPageProps) {
 export default function EventsAdminPage({ searchParams }: EventPageProps) {
   return (
     <AdminShell title="Sự kiện & quà tặng." permission="admin.portal">
-      <Suspense fallback={<LoadingState compact title="Đang mở quản trị sự kiện…" shape="list" />}>
+      <Suspense fallback={<LoadingState compact titleKey="loading.events" shape="list" />}>
         <EventConsoleEntry searchParams={searchParams} />
       </Suspense>
     </AdminShell>

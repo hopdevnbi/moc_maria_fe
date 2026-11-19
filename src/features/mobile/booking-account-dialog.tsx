@@ -359,15 +359,17 @@ export function BookingAccountDialog({
               disabled={busy || (!!gift && !gift.accepted)}
             >
               {busy ? (
-                <PendingLabel>
-                  {sending
-                    ? gift
-                      ? "Đang kiểm tra và mở quà…"
-                      : "Đang gửi yêu cầu…"
-                    : mode === "register"
-                      ? "Đang tạo tài khoản…"
-                      : "Đang đăng nhập…"}
-                </PendingLabel>
+                <PendingLabel
+                  message={
+                    sending
+                      ? gift
+                        ? "loading.gift"
+                        : "loading.sending"
+                      : mode === "register"
+                        ? "loading.register"
+                        : "loading.signIn"
+                  }
+                />
               ) : (
                 <>
                   {gift

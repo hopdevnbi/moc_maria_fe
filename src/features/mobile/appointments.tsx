@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -130,8 +130,8 @@ export default function AppointmentsPage() {
         {status === "authenticated" && user && <AppointmentInquiries onlySent />}
         {status === "loading" ? (
           <LoadingState
-            title="Đang mở lịch hẹn của bạn"
-            description="Mộc đang kiểm tra tài khoản của bạn."
+            titleKey="loading.appointments"
+            descriptionKey="loading.accountDesc"
             shape="list"
           />
         ) : !user ? (
@@ -159,11 +159,13 @@ export default function AppointmentsPage() {
                 {error}
               </p>
             )}
-            {loading && items.length > 0 && <RefreshNotice label="Đang cập nhật lịch hẹn…" />}
+            {loading && items.length > 0 && (
+              <RefreshNotice labelKey="loading.refreshAppointments" />
+            )}
             {loading && items.length === 0 ? (
               <LoadingState
-                title="Đang tải lịch hẹn…"
-                description="Chuẩn bị thông tin yêu cầu và lịch chăm sóc của bạn."
+                titleKey="loading.appointmentsList"
+                descriptionKey="loading.appointmentsDesc"
                 shape="list"
               />
             ) : items.length === 0 ? (

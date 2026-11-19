@@ -71,8 +71,8 @@ export default function BookingPage({
       fallback={
         <PublicPageLoading
           page="booking"
-          title="Chuẩn bị lịch chăm sóc của bạn"
-          description="Đang tải dịch vụ và kỹ thuật viên để bạn lựa chọn."
+          titleKey="loading.booking"
+          descriptionKey="loading.bookingDesc"
         />
       }
     >

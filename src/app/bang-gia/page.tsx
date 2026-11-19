@@ -15,7 +15,7 @@ export default function PricePage() {
       eyebrow="BẢNG GIÁ MỘC MARIA"
       description="Các mức giá được công bố trực tiếp từ danh mục dịch vụ. Mọi phụ phí cần được bạn chấp thuận trước khi xác nhận lịch."
     >
-      <Suspense fallback={<LoadingState title="Đang chuẩn bị bảng giá" shape="list" />}>
+      <Suspense fallback={<LoadingState titleKey="loading.prices" shape="list" />}>
         <PriceResults />
       </Suspense>
     </MarketShell>

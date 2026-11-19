@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
+import { LocalizedText } from "@/shared/i18n/localized-text";
 import { LoadingState } from "@/shared/loading/loading-state";
 
 export function RequireAuth({
@@ -34,17 +35,13 @@ export function RequireAuth({
   if (status === "loading") {
     return (
       <div className="mx-auto max-w-3xl px-6 py-20">
-        <LoadingState
-          title="Đang mở không gian của bạn"
-          description="Mộc đang kiểm tra phiên đăng nhập của bạn."
-          shape="form"
-        />
+        <LoadingState titleKey="loading.auth" descriptionKey="loading.authDesc" shape="form" />
         <p className="mt-5 text-center text-sm">
           <a
             href={"/pwa/recover.html?returnTo=" + encodeURIComponent(pathname)}
             className="inline-block min-h-12 px-4 py-3 underline"
           >
-            Trang tải quá lâu? Mở công cụ khôi phục
+            <LocalizedText message="loading.recover" />
           </a>
         </p>
       </div>

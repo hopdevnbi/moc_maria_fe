@@ -17,12 +17,7 @@ async function HomeContent() {
 export default function HomePage() {
   return (
     <Suspense
-      fallback={
-        <PublicPageLoading
-          title="Một chút an yên, đang đến"
-          description="Mộc đang chuẩn bị danh sách KTV và dịch vụ dành cho bạn."
-        />
-      }
+      fallback={<PublicPageLoading titleKey="loading.home" descriptionKey="loading.homeDesc" />}
     >
       <HomeContent />
     </Suspense>

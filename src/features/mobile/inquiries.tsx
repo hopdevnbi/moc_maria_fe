@@ -85,11 +85,9 @@ export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean 
         </button>
       </div>
       {notice && <p role="alert">{notice}</p>}
-      {loading && visibleItems.length > 0 && (
-        <RefreshNotice label="Đang cập nhật yêu cầu đặt lịch…" />
-      )}
+      {loading && visibleItems.length > 0 && <RefreshNotice labelKey="loading.refreshRequests" />}
       {loading && visibleItems.length === 0 ? (
-        <LoadingState compact title="Đang tải yêu cầu đặt lịch…" description="" shape="list" />
+        <LoadingState compact titleKey="loading.requests" description="" shape="list" />
       ) : !visibleItems.length ? (
         <p>Bạn chưa có yêu cầu đặt lịch nào.</p>
       ) : (

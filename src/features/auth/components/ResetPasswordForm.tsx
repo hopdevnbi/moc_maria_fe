@@ -72,7 +72,7 @@ export function ResetPasswordForm() {
         disabled={state === "saving"}
         className="min-h-12 w-full rounded-2xl bg-[var(--moc-green)] px-5 font-semibold text-white disabled:opacity-60"
       >
-        {state === "saving" ? <PendingLabel>Đang lưu…</PendingLabel> : "Đặt lại mật khẩu"}
+        {state === "saving" ? <PendingLabel message="loading.saving" /> : "Đặt lại mật khẩu"}
       </button>
     </form>
   );

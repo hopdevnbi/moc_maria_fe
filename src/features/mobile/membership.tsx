@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import {
@@ -33,7 +33,7 @@ export default function MembershipPage() {
           </p>
           <div className="mm-members-hero-actions">
             {status === "loading" ? (
-              <RefreshNotice label="Đang kiểm tra tài khoản…" />
+              <RefreshNotice labelKey="loading.checkAccount" />
             ) : user ? (
               <Link className="mm-primary-cta" href="/tai-khoan">
                 Quản lý tài khoản <ArrowRight size={17} />

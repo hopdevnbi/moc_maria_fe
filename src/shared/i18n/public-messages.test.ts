@@ -8,6 +8,7 @@ import { detailMessageKeys } from "./detail-messages";
 import { editorMessageKeys } from "./editor-messages";
 import { workspaceMessageKeys } from "./workspace-messages";
 import { accountAdminMessageKeys } from "./account-admin-messages";
+import { loadingMessageKeys } from "./loading-messages";
 
 describe("public message completeness", () => {
   it("provides all six translations with matching interpolation parameters", () => {
@@ -20,6 +21,7 @@ describe("public message completeness", () => {
       ...editorMessageKeys,
       ...workspaceMessageKeys,
       ...accountAdminMessageKeys,
+      ...loadingMessageKeys,
     ]) {
       const source = translate("vi", key);
       for (const locale of LOCALES) {
