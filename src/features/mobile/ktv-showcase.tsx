@@ -2,6 +2,8 @@
 import Image from "next/image";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import { menuName } from "@/shared/i18n/menu-names";
+import { useShowcaseTranslation } from "@/shared/i18n/use-showcase-translation";
+import { useCatalogTranslations } from "@/shared/i18n/use-catalog-translation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -133,6 +135,11 @@ export function KtvPublicDetail({
   const avatar = publicAvatar(provider.avatarUrl);
   const name = provider.publicName;
   const mainBooking = bookingHref({ provider: profileId });
+  const translation = useShowcaseTranslation(profileId, !introductionOnly && showcase.version > 0);
+  const services = useCatalogTranslations(
+    "service",
+    offers.flatMap((offer) => (offer.bookingServiceId ? [offer.bookingServiceId] : [])),
+  );
 
   return (
     <div className="mobile-experience ktv-showcase-page">
@@ -189,7 +196,7 @@ export function KtvPublicDetail({
               </div>
             )}
             <p className="ktv-showcase-profession">
-              {showcase.headline || provider.title || t("profile.role")}
+              {translation?.headline || showcase.headline || provider.title || t("profile.role")}
             </p>
             <div className="ktv-showcase-facts">
               {provider.serviceArea && (
@@ -212,7 +219,10 @@ export function KtvPublicDetail({
               )}
             </div>
             <p className="ktv-showcase-intro">
-              {showcase.biography || provider.introduction || t("profile.intro")}
+              {translation?.biography ||
+                showcase.biography ||
+                provider.introduction ||
+                t("profile.intro")}
             </p>
             <div className="ktv-showcase-actions">
               {introductionOnly ? (
@@ -274,7 +284,13 @@ export function KtvPublicDetail({
         )}
 
         <div className="ktv-showcase-lower-grid">
-          <ScheduleSection showcase={showcase} canChat={canChat} />
+          <ScheduleSection
+            showcase={{
+              ...showcase,
+              scheduleNote: translation?.scheduleNote || showcase.scheduleNote,
+            }}
+            canChat={canChat}
+          />
           <aside className="ktv-showcase-aside">
             <span className="ktv-showcase-aside-icon">
               <HeartHandshake size={26} strokeWidth={1.4} />
@@ -310,7 +326,9 @@ export function KtvPublicDetail({
                   </span>
                   <div className="ktv-showcase-service-copy">
                     <span className="ktv-showcase-service-label">{t("profile.relax")}</span>
-                    <h3>{menuName(locale, offer.name)}</h3>
+                    <h3>
+                      {services[offer.bookingServiceId ?? ""]?.name ?? menuName(locale, offer.name)}
+                    </h3>
                     {offer.branchName && (
                       <p>
                         <MapPin size={13} /> {offer.branchName}

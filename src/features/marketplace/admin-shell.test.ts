@@ -17,6 +17,7 @@ describe("Admin sidebar RBAC navigation", () => {
       "/quan-tri/ktv",
       "/quan-tri/danh-gia-ktv",
       "/quan-tri/dich-vu",
+      "/quan-tri/da-ngon-ngu",
       "/quan-tri/su-kien",
       "/quan-tri/co-so",
       "/quan-tri/cham-cong",

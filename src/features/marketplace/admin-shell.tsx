@@ -15,6 +15,7 @@ import {
   Gift,
   Headset,
   LayoutDashboard,
+  Languages,
   LockKeyhole,
   Menu,
   Settings2,
@@ -29,6 +30,9 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { AdminUserLink } from "./admin-user-link";
+import { LanguageSelector } from "@/shared/i18n/language-selector";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import type { MessageKey } from "@/shared/i18n/messages";
 import "@/app/home.css";
 import "./marketplace.css";
 import "./admin-workspace.css";
@@ -43,6 +47,27 @@ type AdminNavItem = {
   description?: string;
 };
 type AdminNavGroup = { label: string; items: AdminNavItem[] };
+const adminLabels: Record<string, MessageKey> = {
+  "TRUNG TÂM ĐIỀU HÀNH": "admin.control",
+  "Tổng quan": "admin.overview",
+  "HOẠT ĐỘNG KINH DOANH": "admin.business",
+  "Lịch đặt & yêu cầu": "admin.appointments",
+  "Kỹ thuật viên": "admin.therapists",
+  "Đánh giá KTV": "admin.reviews",
+  "Dịch vụ & bảng giá": "admin.catalog",
+  "Quản lý bản dịch": "editor.title",
+  "Sự kiện & mở hộp quà": "admin.events",
+  "Cơ sở & vận hành": "admin.branches",
+  "Chấm công & Coin": "admin.attendance",
+  "KHÁCH HÀNG & HỘI VIÊN": "admin.customersGroup",
+  "Khách hàng": "admin.customers",
+  "Hội viên VIP": "admin.vip",
+  "HỆ THỐNG": "admin.system",
+  "Email thông báo": "admin.email",
+  "Hồ sơ cá nhân": "admin.profile",
+  "Phân quyền & cấu hình": "admin.permissions",
+  "Quản trị": "admin.management",
+};
 
 export const adminNavGroups: AdminNavGroup[] = [
   {
@@ -76,6 +101,13 @@ export const adminNavGroups: AdminNavGroup[] = [
         icon: Sparkles,
         href: "/quan-tri/dich-vu",
         permission: "staff.manage",
+      },
+      {
+        label: "Quản lý bản dịch",
+        icon: Languages,
+        href: "/quan-tri/da-ngon-ngu",
+        permission: "staff.manage",
+        superOnly: true,
       },
       {
         label: "Sự kiện & mở hộp quà",
@@ -177,11 +209,13 @@ function SidebarMenu({
   pathname: string;
   onNavigate?: () => void;
 }) {
+  const { t } = useLocale();
+  const labelFor = (label: string) => (adminLabels[label] ? t(adminLabels[label]) : label);
   return (
     <nav className="mm-admin-nav" aria-label="Danh mục quản trị">
       {groups.map((group) => (
         <div className="mm-admin-nav-group" key={group.label}>
-          <p className="mm-admin-nav-group-label">{group.label}</p>
+          <p className="mm-admin-nav-group-label">{labelFor(group.label)}</p>
           <div className="mm-admin-nav-items">
             {group.items.map(({ label, icon: Icon, href, description }) =>
               href ? (
@@ -195,7 +229,7 @@ function SidebarMenu({
                   aria-current={isActivePath(pathname, href) ? "page" : undefined}
                 >
                   <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
-                  <span>{label}</span>
+                  <span>{labelFor(label)}</span>
                   {isActivePath(pathname, href) ? (
                     <span className="mm-admin-active-dot" />
                   ) : (
@@ -233,6 +267,7 @@ function AdminSidebarContent({
   pathname: string;
   onNavigate?: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <>
       <div className="mm-admin-brand">
@@ -251,10 +286,10 @@ function AdminSidebarContent({
           <Headset size={19} aria-hidden="true" />
         </div>
         <div>
-          <strong>Không gian điều hành</strong>
-          <span>Quản lý hiệu quả · Phục vụ tận tâm</span>
+          <strong>{t("admin.workspace")}</strong>
+          <span>{t("admin.workspaceHint")}</span>
         </div>
-        <Link href="/" aria-label="Về trang khách hàng" title="Về trang khách hàng">
+        <Link href="/" aria-label={t("admin.customerSite")} title={t("admin.customerSite")}>
           <ArrowUpRight size={18} />
         </Link>
       </div>
@@ -274,6 +309,7 @@ export function AdminShell({
   showHeading?: boolean;
 }) {
   const { user } = useAuth();
+  const { t } = useLocale();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const groups = adminVisibleGroups(user);
@@ -294,7 +330,7 @@ export function AdminShell({
     <RequireAuth requiredPermissions={["admin.portal", permission]}>
       <div className="mm-admin-app">
         <a href="#mm-admin-main" className="mm-admin-skip">
-          Đi đến nội dung
+          {t("admin.skip")}
         </a>
         <aside className="mm-admin-sidebar" aria-label="Sidebar quản trị">
           <AdminSidebarContent groups={groups} pathname={pathname} />
@@ -306,26 +342,29 @@ export function AdminShell({
                 type="button"
                 className="mm-admin-menu-button"
                 onClick={() => setMobileOpen(true)}
-                aria-label="Mở menu quản trị"
+                aria-label={t("admin.menu")}
                 aria-expanded={mobileOpen}
                 aria-controls="mm-admin-mobile-drawer"
               >
                 <Menu size={23} aria-hidden="true" />
               </button>
               <div className="mm-admin-crumbs">
-                <Link href="/quan-tri">Quản trị</Link>
+                <Link href="/quan-tri">{t("admin.management")}</Link>
                 <ChevronRight size={15} aria-hidden="true" />
-                <span aria-current="page">{pageLabel}</span>
+                <span aria-current="page">
+                  {adminLabels[pageLabel] ? t(adminLabels[pageLabel]) : pageLabel}
+                </span>
               </div>
             </div>
             <div className="mm-admin-topbar-right">
               <span className="mm-admin-session">
-                <ShieldCheck size={15} /> Phiên quản trị
+                <ShieldCheck size={15} /> {t("admin.session")}
               </span>
-              <Link className="mm-admin-backsite" href="/" title="Trở về trang dành cho khách">
+              <Link className="mm-admin-backsite" href="/" title={t("admin.customerSite")}>
                 <ArrowLeft size={16} aria-hidden="true" />
-                <span>Trang khách hàng</span>
+                <span>{t("admin.customerSite")}</span>
               </Link>
+              <LanguageSelector />
               <AdminUserLink />
             </div>
           </header>
@@ -345,7 +384,7 @@ export function AdminShell({
           </main>
           <footer className="mm-admin-footer">
             <span>© 2026 Mộc Maria · Khu vực quản trị nội bộ</span>
-            <span>Chỉ hiển thị chức năng theo quyền tài khoản</span>
+            <span>{t("admin.footer")}</span>
           </footer>
         </div>
         {mobileOpen && (
@@ -353,7 +392,7 @@ export function AdminShell({
             <button
               type="button"
               className="mm-admin-drawer-scrim"
-              aria-label="Đóng menu"
+              aria-label={t("admin.closeMenu")}
               onClick={() => setMobileOpen(false)}
             />
             <aside
@@ -365,7 +404,7 @@ export function AdminShell({
                 type="button"
                 className="mm-admin-close-menu"
                 onClick={() => setMobileOpen(false)}
-                aria-label="Đóng menu"
+                aria-label={t("admin.closeMenu")}
               >
                 <X size={21} />
               </button>

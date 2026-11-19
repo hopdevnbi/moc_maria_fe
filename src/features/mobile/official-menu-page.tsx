@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import { menuName } from "@/shared/i18n/menu-names";
+import { useCatalogTranslations } from "@/shared/i18n/use-catalog-translation";
+import type { CatalogTranslation } from "@/shared/i18n/catalog-translation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -46,9 +48,17 @@ const photoNames: Record<string, string> = {
   "goi-dau-sach": "hair-be9ed1917a19-960.webp",
 };
 
-function CareCard({ item, real }: { item: MenuItem; real?: ServiceItem }) {
+function CareCard({
+  item,
+  real,
+  translation,
+}: {
+  item: MenuItem;
+  real?: ServiceItem;
+  translation?: CatalogTranslation;
+}) {
   const { locale, t } = useLocale();
-  const name = menuName(locale, item.name);
+  const name = translation?.name ?? menuName(locale, item.name);
   const canBook = Boolean(
     real?.service.isPublished &&
       real.variants.some((v) => v.isActive && Number(v.priceVnd) === item.priceVnd),
@@ -90,11 +100,12 @@ function CareCard({ item, real }: { item: MenuItem; real?: ServiceItem }) {
         <span className="official-eyebrow">{t("menu.careUpper")}</span>
         <h3>{name}</h3>
         <p>
-          {item.description === "Chăm sóc và thư giãn theo bảng giá Mộc Maria."
-            ? t("menu.careDescription")
-            : item.description === "Thức uống tươi ngon từ menu Mộc Maria."
-              ? t("menu.drinkDescription")
-              : item.description}
+          {translation?.description ??
+            (item.description === "Chăm sóc và thư giãn theo bảng giá Mộc Maria."
+              ? t("menu.careDescription")
+              : item.description === "Thức uống tươi ngon từ menu Mộc Maria."
+                ? t("menu.drinkDescription")
+                : item.description)}
         </p>
         <div className="official-care-bottom">
           <div>
@@ -119,8 +130,20 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
   const [query, setQuery] = useState("");
   const search = normalize(query.trim());
   const realBySlug = useMemo(() => new Map(services.map((s) => [s.service.slug, s])), [services]);
+  const translations = useCatalogTranslations(
+    "service",
+    careMenu.flatMap((item) => {
+      const real = realBySlug.get(item.slug);
+      return real ? [real.service.id] : [];
+    }),
+  );
   const visibleCare = careMenu.filter(
-    (item) => matches(item, search) || normalize(menuName(locale, item.name)).includes(search),
+    (item) =>
+      matches(item, search) ||
+      normalize(menuName(locale, item.name)).includes(search) ||
+      normalize(translations[realBySlug.get(item.slug)?.service.id ?? ""]?.name ?? "").includes(
+        search,
+      ),
   );
   const visibleDrinks = drinkMenu
     .map((section) => ({
@@ -192,7 +215,12 @@ export function OfficialMenuPage({ services }: { services: ServiceItem[] }) {
             </p>
             <div className="official-care-grid">
               {visibleCare.map((item) => (
-                <CareCard key={item.slug} item={item} real={realBySlug.get(item.slug)} />
+                <CareCard
+                  key={item.slug}
+                  item={item}
+                  real={realBySlug.get(item.slug)}
+                  translation={translations[realBySlug.get(item.slug)?.service.id ?? ""]}
+                />
               ))}
             </div>
           </>

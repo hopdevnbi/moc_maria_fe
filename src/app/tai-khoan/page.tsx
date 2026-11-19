@@ -22,6 +22,7 @@ import { StaffAttendanceCard } from "@/features/staff-attendance/staff-attendanc
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useLocale } from "@/shared/i18n/locale-provider";
 import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
 import { OwnProviderPlanning } from "@/features/marketplace/provider-planning";
 import "@/features/marketplace/marketplace.css";
@@ -40,6 +41,7 @@ export default function AccountPage() {
 }
 function AccountContent() {
   const { user, logout, logoutAll } = useAuth();
+  const { t, locale } = useLocale();
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   if (!user) return null;
@@ -64,7 +66,7 @@ function AccountContent() {
     try {
       await logout();
     } catch {
-      setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
+      setNotice(t("account.logoutError"));
     } finally {
       setBusy(false);
     }
@@ -105,45 +107,45 @@ function AccountContent() {
     : [
         {
           href: "/chuyen-vien",
-          title: "Chọn kỹ thuật viên",
-          text: "Chọn người và dịch vụ phù hợp",
+          title: t("account.choose"),
+          text: t("account.chooseHint"),
           Icon: Users,
         },
         {
           href: "/tin-nhan",
-          title: "Tin nhắn của tôi",
-          text: "Tiếp tục chat riêng cùng KTV",
+          title: t("account.messages"),
+          text: t("account.messagesHint"),
           Icon: MessageCircle,
         },
         {
           href: "/dich-vu",
-          title: "Khám phá dịch vụ",
-          text: "Xem thời lượng và bảng giá",
+          title: t("account.explore"),
+          text: t("account.exploreHint"),
           Icon: Flower2,
         },
         ...(customer
           ? [
               {
                 href: "/lich-hen",
-                title: "Lịch hẹn của tôi",
-                text: "Theo dõi các lịch hẹn đã đặt",
+                title: t("account.appointments"),
+                text: t("account.appointmentsHint"),
                 Icon: CalendarDays,
               },
             ]
           : []),
       ];
   return (
-    <main className="mm-container mm-account-main">
+    <main className="mm-container mm-account-main" lang={locale}>
       <section className="mm-account-welcome">
         <div className="mm-account-welcome-details">
           <span className="mm-overline">
-            {technician ? "KHÔNG GIAN KỸ THUẬT VIÊN" : "TÀI KHOẢN CỦA BẠN"}
+            {technician ? t("account.technician") : t("account.kicker")}
           </span>
-          <h1>Xin chào, {user.displayName}</h1>
+          <h1>{t("account.welcome", { name: user.displayName })}</h1>
           <p>
             {technician
               ? "Trả lời khách hàng, xem lịch làm việc và theo dõi hồ sơ tại đây."
-              : "Chọn KTV, tìm hiểu dịch vụ và bắt đầu một cuộc trò chuyện riêng."}
+              : t("account.intro")}
           </p>
         </div>
         <button
@@ -152,7 +154,8 @@ function AccountContent() {
           disabled={busy}
           onClick={() => void signOut()}
         >
-          <LogOut size={17} aria-hidden="true" /> {busy ? "Đang đăng xuất..." : "Đăng xuất"}
+          <LogOut size={17} aria-hidden="true" />{" "}
+          {busy ? t("account.signingOut") : t("account.logout")}
         </button>
       </section>
       {customer &&
@@ -178,7 +181,7 @@ function AccountContent() {
         </p>
       )}
       {!technician && <AccountSearch />}
-      <nav className="mm-account-actions" aria-label="Tiện ích tài khoản">
+      <nav className="mm-account-actions" aria-label={t("account.shortcuts")}>
         {actions.map(({ href, title, text, Icon }) => (
           <Link href={href} key={title}>
             <Icon size={22} />
@@ -192,22 +195,22 @@ function AccountContent() {
       </nav>
       {admin && (
         <Link className="mm-primary-cta" href="/quan-tri">
-          <ShieldCheck size={18} /> Mở khu vực quản trị
+          <ShieldCheck size={18} /> {t("account.admin")}
         </Link>
       )}
       {user.roles.includes("SUPER_ADMIN") && (
         <Link className="mm-primary-cta" href="/quan-tri/an-toan-ktv">
-          <ShieldCheck size={18} /> Theo dõi an toàn KTV
+          <ShieldCheck size={18} /> {t("account.safety")}
         </Link>
       )}
       {user.roles.includes("SUPER_ADMIN") && (
         <Link className="mm-outline-cta" href="/quan-tri/mo-ta-ktv">
-          Duyệt mô tả KTV
+          {t("account.reviewProfile")}
         </Link>
       )}
       {customer && (
         <Link className="mm-text-link" href="/hoi-vien">
-          Hội viên & quyền lợi của bạn <ArrowRight size={15} />
+          {t("account.membership")} <ArrowRight size={15} />
         </Link>
       )}
       {technician && (
@@ -220,28 +223,30 @@ function AccountContent() {
       <section className={customer ? "mm-account-settings is-customer" : "mm-account-settings"}>
         {!customer && (
           <article className="mm-account-profile" id="thong-tin-tai-khoan">
-            <h2>Thông tin tài khoản</h2>
+            <h2>{t("account.info")}</h2>
             <p className="mm-account-role">
-              {technician ? "Kỹ thuật viên" : customer ? "Khách hàng" : "Thành viên Mộc Maria"}
+              {technician
+                ? t("nav.therapists")
+                : customer
+                  ? t("account.customer")
+                  : t("account.member")}
             </p>
             <dl>
               <div>
-                <dt>Họ và tên</dt>
+                <dt>{t("account.fullName")}</dt>
                 <dd>{user.displayName}</dd>
               </div>
               <div>
                 <dt>Email</dt>
-                <dd>{user.email || "Chưa cập nhật"}</dd>
+                <dd>{user.email || t("account.missing")}</dd>
               </div>
               <div>
-                <dt>Số điện thoại</dt>
-                <dd>{user.phone || "Chưa cập nhật"}</dd>
+                <dt>{t("account.phone")}</dt>
+                <dd>{user.phone || t("account.missing")}</dd>
               </div>
             </dl>
             {user.mustChangePassword && (
-              <p className="mm-account-notice">
-                Bạn đang dùng mật khẩu ban đầu. Hãy đổi mật khẩu của riêng mình.
-              </p>
+              <p className="mm-account-notice">{t("account.passwordNotice")}</p>
             )}
             <button
               type="button"
@@ -252,13 +257,13 @@ function AccountContent() {
                 try {
                   await logoutAll();
                 } catch {
-                  setNotice("Chưa đăng xuất được. Vui lòng thử lại.");
+                  setNotice(t("account.logoutError"));
                 } finally {
                   setBusy(false);
                 }
               }}
             >
-              {busy ? "Đang đăng xuất..." : "Đăng xuất mọi thiết bị"}
+              {busy ? t("account.signingOut") : t("account.logoutAll")}
             </button>
             {notice && <p role="alert">{notice}</p>}
           </article>

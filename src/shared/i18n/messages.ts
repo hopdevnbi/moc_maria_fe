@@ -3,6 +3,9 @@ import { navMessage, type NavKey } from "./nav-messages";
 import { homeMessage, type HomeKey } from "./home-messages";
 import { menuMessage, type MenuKey } from "./menu-messages";
 import { detailMessage, type DetailKey } from "./detail-messages";
+import { editorMessage, type EditorKey } from "./editor-messages";
+import { workspaceMessage, type WorkspaceKey } from "./workspace-messages";
+import { accountAdminMessage, type AccountAdminKey } from "./account-admin-messages";
 
 const vi = {
   "language.label": "Ngôn ngữ",
@@ -14,7 +17,15 @@ const vi = {
   "common.retry": "Thử lại",
 } as const;
 type CommonKey = keyof typeof vi;
-export type MessageKey = CommonKey | NavKey | HomeKey | MenuKey | DetailKey;
+export type MessageKey =
+  | CommonKey
+  | NavKey
+  | HomeKey
+  | MenuKey
+  | DetailKey
+  | EditorKey
+  | WorkspaceKey
+  | AccountAdminKey;
 export const messages: Record<Locale, Record<CommonKey, string>> = {
   vi,
   en: {
@@ -65,6 +76,9 @@ export const messages: Record<Locale, Record<CommonKey, string>> = {
 };
 export function translate(locale: Locale, key: MessageKey): string {
   return (
+    workspaceMessage(locale, key as WorkspaceKey) ??
+    accountAdminMessage(locale, key as AccountAdminKey) ??
+    editorMessage(locale, key as EditorKey) ??
     detailMessage(locale, key as DetailKey) ??
     menuMessage(locale, key as MenuKey) ??
     homeMessage(locale, key as HomeKey) ??

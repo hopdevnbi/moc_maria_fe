@@ -1,4 +1,8 @@
-import { LocalizedText, LocalizedMenuName } from "@/shared/i18n/localized-text";
+import {
+  LocalizedText,
+  LocalizedCatalogName,
+  LocalizedCatalogDescription,
+} from "@/shared/i18n/localized-text";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -67,9 +71,14 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                 <LocalizedText message="detail.package" />
               </span>
               <h1>
-                <LocalizedMenuName name={detail.service.name} />
+                <LocalizedCatalogName name={detail.service.name} id={detail.service.id} />
               </h1>
-              <p>{detail.service.description || <LocalizedText message="detail.updating" />}</p>
+              <p>
+                <LocalizedCatalogDescription
+                  description={detail.service.description}
+                  id={detail.service.id}
+                />
+              </p>
               <div className="mm-service-detail-price">
                 {prices.length ? (
                   <LocalizedText
@@ -101,7 +110,11 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                       <article key={variant.id}>
                         <div>
                           <h3>
-                            <LocalizedMenuName name={variant.name} />
+                            <LocalizedCatalogName
+                              name={variant.name}
+                              id={variant.id}
+                              kind="variant"
+                            />
                           </h3>
                           <p>
                             <Clock3 size={15} />{" "}

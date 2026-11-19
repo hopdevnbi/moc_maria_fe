@@ -27,6 +27,7 @@ const STATIC_PATHS = new Set([
   "/quan-tri/an-toan-ktv",
   "/quan-tri/cham-cong",
   "/quan-tri/co-so",
+  "/quan-tri/da-ngon-ngu",
   "/quan-tri/danh-gia-ktv",
   "/quan-tri/dich-vu",
   "/quan-tri/ho-so",
