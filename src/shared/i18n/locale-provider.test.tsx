@@ -21,6 +21,31 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("locale integration", () => {
+  it("renders six real flag options, returns focus on Escape, and saves the active locale", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ locale: "vi" }) }),
+    );
+    const { container } = render(
+      <LocaleProvider enabled>
+        <Preview />
+      </LocaleProvider>,
+    );
+    const trigger = screen.getByRole("button", { expanded: false });
+    expect(trigger.querySelector('svg[data-flag="vi"]')).not.toBeNull();
+    fireEvent.click(trigger);
+    expect(container.querySelectorAll(".moc-language-option svg[data-flag]")).toHaveLength(6);
+    expect(screen.getByRole("button", { name: "Tiếng Việt" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(trigger).toHaveFocus();
+    expect(screen.queryByRole("button", { name: "Tiếng Việt" })).not.toBeInTheDocument();
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole("button", { name: "Tiếng Việt" }));
+    expect(document.cookie).toContain("moc_locale=vi");
+  });
   it("detects country locale and preserves manual choice across reload", async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ locale: "ko" }) });
     vi.stubGlobal("fetch", fetcher);
@@ -31,7 +56,8 @@ describe("locale integration", () => {
     );
     await screen.findByText("잠시의 평온.");
     expect(screen.getByRole("link", { name: "서비스" })).toHaveAttribute("href", "/dich-vu");
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "ja" } });
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("button", { name: "日本語" }));
     expect(screen.getByText("ひとときの安らぎ。")).toBeInTheDocument();
     expect(document.cookie).toContain("moc_locale=ja");
     unmount();
@@ -42,7 +68,8 @@ describe("locale integration", () => {
     );
     await screen.findByText("ひとときの安らぎ。");
     expect(fetcher).toHaveBeenCalledTimes(1);
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "auto" } });
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("button", { name: "国に応じて自動選択" }));
     await screen.findByText("잠시의 평온.");
     expect(document.cookie).not.toContain("moc_locale=");
   });
@@ -53,7 +80,7 @@ describe("locale integration", () => {
         <Preview />
       </LocaleProvider>,
     );
-    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { expanded: false })).not.toBeInTheDocument();
     expect(screen.getByText("Một chút an yên.")).toBeInTheDocument();
     unmount();
     render(

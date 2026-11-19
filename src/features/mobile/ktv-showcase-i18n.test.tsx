@@ -51,7 +51,8 @@ describe("KTV public detail locale", () => {
     expect(screen.getByRole("heading", { name: "Foot massage" })).toBeInTheDocument();
     const href = screen.getByRole("link", { name: "Send request" }).getAttribute("href");
     expect(href).toContain("service-1");
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "ja" } });
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("button", { name: "日本語" }));
     expect(screen.getByRole("heading", { name: "勤務時間" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "リクエスト送信" })).toHaveAttribute("href", href);
     expect(screen.getByRole("heading", { name: "Nguyễn Hoàn" })).toBeInTheDocument();

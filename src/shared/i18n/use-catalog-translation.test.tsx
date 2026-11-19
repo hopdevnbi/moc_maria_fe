@@ -42,9 +42,11 @@ it("prefers approved database translations and never shows another locale during
     </LocaleProvider>,
   );
   await screen.findByText("Approved English service");
-  fireEvent.change(screen.getByRole("combobox"), { target: { value: "ja" } });
+  fireEvent.click(screen.getByRole("button", { expanded: false }));
+  fireEvent.click(screen.getByRole("button", { name: "日本語" }));
   expect(screen.queryByText("Approved English service")).toBeNull();
   expect(await screen.findByText("フットマッサージ")).toBeInTheDocument();
-  fireEvent.change(screen.getByRole("combobox"), { target: { value: "vi" } });
+  fireEvent.click(screen.getByRole("button", { expanded: false }));
+  fireEvent.click(screen.getByRole("button", { name: "Tiếng Việt" }));
   expect(screen.getByText("Massage chân")).toBeInTheDocument();
 });

@@ -41,7 +41,8 @@ describe("localized official price list", () => {
       "href",
       "/chuyen-vien",
     );
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "ja" } });
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("button", { name: "日本語" }));
     fireEvent.change(screen.getByRole("textbox", { name: "料金表を検索" }), {
       target: { value: "フットマッサージ" },
     });
