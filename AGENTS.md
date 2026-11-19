@@ -16,3 +16,6 @@ Read C:/Users/User/Desktop/Mộc maria/Plan/99_PROJECT_STATUS.txt, 13_TASK_LEDGE
 
 Production releases must be pushed to `main` and deployed from `main`. Use isolated worktrees for development, then integrate into `main` after validation.
 Public KTV and service copy must not contain “demo”, “minh họa”, or “ví dụ”. Use existing persisted business records and owner-provided content; ask for missing factual data rather than inventing identities, qualifications or reviews. Existing internal identifiers remain compatible with saved links and chat history.
+
+## Mandatory internationalization rules
+Read docs/I18N_ROADMAP.md before any task. Supported locales: vi (default), en, ko, ja, zh-CN, ru. All new or changed user-facing strings must use semantic message keys with six translations (including errors, validation, aria, empty/loading states and metadata). Preserve Vietnamese fallback, stable API IDs/enums and original user messages. Locale is not authorization, currency or timezone. Use locale-aware cache keys when returning translated data and preserve public IDs and URLs. Do not enable untranslated modules in production. Review dynamic business translations, never invent claims or log raw IPs. Follow existing ownership and migration gates.

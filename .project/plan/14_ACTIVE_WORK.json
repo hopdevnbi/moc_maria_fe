@@ -558,5 +558,23 @@
       ],
       "note": "Owner-requested Thanh Thanh presentation, plus 2026-11-08 update to show Nguyen Hoan's 5 existing care-menu entries and prices. New identity only; pending-only public intro. Do not reuse a previous KTV account, enable chat or bookings, or claim production DB writes without verification."
     }
-  ]
+  ,
+{
+    "agent":  "ChatGPT i18n 2026-11-19",
+    "status":  "ACTIVE",
+    "stage":  "I18N-01 isolated foundation",
+    "taskIds":  [
+                    "I18N-01",
+                    "I18N-02"
+                ],
+    "frontendBranch":  "codex/i18n-foundation-20261119",
+    "ownedPaths":  [
+                       "src/shared/i18n/**",
+                           "src/app/api/locale/**",
+                       "docs/I18N_ROADMAP.md",
+                       "AGENTS.md (i18n rules only)"
+                   ],
+    "note":  "No edits to existing claimed business modules, layout, migrations or production. Existing claims retained."
+}
+]
 }
