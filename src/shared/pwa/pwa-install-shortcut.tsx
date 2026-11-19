@@ -1,10 +1,12 @@
 "use client";
 
+import { useLocale } from "@/shared/i18n/locale-provider";
 import { useEffect, useState } from "react";
 import { ArrowRight, Smartphone } from "lucide-react";
 import { canUsePwaOnHost, hasInstalledPwa, PWA_OPEN_EVENT } from "./pwa-install-utils";
 
 export function PwaInstallShortcut() {
+  const { t } = useLocale();
   const [show, setShow] = useState(false);
   useEffect(() => {
     if (!canUsePwaOnHost(window.location.hostname)) return;
@@ -34,7 +36,7 @@ export function PwaInstallShortcut() {
       onClick={() => window.dispatchEvent(new Event(PWA_OPEN_EVENT))}
     >
       <Smartphone size={20} aria-hidden="true" />
-      <span>Cài Mộc Maria</span>
+      <span>{t("cp.install")}</span>
       <ArrowRight size={16} aria-hidden="true" />
     </button>
   );

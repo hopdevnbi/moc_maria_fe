@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "@/shared/i18n/locale-provider";
 import {
   ArrowRight,
   CalendarDays,
@@ -20,12 +21,13 @@ type AccountShortcutsProps = {
 };
 
 export function AccountShortcuts({ technician, signingOut, onSignOut }: AccountShortcutsProps) {
+  const { t, locale } = useLocale();
   return (
-    <div className="mm-account-shortcut-stack">
-      <section className="mm-account-journey" aria-label="Hành động nhanh">
+    <div className="mm-account-shortcut-stack" lang={locale}>
+      <section className="mm-account-journey" aria-label={t("cp.quick")}>
         <div className="mm-account-shortcut-heading">
-          <span className="mm-overline">LỐI TẮT NHANH</span>
-          <h2>{technician ? "Bắt đầu công việc" : "Bắt đầu trải nghiệm"}</h2>
+          <span className="mm-overline">{t("cp.quickTitle")}</span>
+          <h2>{technician ? t("cp.startWork") : t("cp.start")}</h2>
         </div>
         <div className="mm-account-journey-links">
           <Link
@@ -33,7 +35,7 @@ export function AccountShortcuts({ technician, signingOut, onSignOut }: AccountS
             href={technician ? "/tin-nhan" : "/dat-lich"}
           >
             {technician ? <MessageCircle size={20} /> : <CalendarDays size={20} />}
-            <span>{technician ? "Trả lời khách hàng" : "Đặt lịch chăm sóc"}</span>
+            <span>{technician ? t("cp.reply") : t("cp.book")}</span>
             <ArrowRight size={18} aria-hidden="true" />
           </Link>
           <Link
@@ -41,7 +43,7 @@ export function AccountShortcuts({ technician, signingOut, onSignOut }: AccountS
             href={technician ? "#lich-lam-viec" : "/chuyen-vien"}
           >
             {technician ? <CalendarDays size={20} /> : <Users size={20} />}
-            <span>{technician ? "Lịch làm việc" : "Chọn KTV & Chat"}</span>
+            <span>{technician ? t("cp.schedule") : t("cp.chooseChat")}</span>
             <ArrowRight size={18} aria-hidden="true" />
           </Link>
         </div>
@@ -51,28 +53,28 @@ export function AccountShortcuts({ technician, signingOut, onSignOut }: AccountS
         aria-labelledby="mm-account-security-heading"
       >
         <div className="mm-account-shortcut-heading">
-          <span className="mm-overline">THIẾT LẬP CÁ NHÂN</span>
-          <h2 id="mm-account-security-heading">Tài khoản & bảo mật</h2>
+          <span className="mm-overline">{t("cp.settings")}</span>
+          <h2 id="mm-account-security-heading">{t("cp.security")}</h2>
         </div>
         <div className="mm-account-security-links">
           <Link href="/lich-hen">
             <CalendarDays size={18} aria-hidden="true" />
-            <span>Yêu cầu đặt lịch của tôi</span>
+            <span>{t("cp.requests")}</span>
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
           <Link href="#thong-tin-tai-khoan">
             <UserRound size={20} aria-hidden="true" />
-            <span>Thông tin của tôi</span>
+            <span>{t("cp.myInfo")}</span>
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
           <Link href="#doi-mat-khau">
             <KeyRound size={20} aria-hidden="true" />
-            <span>Đổi mật khẩu</span>
+            <span>{t("cp.password")}</span>
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
           <Link href="/tro-choi/tai-khoan">
             <Gamepad2 size={20} aria-hidden="true" />
-            <span>Vòng xoay may mắn</span>
+            <span>{t("cp.wheel")}</span>
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
           <PwaInstallShortcut />
@@ -80,7 +82,7 @@ export function AccountShortcuts({ technician, signingOut, onSignOut }: AccountS
         <div className="mm-account-security-footer">
           <button type="button" disabled={signingOut} onClick={onSignOut}>
             <LogOut size={18} aria-hidden="true" />
-            {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+            {signingOut ? t("account.signingOut") : t("account.logout")}
           </button>
         </div>
       </section>

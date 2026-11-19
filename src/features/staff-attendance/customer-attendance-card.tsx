@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Clock3, Coins, Gift, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import type { CustomerActivityKey } from "@/shared/i18n/customer-activity-messages";
 import {
   formattedCheckInTime,
   hcmDate,
@@ -20,13 +22,17 @@ function freshCustomerGps(position: GeolocationPosition): boolean {
 }
 
 export function CustomerAttendanceCard() {
+  const { t, locale } = useLocale();
   const { user, authFetch } = useAuth();
   const queryClient = useQueryClient();
   const [day, setDay] = useState(() => hcmDate());
   const [branchId, setBranchId] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState<CustomerActivityKey | "">("");
+  const [error, setError] = useState<{
+    key: CustomerActivityKey;
+    values?: Record<string, number>;
+  } | null>(null);
   const query = useQuery({
     queryKey: ["customer-attendance", user?.id, day],
     queryFn: ({ signal }) =>
@@ -50,11 +56,14 @@ export function CustomerAttendanceCard() {
   async function checkIn() {
     if (busy || data?.today || !selected) return;
     setBusy(true);
-    setError("");
-    setMessage("Đang xin quyền GPS và xác nhận khoảng cách...");
+    setError(null);
+    setMessage("ci.gpsChecking");
     try {
-      if (!navigator.geolocation || !globalThis.crypto?.randomUUID)
-        throw new Error("Thiết bị chưa hỗ trợ GPS hoặc định danh trình duyệt bảo mật.");
+      if (!navigator.geolocation || !globalThis.crypto?.randomUUID) {
+        setError({ key: "ci.unsupported" });
+        setMessage("");
+        return;
+      }
       const position = await new Promise<GeolocationPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
@@ -70,16 +79,20 @@ export function CustomerAttendanceCard() {
         accuracy > 50 ||
         accuracy < 0 ||
         !freshCustomerGps(position)
-      )
-        throw new Error("GPS chưa đủ chính xác (tối đa 50m). Hãy ra nơi thoáng và thử lại.");
+      ) {
+        setError({ key: "ci.accuracy" });
+        setMessage("");
+        return;
+      }
       const distance = metersBetween(
         { latitude, longitude },
         { latitude: selected.latitude!, longitude: selected.longitude! },
       );
-      if (distance > 100)
-        throw new Error(
-          `Bạn đang cách Mộc Maria khoảng ${Math.round(distance)}m, ngoài phạm vi 100m. Chưa trừ lượt check-in.`,
-        );
+      if (distance > 100) {
+        setError({ key: "ci.outside", values: { distance: Math.round(distance) } });
+        setMessage("");
+        return;
+      }
       const deviceId = customerCheckInDeviceId(window.localStorage, () => crypto.randomUUID());
       const result = await authFetch<StaffAttendanceMe>("/customer-attendance/check-ins", {
         method: "POST",
@@ -94,22 +107,10 @@ export function CustomerAttendanceCard() {
       });
       queryClient.setQueryData(["customer-attendance", user?.id, result.localDate], result);
       await queryClient.invalidateQueries({ queryKey: ["customer-attendance", user?.id] });
-      setMessage(
-        result.alreadyCheckedIn
-          ? "Bạn đã check-in hôm nay rồi."
-          : "Check-in thành công! Bạn được cộng 5 coin.",
-      );
+      setMessage(result.alreadyCheckedIn ? "ci.already" : "ci.success");
     } catch (e) {
       const code = (e as { code?: number }).code;
-      setError(
-        code === 1
-          ? "Bạn cần cấp quyền vị trí trong Chrome hoặc Safari để nhận 5 coin."
-          : code === 3
-            ? "GPS phản hồi quá lâu. Hãy đến nơi thoáng và thử lại."
-            : e instanceof Error
-              ? e.message
-              : "Không thể check-in. Vui lòng thử lại.",
-      );
+      setError({ key: code === 1 ? "ci.permission" : code === 3 ? "ci.timeout" : "ci.error" });
       setMessage("");
     } finally {
       setBusy(false);
@@ -117,32 +118,32 @@ export function CustomerAttendanceCard() {
   }
 
   return (
-    <section className="mm-customer-att-card" aria-label="Check-in khách hàng Mộc Maria">
+    <section className="mm-customer-att-card" aria-label={t("ci.label")} lang={locale}>
       <div className="mm-customer-att-head">
         <div className="mm-customer-att-heading">
           <span className="mm-customer-att-eyebrow">
-            <Gift size={15} /> DÀNH CHO KHÁCH HÀNG
+            <Gift size={15} /> {t("ci.customer")}
           </span>
-          <h2>Ghé Mộc mỗi ngày, nhận 5 coin</h2>
-          <p>Chỉ cần check-in trong phạm vi 100m tại cơ sở Mộc Maria.</p>
+          <h2>{t("ci.title")}</h2>
+          <p>{t("ci.hint")}</p>
         </div>
-        <div className="mm-customer-att-coins" aria-label="Số dư coin">
+        <div className="mm-customer-att-coins" aria-label={t("ci.balance")}>
           <Coins size={19} />
           <strong>{data?.wallet.balance ?? 0}</strong>
-          <span>coin</span>
+          <span>{t("ci.coin")}</span>
         </div>
       </div>
 
       {query.isPending && (
         <p role="status" className="mm-customer-att-hint">
-          Đang tải lượt check-in hôm nay...
+          {t("ci.loading")}
         </p>
       )}
       {query.isError && (
         <div role="alert" className="mm-customer-att-error">
-          Không tải được lượt check-in. {query.error?.message}
+          {t("ci.loadError")}
           <button type="button" onClick={() => void query.refetch()}>
-            Thử lại
+            {t("common.retry")}
           </button>
         </div>
       )}
@@ -150,7 +151,7 @@ export function CustomerAttendanceCard() {
         <>
           {branches.length > 1 ? (
             <label className="mm-customer-att-branch">
-              Cơ sở Mộc Maria
+              {t("ci.branch")}
               <select value={selected?.id ?? ""} onChange={(e) => setBranchId(e.target.value)}>
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>
@@ -163,8 +164,8 @@ export function CustomerAttendanceCard() {
             <div className="mm-customer-att-location">
               <MapPin size={19} />
               <div>
-                <strong>{selected?.name ?? "Cơ sở Mộc Maria"}</strong>
-                <p>{selected?.address ?? "Đang cập nhật địa chỉ cơ sở"}</p>
+                <strong>{selected?.name ?? t("ci.branch")}</strong>
+                <p>{selected?.address ?? t("ci.addressUpdating")}</p>
               </div>
             </div>
           )}
@@ -172,16 +173,17 @@ export function CustomerAttendanceCard() {
             <div className="mm-customer-att-success" role="status">
               <CheckCircle2 size={24} />
               <div>
-                <strong>Bạn đã check-in hôm nay!</strong>
-                <p>{formattedCheckInTime(data.today.createdAt ?? data.today.checkedInAt)}</p>
-                <span>+{data.today.coinsEarned} coin · Hẹn gặp lại vào ngày mai</span>
+                <strong>{t("ci.checked")}</strong>
+                <p>
+                  {formattedCheckInTime(data.today.createdAt ?? data.today.checkedInAt, locale)}
+                </p>
+                <span>{t("ci.reward", { n: data.today.coinsEarned })}</span>
               </div>
             </div>
           ) : (
             <>
               <div className="mm-customer-att-rule">
-                <Clock3 size={17} /> Mỗi tài khoản và mỗi trình duyệt chỉ nhận 1 lượt/ngày theo giờ
-                Việt Nam.
+                <Clock3 size={17} /> {t("ci.rule")}
               </div>
               <button
                 type="button"
@@ -189,27 +191,25 @@ export function CustomerAttendanceCard() {
                 onClick={() => void checkIn()}
                 disabled={busy || !selected}
               >
-                <LocateFixed size={22} />{" "}
-                {busy ? "Đang xác nhận GPS..." : "Check-in ngay · Nhận 5 coin"}
+                <LocateFixed size={22} /> {busy ? t("ci.checking") : t("ci.action")}
               </button>
             </>
           )}
           {message && (
             <p role="status" className="mm-customer-att-message">
-              {message}
+              {t(message)}
             </p>
           )}
           {error && (
             <p role="alert" className="mm-customer-att-error">
-              {error}
+              {t(error.key, error.values)}
             </p>
           )}
         </>
       )}
       <p className="mm-customer-att-foot">
         <ShieldCheck size={15} />
-        GPS phải đủ chính xác, dưới 50m sai số. Hệ thống ghi nhớ trình duyệt để hạn chế nhiều tài
-        khoản check-in cùng ngày. Không theo dõi vị trí liên tục.
+        {t("ci.privacy")}
       </p>
     </section>
   );

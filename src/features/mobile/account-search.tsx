@@ -3,6 +3,8 @@ import { providerProfileHref } from "./provider-slugs";
 import { publicServiceSlug } from "./public-route-ids";
 
 import Link from "next/link";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import { menuName } from "@/shared/i18n/menu-names";
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 type Directory = {
@@ -21,6 +23,7 @@ const normalize = (s: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d");
 export function AccountSearch() {
+  const { t, locale } = useLocale();
   const [query, setQuery] = useState("");
   const [data, setData] = useState<Directory | null>(null);
   const [failed, setFailed] = useState(false);
@@ -39,17 +42,28 @@ export function AccountSearch() {
   const q = normalize(query.trim());
   const providers =
     data?.providers
-      .filter((p) => normalize([p.publicName, p.serviceArea, ...p.services].join(" ")).includes(q))
+      .filter((p) =>
+        normalize(
+          [
+            p.publicName,
+            p.serviceArea,
+            ...p.services.flatMap((s) => [s, menuName(locale, s)]),
+          ].join(" "),
+        ).includes(q),
+      )
       .slice(0, 4) || [];
-  const services = data?.services.filter((s) => normalize(s.name).includes(q)).slice(0, 4) || [];
+  const services =
+    data?.services
+      .filter((s) => normalize(s.name + " " + menuName(locale, s.name)).includes(q))
+      .slice(0, 4) || [];
   return (
     <section className="mm-account-profile">
-      <h2>Tìm nhanh KTV & dịch vụ</h2>
+      <h2>{t("cp.searchTitle")}</h2>
       <label className="mm-searchbar">
         <Search size={18} />
         <input
-          aria-label="Tìm nhanh KTV và dịch vụ"
-          placeholder="Tên KTV, massage cổ vai gáy, khu vực..."
+          aria-label={t("cp.searchLabel")}
+          placeholder={t("cp.searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -57,21 +71,23 @@ export function AccountSearch() {
       {q && (
         <div className="mm-quick-results">
           {!data && !failed ? (
-            <p>Đang tải gợi ý...</p>
+            <p>{t("cp.suggestions")}</p>
           ) : !providers.length && !services.length ? (
-            <p>Chưa có kết quả. Thử tên KTV hoặc tên dịch vụ khác.</p>
+            <p>{t("cp.noResults")}</p>
           ) : (
             <>
               {providers.map((p) => (
                 <Link key={p.id} href={providerProfileHref(p)}>
                   <strong>{p.publicName}</strong>
-                  <small>Kỹ thuật viên · {p.serviceArea || "Hà Nội"}</small>
+                  <small>
+                    {t("home.role")} · {p.serviceArea || "Hà Nội"}
+                  </small>
                 </Link>
               ))}
               {services.map((s) => (
                 <Link key={s.id} href={"/dich-vu/" + publicServiceSlug(s.slug)}>
-                  <strong>{s.name}</strong>
-                  <small>Xem dịch vụ & lựa chọn KTV</small>
+                  <strong>{menuName(locale, s.name)}</strong>
+                  <small>{t("cp.viewService")}</small>
                 </Link>
               ))}
             </>
@@ -80,8 +96,8 @@ export function AccountSearch() {
       )}
       {failed && (
         <p>
-          Chưa tải được gợi ý. <Link href="/chuyen-vien">Xem danh sách KTV</Link> hoặc{" "}
-          <Link href="/dich-vu">dịch vụ</Link>.
+          {t("cp.searchError")} <Link href="/chuyen-vien">{t("cp.viewKtv")}</Link> ·{" "}
+          <Link href="/dich-vu">{t("cp.viewServices")}</Link>.
         </p>
       )}
     </section>

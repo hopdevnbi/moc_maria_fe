@@ -1,3 +1,6 @@
+import { translate } from "@/shared/i18n/messages";
+import type { Locale } from "@/shared/i18n/locale";
+
 export type AttendanceStatus =
   | "IN_RANGE"
   | "OUT_OF_RANGE"
@@ -167,11 +170,11 @@ export function hcmDate(date = new Date()): string {
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
-export function formattedCheckInTime(value: string | undefined): string {
-  if (!value) return "Chưa rõ thời gian";
+export function formattedCheckInTime(value: string | undefined, locale: Locale = "vi"): string {
+  if (!value) return translate(locale, "ci.timeUnknown");
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Chưa rõ thời gian";
-  return new Intl.DateTimeFormat("vi-VN", {
+  if (Number.isNaN(date.getTime())) return translate(locale, "ci.timeUnknown");
+  return new Intl.DateTimeFormat(locale, {
     timeZone: "Asia/Ho_Chi_Minh",
     hour: "2-digit",
     minute: "2-digit",

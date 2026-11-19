@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { LoadingState, RefreshNotice } from "@/shared/loading/loading-state";
 import { inquiryDisplayStatus } from "@/shared/booking/inquiry-status";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import type { CustomerActivityKey } from "@/shared/i18n/customer-activity-messages";
+import { menuName } from "@/shared/i18n/menu-names";
 export interface Inquiry {
   id: string;
   customerId: string;
@@ -23,19 +26,20 @@ export interface Inquiry {
   fulfillmentStatus?: string;
   archivedAt?: string;
 }
-const labels: Record<string, string> = {
-  PENDING: "Chờ KTV phản hồi",
-  CONTACTED: "KTV đang trao đổi với bạn",
-  DECLINED: "KTV chưa thể nhận yêu cầu",
-  CANCELLED: "Đã hủy yêu cầu",
-  CONFIRMED: "Đã xác nhận lịch",
-  IN_SERVICE: "Đang phục vụ",
-  COMPLETED: "Đã hoàn thành",
+const labels: Record<string, CustomerActivityKey> = {
+  PENDING: "iq.pending",
+  CONTACTED: "iq.contacted",
+  DECLINED: "iq.declined",
+  CANCELLED: "iq.cancelled",
+  CONFIRMED: "iq.confirmed",
+  IN_SERVICE: "iq.inService",
+  COMPLETED: "iq.completed",
 };
 export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean }) {
+  const { t, locale } = useLocale();
   const { user, authFetch } = useAuth();
   const [items, setItems] = useState<Inquiry[]>([]);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<CustomerActivityKey | "">("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const visibleItems = onlySent ? items.filter((item) => item.customerId === user?.id) : items;
@@ -46,7 +50,7 @@ export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean 
       setItems(await authFetch<Inquiry[]>("/appointment-inquiries", { cache: "no-store" }));
       setNotice("");
     } catch {
-      setNotice("Chưa tải được yêu cầu đặt lịch. Vui lòng tải lại.");
+      setNotice("iq.loadError");
     } finally {
       setLoading(false);
     }
@@ -70,49 +74,54 @@ export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean 
         body: JSON.stringify({ status }),
       });
       await load();
-    } catch (e) {
-      setNotice(e instanceof Error ? e.message : "Chưa cập nhật được yêu cầu.");
+    } catch {
+      setNotice("iq.updateError");
     } finally {
       setBusy("");
     }
   }
   return (
-    <section className="mm-account-profile mm-inquiries" id="yeu-cau-dat-lich">
+    <section className="mm-account-profile mm-inquiries" id="yeu-cau-dat-lich" lang={locale}>
       <div className="mm-inquiry-heading">
-        <h2>{onlySent ? "Yêu cầu tôi đã gửi" : "Yêu cầu đặt lịch"}</h2>
+        <h2>{onlySent ? t("iq.sent") : t("iq.title")}</h2>
         <button className="mm-outline-cta" disabled={loading} onClick={() => void load()}>
-          Tải lại
+          {t("iq.reload")}
         </button>
       </div>
-      {notice && <p role="alert">{notice}</p>}
+      {notice && <p role="alert">{t(notice)}</p>}
       {loading && visibleItems.length > 0 && <RefreshNotice labelKey="loading.refreshRequests" />}
       {loading && visibleItems.length === 0 ? (
         <LoadingState compact titleKey="loading.requests" description="" shape="list" />
       ) : !visibleItems.length ? (
-        <p>Bạn chưa có yêu cầu đặt lịch nào.</p>
+        <p>{t("iq.empty")}</p>
       ) : (
         visibleItems.map((item) => (
           <article key={item.id} className="mm-inquiry-card">
             <strong>
-              {item.serviceName} ·{" "}
+              {menuName(locale, item.serviceName)} ·{" "}
               {user?.id === item.customerId ? item.providerName : item.customerName}
             </strong>
-            <p className="mm-account-role">{labels[inquiryDisplayStatus(item)] || item.status}</p>
+            <p className="mm-account-role">
+              {labels[inquiryDisplayStatus(item)]
+                ? t(labels[inquiryDisplayStatus(item)])
+                : item.status}
+            </p>
             <p>
-              {new Intl.DateTimeFormat("vi-VN", {
+              {new Intl.DateTimeFormat(locale, {
                 dateStyle: "medium",
                 timeStyle: "short",
                 timeZone: "Asia/Ho_Chi_Minh",
               }).format(new Date(item.requestedAt))}{" "}
-              · Thời gian mong muốn
+              · {t("iq.time")}
             </p>
             <p>
-              {item.location === "AT_HOME" ? "Tại địa chỉ khách hàng" : "Tại Mộc Maria"} ·{" "}
-              {item.address}
+              {item.location === "AT_HOME" ? t("iq.home") : t("booking.atBranch")} · {item.address}
             </p>
-            {item.notes && <p className="mm-preserve-lines">Ghi chú: {item.notes}</p>}
+            {item.notes && (
+              <p className="mm-preserve-lines">{t("iq.notes", { text: item.notes })}</p>
+            )}
             {item.status === "DECLINED" && item.declineReason && (
-              <p className="mm-preserve-lines">Lý do KTV từ chối: {item.declineReason}</p>
+              <p className="mm-preserve-lines">{t("iq.reason", { text: item.declineReason })}</p>
             )}
             <div className="mm-inquiry-actions">
               {user?.id !== item.customerId &&
@@ -120,7 +129,7 @@ export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean 
                 item.location === "AT_HOME" &&
                 item.status === "CONTACTED" && (
                   <Link className="mm-primary-cta" href="/ktv/an-toan">
-                    An toàn khi đi phục vụ
+                    {t("iq.safety")}
                   </Link>
                 )}
               <Link
@@ -131,7 +140,7 @@ export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean 
                     : "/tin-nhan"
                 }
               >
-                Mở chat
+                {t("iq.chat")}
               </Link>
               {user?.id === item.customerId
                 ? !item.providerCompletedAt &&
@@ -142,7 +151,7 @@ export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean 
                       className="mm-outline-cta"
                       onClick={() => void reply(item.id, "CANCELLED")}
                     >
-                      Hủy yêu cầu
+                      {t("iq.cancel")}
                     </button>
                   )
                 : item.status === "PENDING" && (
@@ -152,10 +161,10 @@ export function AppointmentInquiries({ onlySent = false }: { onlySent?: boolean 
                         className="mm-primary-cta"
                         onClick={() => void reply(item.id, "CONTACTED")}
                       >
-                        Nhận trao đổi
+                        {t("iq.accept")}
                       </button>
                       <Link className="mm-outline-cta" href="/tai-khoan">
-                        Từ chối phục vụ (ghi lý do)
+                        {t("iq.decline")}
                       </Link>
                     </>
                   )}
