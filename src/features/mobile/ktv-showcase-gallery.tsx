@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useLocale } from "@/shared/i18n/locale-provider";
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Expand, Play, X } from "lucide-react";
 import type { KtvShowcaseMedia } from "./ktv-showcase-types";
@@ -14,6 +15,7 @@ function MediaView({
   name: string;
   expanded?: boolean;
 }) {
+  const { t } = useLocale();
   if (item.kind === "VIDEO") {
     return (
       <video
@@ -24,10 +26,10 @@ function MediaView({
         playsInline
         preload="metadata"
         className={"ktv-showcase-media-video" + (expanded ? " ktv-showcase-media-expanded" : "")}
-        aria-label={item.caption || `Video giới thiệu ${name}`}
+        aria-label={item.caption || t("gallery.video", { name })}
       >
         <source src={item.url} type="video/mp4" />
-        Trình duyệt không hỗ trợ xem video này.
+        {t("gallery.unsupported")}
       </video>
     );
   }
@@ -35,7 +37,7 @@ function MediaView({
     <Image
       key={item.id}
       src={item.url}
-      alt={item.caption || `Hình ảnh hoạt động của ${name}`}
+      alt={item.caption || t("gallery.image", { name })}
       width={expanded ? 1400 : 1100}
       height={expanded ? 950 : 700}
       sizes={expanded ? "95vw" : "(max-width: 700px) 100vw, 1020px"}
@@ -45,6 +47,7 @@ function MediaView({
 }
 
 export function KtvShowcaseGallery({ media, name }: { media: KtvShowcaseMedia[]; name: string }) {
+  const { t } = useLocale();
   const [active, setActive] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const current = media[Math.min(active, media.length - 1)];
@@ -74,7 +77,7 @@ export function KtvShowcaseGallery({ media, name }: { media: KtvShowcaseMedia[];
           <button
             className="ktv-showcase-gallery-expand"
             type="button"
-            aria-label="Mở ảnh toàn màn hình"
+            aria-label={t("gallery.expand")}
             onClick={() => setExpanded(true)}
           >
             <Expand size={18} />
@@ -83,12 +86,12 @@ export function KtvShowcaseGallery({ media, name }: { media: KtvShowcaseMedia[];
       </div>
       {(current.caption || media.length > 1) && (
         <div className="ktv-showcase-gallery-foot">
-          <p>{current.caption || "Hình ảnh và video tại Mộc Maria"}</p>
+          <p>{current.caption || t("gallery.default")}</p>
           {media.length > 1 && (
             <div className="ktv-showcase-gallery-navigation">
               <button
                 type="button"
-                aria-label="Ảnh hoặc video trước"
+                aria-label={t("gallery.prev")}
                 onClick={() => setActive((old) => (old - 1 + media.length) % media.length)}
               >
                 <ChevronLeft size={20} />
@@ -98,7 +101,7 @@ export function KtvShowcaseGallery({ media, name }: { media: KtvShowcaseMedia[];
               </span>
               <button
                 type="button"
-                aria-label="Ảnh hoặc video tiếp theo"
+                aria-label={t("gallery.next")}
                 onClick={() => setActive((old) => (old + 1) % media.length)}
               >
                 <ChevronRight size={20} />
@@ -108,17 +111,16 @@ export function KtvShowcaseGallery({ media, name }: { media: KtvShowcaseMedia[];
         </div>
       )}
       {media.length > 1 && (
-        <div
-          className="ktv-showcase-gallery-thumbs"
-          role="group"
-          aria-label="Chọn hình ảnh hoặc video"
-        >
+        <div className="ktv-showcase-gallery-thumbs" role="group" aria-label={t("gallery.select")}>
           {media.map((item, index) => (
             <button
               type="button"
               key={item.id}
               className={"ktv-showcase-gallery-thumb" + (index === active ? " is-active" : "")}
-              aria-label={`${item.kind === "VIDEO" ? "Video" : "Hình ảnh"} ${index + 1}: ${item.caption || name}`}
+              aria-label={t(item.kind === "VIDEO" ? "gallery.videoIndex" : "gallery.imageIndex", {
+                n: index + 1,
+                name: item.caption || name,
+              })}
               aria-pressed={index === active}
               onClick={() => setActive(index)}
             >
@@ -138,13 +140,13 @@ export function KtvShowcaseGallery({ media, name }: { media: KtvShowcaseMedia[];
           className="ktv-showcase-lightbox"
           role="dialog"
           aria-modal="true"
-          aria-label={`Hình ảnh ${name}`}
+          aria-label={t("gallery.dialog", { name })}
           onClick={() => setExpanded(false)}
         >
           <button
             type="button"
             className="ktv-showcase-lightbox-close"
-            aria-label="Đóng ảnh"
+            aria-label={t("gallery.close")}
             onClick={() => setExpanded(false)}
           >
             <X size={23} />

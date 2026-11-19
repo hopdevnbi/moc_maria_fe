@@ -1,4 +1,7 @@
+"use client";
 import Image from "next/image";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import { menuName } from "@/shared/i18n/menu-names";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -52,14 +55,15 @@ function publicAvatar(src?: string | null): string | null {
 }
 
 function ScheduleSection({ showcase, canChat }: { showcase: KtvShowcase; canChat: boolean }) {
+  const { locale, t } = useLocale();
   const isConfigured = showcase.weeklyHours.length > 0;
   const days = [1, 2, 3, 4, 5, 6, 0];
   return (
     <section className="ktv-showcase-section ktv-showcase-schedule" id="lich-lam-viec">
       <div className="ktv-showcase-section-title">
         <div>
-          <span className="ktv-showcase-kicker">THỜI GIAN ĐỒNG HÀNH</span>
-          <h2>Lịch làm việc</h2>
+          <span className="ktv-showcase-kicker">{t("profile.scheduleKicker")}</span>
+          <h2>{t("profile.schedule")}</h2>
         </div>
         <span className="ktv-showcase-section-icon" aria-hidden="true">
           <Clock3 size={20} />
@@ -74,11 +78,17 @@ function ScheduleSection({ showcase, canChat }: { showcase: KtvShowcase; canChat
                 key={day}
                 className={"ktv-showcase-hour " + (!hours.length ? "ktv-showcase-hour-off" : "")}
               >
-                <span>{KTV_WEEKDAYS[day]}</span>
+                <span>
+                  {locale === "vi"
+                    ? KTV_WEEKDAYS[day]
+                    : new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(
+                        new Date(Date.UTC(2024, 0, 7 + day)),
+                      )}
+                </span>
                 <strong>
                   {hours.length
                     ? hours.map((item) => `${item.startsAt}–${item.endsAt}`).join(" · ")
-                    : "Chưa có ca"}
+                    : t("profile.noShift")}
                 </strong>
               </div>
             );
@@ -90,12 +100,8 @@ function ScheduleSection({ showcase, canChat }: { showcase: KtvShowcase; canChat
             <CalendarClock size={29} strokeWidth={1.35} />
           </span>
           <div>
-            <strong>Trao đổi thời gian phù hợp với bạn</strong>
-            <p>
-              {canChat
-                ? "Kỹ thuật viên chưa công bố lịch cố định. Bạn có thể gửi yêu cầu hoặc nhắn tin để thống nhất thời gian."
-                : "Kỹ thuật viên chưa công bố lịch cố định. Vui lòng liên hệ Mộc Maria để biết thêm thông tin."}
-            </p>
+            <strong>{t("profile.arrange")}</strong>
+            <p>{canChat ? t("profile.scheduleChat") : t("profile.scheduleContact")}</p>
           </div>
         </div>
       )}
@@ -103,8 +109,7 @@ function ScheduleSection({ showcase, canChat }: { showcase: KtvShowcase; canChat
         <p className="ktv-showcase-schedule-note">{showcase.scheduleNote}</p>
       )}
       <p className="ktv-showcase-help-line">
-        <CalendarCheck2 size={16} /> Đây là giờ làm việc tham khảo. Lịch hẹn chỉ có hiệu lực sau khi
-        Mộc Maria xác nhận.
+        <CalendarCheck2 size={16} /> {t("profile.scheduleNote")}
       </p>
     </section>
   );
@@ -121,6 +126,7 @@ export function KtvPublicDetail({
   offers: KtvDetailOffer[];
   showcase?: KtvShowcase;
 }) {
+  const { locale, t } = useLocale();
   const reviewId = provider.chatProviderId || profileId;
   const canChat = provider.chatEnabled !== false && !!reviewId;
   const introductionOnly = provider.isDemo === true && provider.chatEnabled === false;
@@ -132,9 +138,9 @@ export function KtvPublicDetail({
     <div className="mobile-experience ktv-showcase-page">
       <MobileHeader />
       <main className="mm-container ktv-showcase-main" id="main">
-        <nav aria-label="Điều hướng hồ sơ" className="ktv-showcase-breadcrumb">
+        <nav aria-label={t("profile.breadcrumb")} className="ktv-showcase-breadcrumb">
           <Link href="/chuyen-vien">
-            <ArrowLeft size={16} /> Danh sách kỹ thuật viên
+            <ArrowLeft size={16} /> {t("profile.list")}
           </Link>
           <span aria-hidden="true">/</span>
           <span>{name}</span>
@@ -146,7 +152,7 @@ export function KtvPublicDetail({
               {avatar ? (
                 <Image
                   src={avatar}
-                  alt={provider.avatarAlt || `Ảnh kỹ thuật viên ${name}`}
+                  alt={provider.avatarAlt || t("home.avatar", { name })}
                   width={380}
                   height={460}
                   sizes="(max-width: 540px) 124px, (max-width: 900px) 240px, 300px"
@@ -155,7 +161,7 @@ export function KtvPublicDetail({
               ) : (
                 <span
                   className="ktv-showcase-portrait-placeholder"
-                  aria-label="Chưa có ảnh chân dung"
+                  aria-label={t("profile.noPhoto")}
                 >
                   <UserRound size={74} strokeWidth={1} />
                   <Leaf className="ktv-showcase-leaf" size={32} strokeWidth={1.2} />
@@ -170,7 +176,7 @@ export function KtvPublicDetail({
           <div className="ktv-showcase-hero-content">
             <div className="ktv-showcase-hero-topline">
               <span className="ktv-showcase-kicker">
-                <Sparkles size={14} /> NGƯỜI ĐỒNG HÀNH CÙNG MỘC
+                <Sparkles size={14} /> {t("profile.companion")}
               </span>
               {!introductionOnly && (
                 <KtvShowcaseEditorLauncher providerId={profileId} initial={showcase} name={name} />
@@ -183,7 +189,7 @@ export function KtvPublicDetail({
               </div>
             )}
             <p className="ktv-showcase-profession">
-              {showcase.headline || provider.title || "Kỹ thuật viên Mộc Maria"}
+              {showcase.headline || provider.title || t("profile.role")}
             </p>
             <div className="ktv-showcase-facts">
               {provider.serviceArea && (
@@ -195,20 +201,18 @@ export function KtvPublicDetail({
               {provider.yearsExperience != null && (
                 <span>
                   <Sparkles size={15} />
-                  {provider.yearsExperience} năm kinh nghiệm
+                  {t("home.experience", { n: provider.yearsExperience })}
                 </span>
               )}
               {provider.age && (
                 <span>
                   <CheckCircle2 size={15} />
-                  {provider.age} tuổi
+                  {t("home.age", { n: provider.age })}
                 </span>
               )}
             </div>
             <p className="ktv-showcase-intro">
-              {showcase.biography ||
-                provider.introduction ||
-                "Đồng hành cùng bạn trên hành trình chăm sóc và thư giãn tại Mộc Maria."}
+              {showcase.biography || provider.introduction || t("profile.intro")}
             </p>
             <div className="ktv-showcase-actions">
               {introductionOnly ? (
@@ -217,7 +221,7 @@ export function KtvPublicDetail({
                   aria-disabled="true"
                 >
                   <CalendarClock size={18} />
-                  <span>Chưa mở nhận lịch</span>
+                  <span>{t("profile.closed")}</span>
                 </span>
               ) : (
                 <Link
@@ -225,7 +229,7 @@ export function KtvPublicDetail({
                   className="ktv-showcase-action ktv-showcase-action-primary"
                 >
                   <CalendarClock size={18} />
-                  <span>Yêu cầu đặt lịch</span>
+                  <span>{t("home.requestBook")}</span>
                   <ArrowUpRight size={17} />
                 </Link>
               )}
@@ -235,12 +239,12 @@ export function KtvPublicDetail({
                   className="ktv-showcase-action ktv-showcase-action-secondary"
                 >
                   <MessageCircle size={18} />
-                  <span>Nhắn tin tư vấn</span>
+                  <span>{t("profile.chat")}</span>
                 </Link>
               )}
             </div>
             <p className="ktv-showcase-hero-footnote">
-              <ShieldCheck size={15} /> Mộc Maria hỗ trợ xác nhận thời gian trước khi đặt lịch.
+              <ShieldCheck size={15} /> {t("profile.confirm")}
             </p>
           </div>
         </section>
@@ -258,11 +262,11 @@ export function KtvPublicDetail({
           <section className="ktv-showcase-section" id="hinh-anh-video">
             <div className="ktv-showcase-section-title">
               <div>
-                <span className="ktv-showcase-kicker">GÓC NHÌN THÂN QUEN</span>
-                <h2>Khoảnh khắc cùng Mộc</h2>
+                <span className="ktv-showcase-kicker">{t("profile.mediaKicker")}</span>
+                <h2>{t("profile.media")}</h2>
               </div>
               <span className="ktv-showcase-section-count">
-                {showcase.media.length} ảnh & video
+                {t("profile.mediaCount", { n: showcase.media.length })}
               </span>
             </div>
             <KtvShowcaseGallery media={showcase.media} name={name} />
@@ -275,15 +279,12 @@ export function KtvPublicDetail({
             <span className="ktv-showcase-aside-icon">
               <HeartHandshake size={26} strokeWidth={1.4} />
             </span>
-            <span className="ktv-showcase-kicker">CHĂM SÓC TẬN TÂM</span>
-            <h2>Lắng nghe để chăm sóc tốt hơn</h2>
-            <p>
-              Bạn có thể trao đổi trước về nhu cầu, thời gian và dịch vụ phù hợp. Kỹ thuật viên sẽ
-              phản hồi khi có thể tiếp nhận.
-            </p>
+            <span className="ktv-showcase-kicker">{t("profile.careKicker")}</span>
+            <h2>{t("profile.listen")}</h2>
+            <p>{t("profile.careBody")}</p>
             {canChat && (
               <Link href={chatHref(reviewId)}>
-                Trao đổi với {name}
+                {t("profile.talk", { name })}
                 <ArrowUpRight size={17} />
               </Link>
             )}
@@ -293,10 +294,12 @@ export function KtvPublicDetail({
         <section className="ktv-showcase-section" id="dich-vu">
           <div className="ktv-showcase-section-title">
             <div>
-              <span className="ktv-showcase-kicker">CHỌN SỰ CHĂM SÓC PHÙ HỢP</span>
-              <h2>Dịch vụ phục vụ</h2>
+              <span className="ktv-showcase-kicker">{t("profile.selectCare")}</span>
+              <h2>{t("profile.services")}</h2>
             </div>
-            <span className="ktv-showcase-section-count">{offers.length} dịch vụ</span>
+            <span className="ktv-showcase-section-count">
+              {t("menu.serviceCount", { n: offers.length })}
+            </span>
           </div>
           {offers.length ? (
             <div className="ktv-showcase-services">
@@ -306,8 +309,8 @@ export function KtvPublicDetail({
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <div className="ktv-showcase-service-copy">
-                    <span className="ktv-showcase-service-label">THƯ GIÃN & CHĂM SÓC</span>
-                    <h3>{offer.name}</h3>
+                    <span className="ktv-showcase-service-label">{t("profile.relax")}</span>
+                    <h3>{menuName(locale, offer.name)}</h3>
                     {offer.branchName && (
                       <p>
                         <MapPin size={13} /> {offer.branchName}
@@ -317,7 +320,9 @@ export function KtvPublicDetail({
                   <div className="ktv-showcase-service-action">
                     {offer.price != null && <strong>{formatPrice(offer.price)}</strong>}
                     {introductionOnly ? (
-                      <span className="ktv-showcase-service-unavailable">Chưa mở nhận lịch</span>
+                      <span className="ktv-showcase-service-unavailable">
+                        {t("profile.closed")}
+                      </span>
                     ) : (
                       <Link
                         href={
@@ -326,7 +331,9 @@ export function KtvPublicDetail({
                             : bookingHref({ provider: profileId, service: offer.bookingServiceId })
                         }
                       >
-                        {offer.consultationServiceId && canChat ? "Tư vấn dịch vụ" : "Gửi yêu cầu"}
+                        {offer.consultationServiceId && canChat
+                          ? t("profile.consult")
+                          : t("profile.request")}
                         <ArrowUpRight size={16} />
                       </Link>
                     )}
@@ -338,8 +345,8 @@ export function KtvPublicDetail({
             <div className="ktv-showcase-services-empty">
               <Leaf size={25} />
               <div>
-                <strong>Chưa có dịch vụ mở đặt lịch</strong>
-                <p>Liên hệ Mộc Maria để được hỗ trợ lựa chọn dịch vụ phù hợp.</p>
+                <strong>{t("profile.noServices")}</strong>
+                <p>{t("profile.contact")}</p>
               </div>
             </div>
           )}
@@ -351,8 +358,7 @@ export function KtvPublicDetail({
           </div>
         )}
         <div className="ktv-showcase-legal">
-          <ShieldCheck size={17} /> Thông tin giới thiệu và lịch tham khảo không thay thế xác nhận
-          chuyên môn, điều kiện cung cấp dịch vụ và lịch đặt thực tế.
+          <ShieldCheck size={17} /> {t("profile.legal")}
         </div>
       </main>
       <MobileNavigation active="providers" />

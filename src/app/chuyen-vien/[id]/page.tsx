@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/shared/i18n/localized-text";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { publicRead } from "@/features/marketplace/public-api";
@@ -113,7 +114,7 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
   if (!provider) {
     return (
       <main className="mm-container" role="alert">
-        Chưa tải được hồ sơ kỹ thuật viên. Vui lòng thử lại.
+        <LocalizedText message="profile.loadError" />
       </main>
     );
   }

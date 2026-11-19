@@ -1,3 +1,4 @@
+import { LocalizedText, LocalizedMenuName } from "@/shared/i18n/localized-text";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -53,32 +54,44 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
       <MobileHeader />
       <main className="mm-container mm-detail-main">
         <Link href="/dich-vu" className="mm-back">
-          <ArrowLeft size={16} /> Danh sách dịch vụ
+          <ArrowLeft size={16} /> <LocalizedText message="detail.list" />
         </Link>
         {!detail ? (
           <div className="mm-empty" role="alert">
-            Chưa tải được thông tin dịch vụ. Vui lòng thử lại.
+            <LocalizedText message="detail.loadError" />
           </div>
         ) : (
           <>
             <section className="mm-service-detail-hero">
-              <span className="mm-overline">GÓI CHĂM SÓC MỘC MARIA</span>
-              <h1>{detail.service.name}</h1>
-              <p>
-                {detail.service.description ||
-                  "Mộc đang cập nhật thông tin chi tiết của dịch vụ này."}
-              </p>
+              <span className="mm-overline">
+                <LocalizedText message="detail.package" />
+              </span>
+              <h1>
+                <LocalizedMenuName name={detail.service.name} />
+              </h1>
+              <p>{detail.service.description || <LocalizedText message="detail.updating" />}</p>
               <div className="mm-service-detail-price">
-                {prices.length ? "Giá từ " + formatPrice(Math.min(...prices)) : "Giá đang cập nhật"}
+                {prices.length ? (
+                  <LocalizedText
+                    message="detail.priceFrom"
+                    values={{ price: formatPrice(Math.min(...prices)) }}
+                  />
+                ) : (
+                  <LocalizedText message="detail.updatingPrice" />
+                )}
               </div>
               <Link className="mm-primary-cta" href={bookingHref({ service: detail.service.id })}>
-                Chọn thời gian đặt lịch <ArrowRight size={18} />
+                <LocalizedText message="detail.chooseTime" /> <ArrowRight size={18} />
               </Link>
             </section>
             <section className="mm-detail-section">
               <div className="mm-results-heading">
-                <h2>Gói chăm sóc & thời lượng</h2>
-                <span>{detail.variants.length} lựa chọn</span>
+                <h2>
+                  <LocalizedText message="detail.packages" />
+                </h2>
+                <span>
+                  <LocalizedText message="detail.options" values={{ n: detail.variants.length }} />
+                </span>
               </div>
               {detail.variants.filter((variant) => variant.isActive).length ? (
                 <div className="mm-detail-services">
@@ -87,29 +100,41 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                     .map((variant) => (
                       <article key={variant.id}>
                         <div>
-                          <h3>{variant.name}</h3>
+                          <h3>
+                            <LocalizedMenuName name={variant.name} />
+                          </h3>
                           <p>
-                            <Clock3 size={15} /> {variant.durationMinutes} phút ·{" "}
-                            <strong>{formatPrice(variant.priceVnd)}</strong>
+                            <Clock3 size={15} />{" "}
+                            <LocalizedText
+                              message="detail.minutes"
+                              values={{ n: variant.durationMinutes }}
+                            />{" "}
+                            · <strong>{formatPrice(variant.priceVnd)}</strong>
                           </p>
                         </div>
                         <Link
                           className="mm-tile-book"
                           href={bookingHref({ service: detail.service.id, variant: variant.id })}
                         >
-                          Chọn gói <ArrowRight size={16} />
+                          <LocalizedText message="detail.choosePackage" /> <ArrowRight size={16} />
                         </Link>
                       </article>
                     ))}
                 </div>
               ) : (
-                <div className="mm-empty">Chưa có gói được mở phục vụ.</div>
+                <div className="mm-empty">
+                  <LocalizedText message="detail.noPackage" />
+                </div>
               )}
             </section>
             <section className="mm-detail-section">
               <div className="mm-results-heading">
-                <h2>Kỹ thuật viên phù hợp</h2>
-                <span>{eligible.length} KTV</span>
+                <h2>
+                  <LocalizedText message="detail.eligible" />
+                </h2>
+                <span>
+                  <LocalizedText message="detail.therapistCount" values={{ n: eligible.length }} />
+                </span>
               </div>
               {eligible.length ? (
                 <div className="mm-provider-grid">
@@ -119,13 +144,15 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                 </div>
               ) : (
                 <div className="mm-empty">
-                  Chưa có KTV đủ điều kiện công khai để cung cấp dịch vụ này.
+                  <LocalizedText message="detail.noEligible" />
                 </div>
               )}
             </section>
             <section className="mm-detail-section">
               <div className="mm-results-heading">
-                <h2>Cơ sở cung cấp</h2>
+                <h2>
+                  <LocalizedText message="detail.branches" />
+                </h2>
               </div>
               {detail.branches.length ? (
                 <div className="mm-detail-services">
@@ -141,12 +168,13 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                   ))}
                 </div>
               ) : (
-                <div className="mm-empty">Cơ sở đang được cập nhật.</div>
+                <div className="mm-empty">
+                  <LocalizedText message="detail.branchUpdating" />
+                </div>
               )}
             </section>
             <div className="mm-detail-notice">
-              <ShieldCheck size={18} /> Giá cuối cùng được hiển thị theo lịch trống, cơ sở và báo
-              giá thực tế trước khi khách xác nhận.
+              <ShieldCheck size={18} /> <LocalizedText message="detail.finalPrice" />
             </div>
           </>
         )}
