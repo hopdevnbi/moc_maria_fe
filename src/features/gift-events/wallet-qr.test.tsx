@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WalletQr, canGenerateGiftQr } from "./wallet-qr";
 import type { WalletGift } from "./types";
+vi.mock("qrcode", () => ({ toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,AA==") }));
 const gift: WalletGift = {
   id: "1234",
   openId: "open1",
@@ -46,6 +47,10 @@ describe("P11 private QR wallet", () => {
         method: "POST",
         cache: "no-store",
       }),
+    );
+    expect(await screen.findByRole("img", { name: /Mã QR nhận quà/ })).toHaveAttribute(
+      "src",
+      "data:image/png;base64,AA==",
     );
     expect(location.href).not.toContain("secret-one-time");
   });
