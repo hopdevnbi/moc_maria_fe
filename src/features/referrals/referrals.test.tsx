@@ -18,7 +18,7 @@ const data = {
   code: "0123456789ABCDEFABCD",
   enabled: true,
   rewardCoins: 100,
-  registered: 2,
+  registered: 0,
   rewarded: 1,
   coins: 100,
   verificationAvailable: false,
@@ -68,6 +68,59 @@ it("generates referral QR locally with the exact public link and allows hiding i
   );
   fireEvent.click(screen.getByRole("button", { name: translate("vi", "ref.qrHide") }));
   expect(screen.queryByRole("img", { name: translate("vi", "ref.qr") })).not.toBeInTheDocument();
+});
+it("shows exact committed reward, pages own history and never exposes risk", async () => {
+  const awardedAt = "2026-11-20T03:00:00Z";
+  mock.fetch.mockImplementation((path: string) =>
+    Promise.resolve(
+      path === "/referrals/me"
+        ? { ...data, registered: 21, latestReward: { id: "r1", amount: 100, awardedAt } }
+        : path.endsWith("page=2")
+          ? {
+              items: [
+                {
+                  id: "r2",
+                  status: "PENDING_VERIFICATION",
+                  rewardCoins: 100,
+                  createdAt: awardedAt,
+                  awardedAt: null,
+                  earnedCoins: 0,
+                },
+              ],
+              hasMore: false,
+            }
+          : {
+              items: [
+                {
+                  id: "r1",
+                  status: "REWARDED",
+                  rewardCoins: 100,
+                  createdAt: awardedAt,
+                  awardedAt,
+                  earnedCoins: 100,
+                },
+              ],
+              hasMore: true,
+            },
+    ),
+  );
+  mount(<ReferralCard />);
+  expect(
+    await screen.findByText(translate("vi", "ref.receipt").replace("{n}", "100")),
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByText(translate("vi", "ref.earned").replace("{n}", "100")),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: translate("vi", "ref.next") }));
+  expect(
+    await screen.findByText(translate("vi", "ref.expected").replace("{n}", "100")),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: translate("vi", "ref.next") })).toBeDisabled();
+  expect(mock.fetch).toHaveBeenCalledWith(
+    "/referrals/me/history?page=2",
+    expect.objectContaining({ cache: "no-store" }),
+  );
+  expect(screen.queryByText(translate("vi", "ref.risk"))).not.toBeInTheDocument();
 });
 it("admin review is only an acknowledgement; no rejection or award command", async () => {
   mock.user.roles = ["SUPER_ADMIN"];

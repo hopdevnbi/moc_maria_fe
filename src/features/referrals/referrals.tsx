@@ -2,7 +2,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Gift, Copy, Share2, ShieldCheck, ChevronLeft, ChevronRight, QrCode } from "lucide-react";
+import {
+  Gift,
+  Copy,
+  Share2,
+  ShieldCheck,
+  ChevronLeft,
+  ChevronRight,
+  QrCode,
+  History,
+  CheckCircle2,
+} from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import type { MessageKey } from "@/shared/i18n/messages";
@@ -18,6 +28,15 @@ type Mine = {
   verificationAvailable: boolean;
   verificationStatus: string | null;
   hasPhone: boolean;
+  latestReward?: { id: string; amount: number; awardedAt: string } | null;
+};
+type HistoryRow = {
+  id: string;
+  status: string;
+  rewardCoins: number;
+  createdAt: string;
+  awardedAt: string | null;
+  earnedCoins: number;
 };
 type Settings = {
   enabled: boolean;
@@ -66,6 +85,7 @@ export function ReferralCard() {
     enabled: !!user?.isActive,
     retry: false,
     staleTime: 20000,
+    refetchInterval: 30000,
   });
   const m = query.data;
   const link = m ? "https://mocmaria.com/r/" + m.code : "";
@@ -188,6 +208,23 @@ export function ReferralCard() {
             </div>
           )}
           {m.enabled && !m.verificationAvailable && <p>{t("ref.payoutPending")}</p>}
+          {m.latestReward && (
+            <div className="mm-referral-receipt" role="status">
+              <CheckCircle2 size={24} aria-hidden="true" />
+              <div>
+                <strong>{t("ref.receipt", { n: m.latestReward.amount })}</strong>
+                <small>
+                  {t("ref.awardedAt", {
+                    date: new Intl.DateTimeFormat(locale, {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                      timeZone: "Asia/Ho_Chi_Minh",
+                    }).format(new Date(m.latestReward.awardedAt)),
+                  })}
+                </small>
+              </div>
+            </div>
+          )}
           {m.enabled && qr?.link === link && (
             <div className="mm-referral-qr">
               {/* QR is generated locally; no external image service receives the link. */}
@@ -239,9 +276,89 @@ export function ReferralCard() {
           {m.verificationStatus && m.verificationStatus !== "PENDING_VERIFICATION" && (
             <p>{t(statuses[m.verificationStatus] ?? "ref.pending")}</p>
           )}
+          {m.registered > 0 && user?.id && <ReferralHistory key={user.id} />}
         </>
       )}
       {notice && <p role="status">{t(notice)}</p>}
+    </section>
+  );
+}
+function ReferralHistory() {
+  const { user, authFetch } = useAuth();
+  const { t, locale } = useLocale();
+  const [page, setPage] = useState(1);
+  const rows = useQuery({
+    queryKey: ["referrals", "history", user?.id, page],
+    queryFn: ({ signal }) =>
+      authFetch<{ items: HistoryRow[]; hasMore: boolean }>("/referrals/me/history?page=" + page, {
+        signal,
+        cache: "no-store",
+      }),
+    enabled: !!user?.isActive,
+    retry: false,
+    refetchInterval: 30000,
+  });
+  const date = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      dateStyle: "short",
+      timeStyle: "short",
+      timeZone: "Asia/Ho_Chi_Minh",
+    }).format(new Date(value));
+  return (
+    <section className="mm-referral-history">
+      <h3>
+        <History size={19} aria-hidden="true" />
+        {t("ref.history")}
+      </h3>
+      <p>{t("ref.historyHint")}</p>
+      {rows.isPending ? (
+        <p role="status">{t("common.loading")}</p>
+      ) : rows.isError ? (
+        <p role="alert">
+          {t("ref.error")}{" "}
+          <button type="button" onClick={() => void rows.refetch()}>
+            {t("common.retry")}
+          </button>
+        </p>
+      ) : !rows.data?.items?.length ? (
+        <p>{t("ref.none")}</p>
+      ) : (
+        <div className="mm-referral-list">
+          {rows.data.items.map((r) => (
+            <article key={r.id}>
+              <strong>{t(statuses[r.status] ?? "ref.pending")}</strong>
+              <small>{date(r.createdAt)}</small>
+              {r.awardedAt ? (
+                <>
+                  <b>{t("ref.earned", { n: r.earnedCoins })}</b>
+                  <small>{t("ref.awardedAt", { date: date(r.awardedAt) })}</small>
+                </>
+              ) : r.status === "PENDING_VERIFICATION" ? (
+                <small>{t("ref.expected", { n: r.rewardCoins })}</small>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      )}
+      <div className="mm-referral-actions">
+        <button
+          type="button"
+          disabled={page <= 1 || rows.isFetching}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          <ChevronLeft size={16} />
+          {t("ref.prev")}
+        </button>
+        <span>{t("ref.page", { n: page })}</span>
+        <button
+          type="button"
+          disabled={!rows.data?.hasMore || rows.isFetching}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          {t("ref.next")}
+          <ChevronRight size={16} />
+        </button>
+      </div>
     </section>
   );
 }

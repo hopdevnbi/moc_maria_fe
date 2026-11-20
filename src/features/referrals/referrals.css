@@ -18,6 +18,35 @@
   border: 1px solid #d9e7da;
   border-radius: 14px;
 }
+.mm-referral-receipt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #c8dfcb;
+  border-radius: 14px;
+  padding: 14px;
+  background: #eff7ee;
+}
+.mm-referral-receipt > svg {
+  flex-shrink: 0;
+}
+.mm-referral-history {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #d9e7da;
+  padding-top: 14px;
+}
+.mm-referral-history h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+}
+.mm-referral-history .mm-referral-actions {
+  align-items: center;
+  justify-content: space-between;
+}
 .mm-referral-qr img {
   max-width: 100%;
   height: auto;
