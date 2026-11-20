@@ -61,8 +61,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className={`${sans.variable} ${serif.variable} christmas-season`}>
-        <ChristmasWelcome />
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <ChristmasWelcome />
+          {children}
+        </AppProviders>
         <StartupRecovery />
         <Suspense fallback={null}>
           <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />

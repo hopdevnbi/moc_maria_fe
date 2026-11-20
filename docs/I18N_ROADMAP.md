@@ -1,13 +1,17 @@
 # Mộc Maria — I18N roadmap
+
 Date: 2026-11-19. Baseline FE 9c42664 / BE 2d15395. Status: foundation, not production enabled.
 
 ## Scope and audit
+
 FE: Next 16 App Router, React 19, cacheComponents, event host rewrite, React Query, legacy iOS compatibility, PWA. 414 tracked src files; 282 grep matches for Vietnamese characters (including tests/data, not translation count). Root layout lang=vi; metadata, auth, mobile navigation, public home/catalog, booking, accounts, chat, games, promotions, admin and notification strings need inventory. BE: NestJS, TypeORM, PostgreSQL, 376 tracked src files, 107 grep matches. Service name/description and provider public title are single-language fields. GlobalExceptionFilter uses textual messages; public cache currently keyed by path and revision; PWA push/offline are Vietnamese. Shared chat/queue are multi-project; no changes without scoped contract.
 
 ## Locale contract
+
 Supported: vi, en, ko, ja, zh-CN, ru. Default vi. Country mapping VN→vi, KR→ko, JP→ja, CN→zh-CN, RU→ru, US/GB/CA/AU/NZ/IE/SG→en. Other/missing countries → vi. Do not infer nationality. Explicit saved choice overrides country; account preference later, explicit current device choice wins on conflict. No browser-language override unless owner changes requirement. IP is approximate (VPN/travel); always allow selector. Country source: first-party trusted edge geolocation (Vercel x-vercel-ip-country after verifying edge overwrites client input). No raw IP storage or external geo API per page. No trust for arbitrary X-Forwarded-For or country input; never use locale for authorization. Default on failed lookup. Separate event.mocmaria.com origin: deliberate preference sync after security review; preserve event host routing.
 
 ## Tasks and acceptance gates
+
 - I18N-01 audit and rules: inventory source strings by route/component/error, map dynamic fields and dependencies, ownership. Add rules and roadmap in both repos. Audit counts indicative, not string completeness.
 - I18N-02 framework: typed locale registry, resolver, normalization, dictionary keys, parity tests; same locale contract in FE/BE. Trusted country endpoint: private/no-store, validate edge provenance, fallback. Manual selector, cookie (allowlisted, SameSite=Lax, Secure in HTTPS), account preference later. Do not automatically advertise or enable untranslated UI. Preserve existing links, queries, event host and recovery routes.
 - I18N-03 public FE: navigation/footer, homepage, service listing/detail/pricing, KTV listing/detail, promotions, contact, errors/loading; six dictionaries with reviewed terminology. Localize accessible labels, validation, metadata, image alt. Fonts for CJK/Cyrillic; 320/390/768/1440 checks. Public SEO: explicit locale URLs for crawlable translated pages, canonical/hreflang, Vietnamese existing URLs stay valid; IP redirect only where safe, no automatic redirect for crawlers/deep links. SSR/cache/hydration tests before release.
@@ -19,21 +23,38 @@ Supported: vi, en, ko, ja, zh-CN, ru. Default vi. Country mapping VN→vi, KR→
 - I18N-09 release: 6 locale dictionaries parity and missing-key check; six simulated trusted countries, unknown/missing/VPN/manual precedence, no locale cache leaks; auth/booking/chat/event/PWA regression, actual mobile/desktop, accessibility, SEO; BE additive deploy first, FE feature flag release, observe error/latency, rollback flag then source (keep additive data). Record source SHA, tests, deploy and business data separately. No claim of complete translation until all module gates pass.
 
 ## Rules
+
 Every new/changed user-facing string uses a semantic dictionary key and six translations, including validation/empty/loading/error/aria/metadata. No string concatenation for grammar; preserve placeholders. Use Intl and stable IDs/enums, no auto-translation at render time. User-generated data and names remain original; review business translations. Fallback vi and report missing keys in dev/CI. Keep language separate from currency, timezone, permissions. Never expose secrets/IP. Do not mark production ready before validation and independent module gates.
 
 ## Integration checkpoint — 2026-11-19
+
 Global client LocaleProvider integrated with AppProviders; locale-aware header, account buttons, mobile navigation, homepage and therapist directory. Manual preference persisted via host-only cookie; auto resets preference; GeoIP fetched once after hydration without caching. Server HTML remains Vietnamese to avoid changing cached routes and misleading crawlers. Translated sections use lang attribute; data, prices, route IDs and authentication unchanged. Enabled in next dev or opt-in preview via NEXT_PUBLIC_MOC_I18N_PREVIEW=1; MOC_I18N_GEO=1 only on verified Vercel ingress. Production flag remains off. Event subdomain preference sync, service detail/menu, database translations, booking, metadata and PWA remain pending. This phase is not a complete multilingual release.
 Validation: 22 targeted Vitest tests passed (6 files), scoped ESLint and full TypeScript noEmit passed. Browser visual QA / production GeoIP / full build still pending. Worktree isolated; no migration or production deployment.
 
 ## Public pricing checkpoint — 2026-11-19
+
 CODE: localized official-menu UI, search, 10 care services and 21 drink names in six locales. Homepage labels and search use exact known menu names; unknown source strings remain unchanged. No new medical claims, IDs, prices, booking policies or DB writes. TEST: 27 targeted FE tests pass, scoped ESLint and full noEmit pass (existing local dependencies). Build with existing Next 16.4.1 compiled but was blocked by dependency security guard; repository lock already specifies 16.4.6; clean install validation required. Production feature flag stays off until remaining module/edge checks; preview is appropriate for partial coverage.
+
 ## Service and therapist detail checkpoint — 2026-11-19
+
 CODE: six-language service detail and KTV profile presentation, schedule weekday names (Intl with UTC reference dates), gallery navigation/labels, service names and booking actions. Server-side API reads, ID and price fields, eligibility, URLs, provider identity and original owner-entered biographies/schedules/captions unchanged. Known name translations only; no inferred claims. Client translation leaves preserve cached server route data. Scope excludes dynamic DB translations, ratings/reviews, tip panel, editor, remaining SEO/alt labels and booking flow. TEST: 13 focused tests pass; full TypeScript and scoped ESLint pass. Release target: branch-specific Vercel preview; do not enable incomplete public language coverage in production.
+
 ## Translation editor and workspace integration
+
 Super Admin catalog and persisted KTV showcase editor at quan-tri/da-ngon-ngu, with draft/publish, source fingerprints, conflict validation and role gate. Dynamic approved catalog reads on official menu, actual service detail, KTV cards and booking wizard; locale-specific no-store proxy and visible-page/focus refresh. Profile display consumes reviewed persisted showcase headline, biography and schedule note; production profile endpoint pending backend rollout. Booking primary form, account landing and admin shell receive six-language UI messages. Remaining work: nested account/admin modules, hard-coded booking edge-case hints, localized backend error codes, full browser/device verification, bulk translation content review, real-time revision integration and production feature activation.
+
 ## Manual locale selector release
+
 User requested visible language flags on production desktop and mobile. Replace emoji with inline SVG flags, touch-friendly options (48px on mobile), current-locale checkmark, keyboard Escape/outside dismissal and focus restoration. Retain six supported locales, manual cookie persistence and Vietnamese fallback. Release the current partial i18n coverage with explicit production feature flag only after quality checks, while untranslated modules retain source text. GeoIP activation remains separate from manual selection and requires verified production ingress. No changes to booking logic, prices, authentication, or database schema.
+
 ## Shared loading localization
+
 All shared LoadingState, PublicPageLoading, RefreshNotice and PendingLabel production callsites use typed six-locale message keys, including home, directories, service/profile detail, booking, chat, auth, appointments and event administration. Slow-connection guidance after eight seconds translates without resetting the timer. Keep current brand, skeleton and cache behavior unchanged. User selections persist through the existing locale provider; initial cached SSR remains Vietnamese until hydration. Tests cover six locales, language switch while waiting and unchanged provider name. No database changes.
+
 ## Customer profile localization
+
 Translate the customer profile, avatar controls, VIP and standard membership labels, personal information, shortcuts, search, password form, attendance and booking-request cards using typed six-locale keys. Keep user data, IDs, permissions, check-in thresholds, coin rewards and Vietnam timezone unchanged. Use translated generic failure messages instead of displaying unlocalized backend messages; detailed error-code localization remains separate. Tests cover six locales and live switching with unsaved input. Staff-specific workspace and linked standalone pages are out of scope.
+
+## First-visit promotion and linked booking journey
+
+First-visit dialog title, booking CTA, close label and poster description are localized in all six locales. The original owner-provided Vietnamese poster is retained; non-Vietnamese users see a localized equivalent, with the booking CTA kept accessible. Christmas welcome banner is now inside the existing locale provider. The default inquiry booking, provider picker, linked availability wizard and quick account dialog use typed message keys and reviewed catalog translations. Keep booking payloads, default note semantics, offer amounts, identity and time zone intact. Original addresses, user text and event terms remain source content. Unknown API failure text uses localized generic errors for non-Vietnamese locales; full stable error-code mapping remains a separate backend contract task. Owner's mandatory touched-flow i18n rule now applies to FE and BE AGENTS.md: no deferring known missing static UI in an edited journey.

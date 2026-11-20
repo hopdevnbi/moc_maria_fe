@@ -1,6 +1,10 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { AppointmentRequest } from "./appointment-request";
+import { LocaleProvider, useLocale } from "@/shared/i18n/locale-provider";
+import { BookingWizard } from "./booking";
+import { LOCALES } from "@/shared/i18n/locale";
+import { translate } from "@/shared/i18n/messages";
 import demoProviders from "./demo-ktvs.json";
 import demoServices from "./demo-services.json";
 import { careMenu } from "./official-menu";
@@ -72,6 +76,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  document.cookie = "moc_locale=; Path=/; Max-Age=0";
 });
 const providers = demoProviders.map((p, i) => ({
   ...p,
@@ -82,6 +87,79 @@ function mount() {
   render(<AppointmentRequest providers={providers} services={demoServices} initial={{}} />);
 }
 describe("appointment request flow", () => {
+  it("preserves address and user-entered notes when changing the locale", async () => {
+    document.cookie = "moc_locale=en; Path=/";
+    function Switcher() {
+      const { setLocale } = useLocale();
+      return <button onClick={() => setLocale("ja")}>Switch Japanese</button>;
+    }
+    render(
+      <LocaleProvider enabled>
+        <Switcher />
+        <AppointmentRequest
+          providers={providers}
+          services={demoServices}
+          initial={{ provider: providers[0].id }}
+        />
+      </LocaleProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: translate("en", "rq.home") }));
+    fireEvent.change(screen.getByLabelText(translate("en", "rq.address")), {
+      target: { value: "12 Nguyễn Trãi, Hà Nội" },
+    });
+    fireEvent.change(screen.getByLabelText(translate("en", "rq.notes")), {
+      target: { value: "Please contact me first" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Switch Japanese" }));
+    expect(screen.getByLabelText(translate("ja", "rq.address"))).toHaveValue(
+      "12 Nguyễn Trãi, Hà Nội",
+    );
+    expect(screen.getByLabelText(translate("ja", "rq.notes"))).toHaveValue(
+      "Please contact me first",
+    );
+  });
+  it.each(LOCALES)("localizes the verified booking home-visit hints in %s", async (locale) => {
+    document.cookie = "moc_locale=" + locale + "; Path=/";
+    render(
+      <LocaleProvider enabled>
+        <BookingWizard providers={[]} services={[]} branches={[]} initial={{}} />
+      </LocaleProvider>,
+    );
+    const home = await screen.findByRole("button", {
+      name: new RegExp(translate(locale, "booking.home").replace(/[.*+?^$${}()|[\]\\]/g, "\\$&")),
+    });
+    fireEvent.click(home);
+    expect(screen.getByText(translate(locale, "bv.homeUnavailable"))).toBeInTheDocument();
+    expect(screen.getByText(translate(locale, "bv.homeConfirm"))).toBeInTheDocument();
+    expect(screen.getByText(translate(locale, "bv.homeCta"))).toBeInTheDocument();
+  });
+  it.each(LOCALES)(
+    "localizes the promotion booking destination and quick account dialog in %s",
+    async (locale) => {
+      document.cookie = "moc_locale=" + locale + "; Path=/";
+      state.guest = true;
+      render(
+        <LocaleProvider enabled>
+          <AppointmentRequest
+            providers={providers}
+            services={demoServices}
+            initial={{ provider: providers[0].id }}
+          />
+        </LocaleProvider>,
+      );
+      expect(await screen.findByLabelText(translate(locale, "rq.service"))).toBeInTheDocument();
+      expect(screen.getByLabelText(translate(locale, "rq.date"))).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: translate(locale, "rq.continue") }));
+      const dialog = await screen.findByRole("dialog", { name: translate(locale, "ba.title") });
+      expect(within(dialog).getByLabelText(translate(locale, "ba.name"))).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole("button", { name: translate(locale, "ba.registerSend") }),
+      ).toBeInTheDocument();
+      expect(
+        within(dialog).getByLabelText(translate(locale, "ba.password"), { exact: true }),
+      ).toBeInTheDocument();
+    },
+  );
   it.each(["THERAPIST", "ADMIN", "SUPER_ADMIN"])(
     "lets %s request another KTV without customer.portal",
     async (role) => {

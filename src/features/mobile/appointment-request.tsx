@@ -1,4 +1,8 @@
 "use client";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import { menuName } from "@/shared/i18n/menu-names";
+import { useCatalogTranslations } from "@/shared/i18n/use-catalog-translation";
+import { providerTitle } from "@/shared/i18n/provider-titles";
 import { DEFAULT_BOOKING_NOTE } from "@/shared/booking/inquiry-status";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -51,7 +55,14 @@ export function AppointmentRequest({
   initial: { provider?: string; service?: string };
   verifiedAvailable?: boolean;
 }) {
+  const { locale, t } = useLocale();
   const services = useMemo(() => inquiryServiceOptions(sourceServices), [sourceServices]);
+  const serviceTranslations = useCatalogTranslations(
+    "service",
+    services.map((s) => s.service.id),
+  );
+  const serviceLabel = (service: { id: string; name: string }) =>
+    serviceTranslations[service.id]?.name ?? menuName(locale, service.name);
   const { user, status, authFetch } = useAuth();
   const available = providers.filter((p) => p.chatEnabled || !p.isDemo);
   const initialProvider = available.find(
@@ -156,9 +167,11 @@ export function AppointmentRequest({
         [
           p.publicName,
           p.title,
+          providerTitle(locale, p.title),
           p.serviceArea,
           chosenService?.service.name,
-          ...offers(p).map((s) => s.name),
+          chosenService && serviceLabel(chosenService.service),
+          ...offers(p).flatMap((s) => [s.name, menuName(locale, s.name)]),
         ].join(" "),
       ).includes(searchText(query)),
   );
@@ -173,13 +186,13 @@ export function AppointmentRequest({
     const actor = auth?.user ?? user;
     if (sending.current || !actor) return;
     if (!canUsePersonalBooking(actor)) {
-      setError("Tài khoản này chưa thể gửi yêu cầu đặt lịch.");
+      setError("rq.denied");
       return;
     }
     const requestedTime = new Date(requestedAt + ":00+07:00").getTime();
     // eslint-disable-next-line react-hooks/purity -- Submit handler: recheck time after async signup.
     if (!canSend || !chosen || !chosenService || requestedTime <= Date.now()) {
-      setError("Bạn kiểm tra lại dịch vụ, địa chỉ và thời gian mong muốn trước khi gửi nhé.");
+      setError("rq.check");
       return;
     }
     sending.current = true;
@@ -227,19 +240,16 @@ export function AppointmentRequest({
   return (
     <div className="mobile-experience">
       <MobileHeader />
-      <main className="mm-container mm-booking-main mm-quick-booking-main">
+      <main className="mm-container mm-booking-main mm-quick-booking-main" lang={locale}>
         <header className="mm-booking-heading">
-          <span className="mm-overline">MỘC MARIA · HÀ NỘI</span>
+          <span className="mm-overline">MỘC MARIA · {t("rq.city")}</span>
           <h1>
-            Đặt lịch chăm sóc <em>theo cách của bạn.</em>
+            {t("rq.heading")} <em>{t("rq.headingEnd")}</em>
           </h1>
-          <p>
-            Chọn dịch vụ, kỹ thuật viên và nơi phục vụ. KTV sẽ phản hồi để thống nhất thời gian và
-            chi phí.
-          </p>
+          <p>{t("rq.intro")}</p>
           {verifiedAvailable && (
             <Link className="mm-outline-cta" href="/dat-lich?flow=verified">
-              Kiểm tra lịch trống tại cơ sở
+              {t("rq.verified")}
             </Link>
           )}
         </header>
@@ -247,19 +257,16 @@ export function AppointmentRequest({
         {submitted ? (
           <section ref={successRef} tabIndex={-1} className="mm-booking-success" role="status">
             <CheckCircle2 size={40} />
-            <h2>Đã gửi yêu cầu đến {chosen?.publicName}</h2>
-            <p>
-              KTV sẽ trao đổi để xác nhận khả năng phục vụ, thời gian và giá. Bạn có thể xem yêu cầu
-              trong tài khoản.
-            </p>
+            <h2>{t("rq.sent", { name: chosen?.publicName ?? "" })}</h2>
+            <p>{t("rq.sentHint")}</p>
             <Link className="mm-primary-cta" href="/lich-hen">
-              Theo dõi yêu cầu <ArrowRight size={17} />
+              {t("rq.track")} <ArrowRight size={17} />
             </Link>
             <Link
               className="mm-outline-cta"
               href={chatHref(chosen?.chatProviderId || chosen?.id || "")}
             >
-              Chat với KTV
+              {t("rq.chat")}
             </Link>
           </section>
         ) : (
@@ -269,12 +276,12 @@ export function AppointmentRequest({
                 <div className="mm-booking-step">
                   <span>01</span>
                   <div>
-                    <h2>Chọn dịch vụ</h2>
-                    <p>Thời lượng và giá tham khảo để bạn dễ lựa chọn.</p>
+                    <h2>{t("rq.chooseService")}</h2>
+                    <p>{t("rq.serviceHint")}</p>
                   </div>
                 </div>
                 <label className="mm-booking-field">
-                  Dịch vụ chăm sóc
+                  {t("rq.service")}
                   <select
                     required
                     value={serviceId}
@@ -285,10 +292,10 @@ export function AppointmentRequest({
                         setProviderId("");
                     }}
                   >
-                    <option value="">Chọn dịch vụ</option>
+                    <option value="">{t("rq.chooseService")}</option>
                     {serviceList.map((s) => (
                       <option key={s.service.id} value={s.service.id}>
-                        {s.service.name}
+                        {serviceLabel(s.service)}
                       </option>
                     ))}
                   </select>
@@ -299,8 +306,10 @@ export function AppointmentRequest({
                       formatPrice(chosenMenuItem.priceVnd)
                     ) : (
                       <>
-                        {chosenService.variants.map((v) => v.durationMinutes + " phút").join(" · ")}{" "}
-                        · Từ{" "}
+                        {chosenService.variants
+                          .map((v) => t("rq.minute", { n: v.durationMinutes }))
+                          .join(" · ")}{" "}
+                        · {t("rq.from")}{" "}
                         {formatPrice(
                           Math.min(...chosenService.variants.map((v) => Number(v.priceVnd))),
                         )}
@@ -313,13 +322,9 @@ export function AppointmentRequest({
                 <div className="mm-booking-step">
                   <span>02</span>
                   <div>
-                    <h2>
-                      {!showProviderPicker && chosen ? "KTV bạn đã chọn" : "Chọn kỹ thuật viên"}
-                    </h2>
+                    <h2>{!showProviderPicker && chosen ? t("rq.selected") : t("rq.chooseKtv")}</h2>
                     <p>
-                      {!showProviderPicker && chosen
-                        ? "KTV này sẽ nhận yêu cầu đặt lịch của bạn."
-                        : "Tìm theo tên, dịch vụ hoặc khu vực."}
+                      {!showProviderPicker && chosen ? t("rq.selectedHint") : t("rq.searchHint")}
                     </p>
                   </div>
                 </div>
@@ -343,7 +348,7 @@ export function AppointmentRequest({
                     className="mm-outline-cta mm-request-change"
                     onClick={() => setShowProviderPicker(true)}
                   >
-                    Đổi KTV
+                    {t("rq.changeKtv")}
                   </button>
                 )}
               </section>
@@ -351,18 +356,18 @@ export function AppointmentRequest({
                 <div className="mm-booking-step">
                   <span>03</span>
                   <div>
-                    <h2>Địa điểm & thời gian</h2>
-                    <p>Khu vực phục vụ hiện tại: Hà Nội.</p>
+                    <h2>{t("rq.locationTime")}</h2>
+                    <p>{t("rq.areaHint")}</p>
                   </div>
                 </div>
-                <div className="mm-request-location" role="group" aria-label="Nơi phục vụ">
+                <div className="mm-request-location" role="group" aria-label={t("rq.location")}>
                   <button
                     type="button"
                     aria-pressed={location === "AT_BRANCH"}
                     className={location === "AT_BRANCH" ? "selected" : ""}
                     onClick={() => setLocation("AT_BRANCH")}
                   >
-                    Đến Mộc Maria
+                    {t("rq.branch")}
                   </button>
                   <button
                     type="button"
@@ -370,22 +375,22 @@ export function AppointmentRequest({
                     className={location === "AT_HOME" ? "selected" : ""}
                     onClick={() => setLocation("AT_HOME")}
                   >
-                    Tại địa chỉ của tôi
+                    {t("rq.home")}
                   </button>
                 </div>
                 <label className="mm-booking-field">
-                  Khu vực phục vụ
-                  <input readOnly value="Hà Nội" />
+                  {t("rq.area")}
+                  <input readOnly value={t("rq.city")} />
                 </label>
                 {location === "AT_HOME" ? (
                   <label className="mm-booking-field">
-                    Địa chỉ nhận dịch vụ
+                    {t("rq.address")}
                     <input
                       required
                       minLength={12}
                       maxLength={300}
                       autoComplete="street-address"
-                      placeholder="Số nhà, đường, phường/xã, quận/huyện, Hà Nội"
+                      placeholder={t("rq.addressHint")}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                     />
@@ -397,7 +402,7 @@ export function AppointmentRequest({
                   </p>
                 )}
                 <label className="mm-booking-field">
-                  Ngày & giờ mong muốn (giờ Hà Nội)
+                  {t("rq.date")}
                   <input
                     type="datetime-local"
                     min={dateLimits.min}
@@ -408,44 +413,48 @@ export function AppointmentRequest({
                   />
                 </label>
                 <label className="mm-booking-field">
-                  Ghi chú cho KTV
+                  {t("rq.notes")}
                   <textarea
                     rows={3}
                     maxLength={500}
-                    value={notes}
+                    value={notes === DEFAULT_BOOKING_NOTE ? t("rq.defaultNote") : notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Thời lượng mong muốn, lưu ý khi phục vụ..."
+                    placeholder={t("rq.noteHint")}
                   />
                 </label>
               </section>
             </div>
             <aside className="mm-booking-summary">
-              <span className="mm-overline">YÊU CẦU CỦA BẠN</span>
-              <h2>Khoảng nghỉ dành riêng cho bạn</h2>
+              <span className="mm-overline">{t("rq.summary")}</span>
+              <h2>{t("rq.summaryTitle")}</h2>
               <div className="mm-summary-items">
                 <p>
                   <UserRound size={18} />
-                  {chosen?.publicName || "Chưa chọn kỹ thuật viên"}
+                  {chosen?.publicName || t("rq.noKtv")}
                 </p>
-                <p>{chosenService?.service.name || "Chưa chọn dịch vụ"}</p>
+                <p>{chosenService ? serviceLabel(chosenService.service) : t("rq.noService")}</p>
                 <p>
                   <MapPin size={18} />
-                  {location === "AT_BRANCH" ? "Tại Mộc Maria" : address || "Chưa nhập địa chỉ"} · Hà
-                  Nội
+                  {location === "AT_BRANCH"
+                    ? t("rq.atBranch")
+                    : address || t("rq.noAddress")} · {t("rq.city")}
                 </p>
                 <p>
                   <CalendarDays size={18} />
-                  {requestedAt ? requestedAt.replace("T", " · ") : "Chưa chọn ngày và giờ"}
+                  {requestedAt
+                    ? new Intl.DateTimeFormat(locale, {
+                        timeZone: "Asia/Ho_Chi_Minh",
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(new Date(requestedAt + ":00+07:00"))
+                    : t("rq.noDate")}
                 </p>
               </div>
-              <p className="mm-hint">
-                Yêu cầu sẽ chờ KTV phản hồi và xác nhận. Giá và khả năng phục vụ tại nhà được trao
-                đổi trước khi chốt lịch.
-              </p>
+              <p className="mm-hint">{t("rq.confirmHint")}</p>
               <div className="mm-booking-action">
                 <span className="mm-booking-action-context">
-                  {chosen?.publicName || "Lựa chọn của bạn"} ·{" "}
-                  {chosenService?.service.name || "Chọn dịch vụ"}
+                  {chosen?.publicName || t("rq.choice")} ·{" "}
+                  {chosenService ? serviceLabel(chosenService.service) : t("rq.chooseService")}
                 </span>
                 <button
                   type="submit"
@@ -458,23 +467,25 @@ export function AppointmentRequest({
                   }
                 >
                   {status === "loading"
-                    ? "Đang kiểm tra tài khoản…"
+                    ? t("loading.checkAccount")
                     : busy
-                      ? "Đang gửi yêu cầu…"
+                      ? t("loading.sending")
                       : !user
-                        ? "Tiếp tục đặt lịch"
-                        : "Gửi yêu cầu đặt lịch"}
+                        ? t("rq.continue")
+                        : t("rq.send")}
                   <ArrowRight size={17} />
                 </button>
               </div>
-              {user && !canUsePersonalBooking(user) && (
-                <p>
-                  Tài khoản này chưa thể gửi yêu cầu đặt lịch. Vui lòng liên hệ Mộc để được hỗ trợ.
-                </p>
-              )}
+              {user && !canUsePersonalBooking(user) && <p>{t("rq.deniedHint")}</p>}
               {error && (
                 <p role="alert" className="mm-booking-error">
-                  {error}
+                  {error === "rq.denied"
+                    ? t("rq.denied")
+                    : error === "rq.check"
+                      ? t("rq.check")
+                      : locale === "vi"
+                        ? error
+                        : t("rq.error")}
                 </p>
               )}
             </aside>
@@ -484,8 +495,8 @@ export function AppointmentRequest({
       {accountOpen && !submitted && chosen && chosenService && (
         <BookingAccountDialog
           providerName={chosen.publicName}
-          serviceName={chosenService.service.name}
-          when={new Intl.DateTimeFormat("vi-VN", {
+          serviceName={serviceLabel(chosenService.service)}
+          when={new Intl.DateTimeFormat(locale, {
             timeZone: "Asia/Ho_Chi_Minh",
             hour: "2-digit",
             minute: "2-digit",

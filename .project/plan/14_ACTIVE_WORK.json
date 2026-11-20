@@ -586,5 +586,6 @@
       "branch": "codex/i18n-foundation-20261119",
       "ownedPaths": ["BE new ktv-chat monitor controller/service and scoped privacy migration", "FE chat monitor page, compact feed, navigation and virtual inbox group", "FE participant notice", "own tests and docs"],
       "note": "Owner-authorized additive read-only monitor. Preserve password protection, existing support grants, Zalo and shared Chat/Queue; no production fixtures."
-    }]
+    },
+    {"agent":"ChatGPT promotion i18n 2026-11-20","status":"ACTIVE","stage":"Promotion and linked booking i18n","taskIds":["I18N-PROMOTION-01"],"branch":"codex/i18n-foundation-20261119","ownedPaths":["src/shared/seasonal first visit and welcome","src/features/mobile appointment request, booking picker and quick account dialog","src/shared/i18n new dictionaries/tests","AGENTS.md and roadmap"],"note":"Owner authorized localization of touched legacy flows; preserve business payloads and all other claims."}]
 }

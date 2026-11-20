@@ -1,7 +1,10 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LOCALES } from "@/shared/i18n/locale";
+import { translate } from "@/shared/i18n/messages";
 
 let Dialog: typeof import("./first-visit-promotion").FirstVisitPromotionDialog;
+let LocaleProvider: typeof import("@/shared/i18n/locale-provider").LocaleProvider;
 const show = () =>
   act(() => {
     vi.advanceTimersByTime(1200);
@@ -10,6 +13,7 @@ const show = () =>
 beforeEach(async () => {
   vi.resetModules();
   Dialog = (await import("./first-visit-promotion")).FirstVisitPromotionDialog;
+  LocaleProvider = (await import("@/shared/i18n/locale-provider")).LocaleProvider;
   sessionStorage.clear();
   vi.useFakeTimers();
   Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
@@ -30,9 +34,37 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
   vi.restoreAllMocks();
+  document.cookie = "moc_locale=; Path=/; Max-Age=0";
 });
 
 describe("homepage first-visit offer", () => {
+  it.each(LOCALES)(
+    "localizes the title, booking CTA, close control and offer details in %s",
+    (locale) => {
+      document.cookie = "moc_locale=" + locale + "; Path=/";
+      render(
+        <LocaleProvider enabled>
+          <Dialog />
+        </LocaleProvider>,
+      );
+      show();
+      expect(
+        screen.getByRole("dialog", { name: translate(locale, "promo.title") }),
+      ).toHaveAttribute("lang", locale);
+      expect(screen.getByRole("link", { name: translate(locale, "nav.bookNow") })).toHaveAttribute(
+        "href",
+        "/dat-lich",
+      );
+      expect(
+        screen.getByRole("img", { name: translate(locale, "promo.poster") }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: translate(locale, "promo.close") }),
+      ).toBeInTheDocument();
+      if (locale !== "vi")
+        expect(screen.getByText(translate(locale, "promo.poster"))).toBeInTheDocument();
+    },
+  );
   it("shows the responsive poster and booking link once per tab, restores focus and scroll", () => {
     const initialFocus = document.createElement("button");
     document.body.append(initialFocus);

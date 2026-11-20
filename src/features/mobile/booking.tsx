@@ -73,8 +73,8 @@ function vietnamToday() {
   const get = (key: string) => parts.find((part) => part.type === key)?.value || "";
   return get("year") + "-" + get("month") + "-" + get("day");
 }
-function displayTime(date: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
+function displayTime(date: string, locale: string = "vi") {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: "Asia/Ho_Chi_Minh",
     hour: "2-digit",
     minute: "2-digit",
@@ -327,7 +327,7 @@ export function BookingWizard({
   const displayAddress =
     locationMode === "AT_BRANCH"
       ? activeBranch?.address || MOC_MARIA_PRIMARY_ADDRESS
-      : homeAddress.trim() || "Chưa nhập địa chỉ";
+      : homeAddress.trim() || t("rq.noAddress");
 
   return (
     <div className="mobile-experience mm-booking-page">
@@ -453,9 +453,7 @@ export function BookingWizard({
                       />
                     </label>
                     <p className="mm-place-instruction">
-                      {territories.length
-                        ? "Vui lòng nhập địa chỉ đầy đủ. Chỉ những KTV được duyệt phục vụ khu vực này mới được hiển thị."
-                        : "Chưa có KTV được xác minh để nhận lịch tại nhà. Bạn vẫn có thể đến cơ sở Mộc Maria."}
+                      {territories.length ? t("bv.addressHint") : t("bv.homeUnavailable")}
                     </p>
                   </div>
                 )}
@@ -467,9 +465,7 @@ export function BookingWizard({
                   <div>
                     <h2>{t("booking.therapist")}</h2>
                     <p>
-                      {locationMode === "AT_HOME"
-                        ? "Chỉ hiển thị KTV được duyệt trong khu vực bạn chọn."
-                        : t("booking.serviceFirst")}
+                      {locationMode === "AT_HOME" ? t("bv.areaOnly") : t("booking.serviceFirst")}
                     </p>
                   </div>
                 </div>
@@ -507,9 +503,9 @@ export function BookingWizard({
                   <p className="mm-hint">
                     {locationMode === "AT_HOME"
                       ? homeReady
-                        ? "Chưa có KTV phù hợp trong khu vực này."
-                        : "Chọn khu vực và nhập địa chỉ tại bước 01 để xem KTV phù hợp."
-                      : "Chưa có KTV được công bố hoặc đủ điều kiện nhận lịch."}
+                        ? t("bv.noKtv")
+                        : t("bv.chooseArea")
+                      : t("bv.noPublished")}
                   </p>
                 )}
               </section>
@@ -520,14 +516,12 @@ export function BookingWizard({
                   <div>
                     <h2>{t("booking.serviceDuration")}</h2>
                     <p>
-                      {locationMode === "AT_HOME"
-                        ? "Chỉ hiển thị dịch vụ KTV có thể phục vụ tại địa chỉ của bạn."
-                        : t("booking.chooseCare")}
+                      {locationMode === "AT_HOME" ? t("bv.homeServices") : t("booking.chooseCare")}
                     </p>
                   </div>
                 </div>
                 {chosenProvider && !compatibleServices.length && (
-                  <p className="mm-hint">KTV này chưa có dịch vụ đủ điều kiện đặt lịch.</p>
+                  <p className="mm-hint">{t("bv.noServices")}</p>
                 )}
                 <div className="mm-booking-options">
                   {compatibleServices.map((item) => (
@@ -576,7 +570,7 @@ export function BookingWizard({
                   </div>
                 )}
                 {locationMode === "AT_HOME" && !homeReady && (
-                  <p className="mm-hint">Hoàn tất địa chỉ để xem danh sách dịch vụ phù hợp.</p>
+                  <p className="mm-hint">{t("bv.completeAddress")}</p>
                 )}
               </section>
 
@@ -594,7 +588,7 @@ export function BookingWizard({
                   <>
                     {detailError && (
                       <p className="mm-hint" role="alert">
-                        {detailError}
+                        {locale === "vi" ? detailError : t("bv.detailError")}
                       </p>
                     )}
                     <label className="mm-booking-field">
@@ -617,7 +611,7 @@ export function BookingWizard({
                       </select>
                     </label>
                     {variantId && !availableBranches.length && !detailError && (
-                      <p className="mm-hint">Cơ sở chính chưa mở đặt lịch cho dịch vụ này.</p>
+                      <p className="mm-hint">{t("bv.branchUnavailable")}</p>
                     )}
                   </>
                 )}
@@ -625,9 +619,8 @@ export function BookingWizard({
                   <div className="mm-home-pending">
                     <House size={21} />
                     <p>
-                      <strong>Phục vụ tại nhà cần xác nhận riêng.</strong>
-                      Hệ thống chưa mở đặt lịch tại nhà trực tuyến. Sau khi chọn dịch vụ và KTV, bạn
-                      có thể nhắn tin để trao đổi lịch và chi phí di chuyển.
+                      <strong>{t("bv.homeConfirm")}</strong>
+                      {t("bv.homePending")}
                     </p>
                   </div>
                 )}
@@ -652,7 +645,7 @@ export function BookingWizard({
                       <p role="status">{t("booking.checking")}</p>
                     ) : availabilityError ? (
                       <p role="alert" className="mm-hint">
-                        {availabilityError}
+                        {locale === "vi" ? availabilityError : t("bv.slotsError")}
                       </p>
                     ) : slots.length ? (
                       <div className="mm-slot-grid">
@@ -668,7 +661,7 @@ export function BookingWizard({
                             }
                             onClick={() => setSelectedSlot(slot)}
                           >
-                            <strong>{displayTime(slot.startsAt)}</strong>
+                            <strong>{displayTime(slot.startsAt, locale)}</strong>
                             <small>{slot.providerName}</small>
                           </button>
                         ))}
@@ -677,9 +670,7 @@ export function BookingWizard({
                       <p className="mm-hint">{t("booking.noSlots")}</p>
                     )}
                     {availability && !availability.requestEnabled && (
-                      <p className="mm-hint">
-                        Cơ sở chưa mở chức năng gửi yêu cầu đặt lịch trực tuyến.
-                      </p>
+                      <p className="mm-hint">{t("bv.requestDisabled")}</p>
                     )}
                   </div>
                 )}
@@ -720,7 +711,7 @@ export function BookingWizard({
                   <CalendarDays size={17} />
                   <span>
                     {selectedSlot
-                      ? displayTime(selectedSlot.startsAt) + " · " + day
+                      ? displayTime(selectedSlot.startsAt, locale) + " · " + day
                       : t("booking.noTime", { day })}
                   </span>
                 </p>
@@ -738,15 +729,13 @@ export function BookingWizard({
                 </strong>
               </div>
               <p className="mm-hint">
-                {locationMode === "AT_HOME"
-                  ? "Tin nhắn tư vấn chưa phải xác nhận lịch hoặc báo giá. Không thanh toán trước qua chat."
-                  : "Giá cuối cùng được thể hiện trong báo giá. Yêu cầu chỉ xác nhận theo quy trình của Mộc."}
+                {locationMode === "AT_HOME" ? t("bv.chatWarning") : t("bv.quote")}
               </p>
               {locationMode === "AT_BRANCH" && (
                 <label className="mm-booking-field">
                   {t("booking.notes")}
                   <textarea
-                    value={notes}
+                    value={notes === DEFAULT_BOOKING_NOTE ? t("rq.defaultNote") : notes}
                     onChange={(e) => setNotes(e.target.value)}
                     maxLength={500}
                     rows={3}
@@ -763,9 +752,7 @@ export function BookingWizard({
                     {t("booking.chat")} <ArrowRight size={17} />
                   </Link>
                 ) : (
-                  <p className="mm-hint mm-home-cta-hint">
-                    Chọn địa chỉ, dịch vụ và một KTV để trao đổi thời gian phục vụ tại nhà.
-                  </p>
+                  <p className="mm-hint mm-home-cta-hint">{t("bv.homeCta")}</p>
                 )
               ) : status === "loading" ? (
                 <p>{t("booking.checkAccount")}</p>
@@ -796,7 +783,7 @@ export function BookingWizard({
               )}
               {sendError && (
                 <p role="alert" className="mm-booking-error">
-                  {sendError}
+                  {locale === "vi" ? sendError : t("rq.error")}
                 </p>
               )}
               <p className="mm-privacy">

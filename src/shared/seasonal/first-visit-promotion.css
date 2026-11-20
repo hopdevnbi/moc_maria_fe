@@ -80,6 +80,8 @@
 }
 
 .mm-first-visit-book {
+  position: sticky;
+  bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,6 +96,12 @@
   text-decoration: none;
   font-size: 15px;
   font-weight: 700;
+}
+.mm-first-visit-summary {
+  margin: 8px 14px 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .mm-first-visit :is(a, button):focus-visible {

@@ -2,12 +2,14 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { CalendarDays, X } from "lucide-react";
+import { useLocale } from "@/shared/i18n/locale-provider";
 import "./first-visit-promotion.css";
 
 const SESSION_KEY = "mm:first-visit-99k:v1";
 let shownThisDocument = false;
 
 export function FirstVisitPromotionDialog() {
+  const { locale, t } = useLocale();
   const [open, setOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -58,6 +60,7 @@ export function FirstVisitPromotionDialog() {
     <dialog
       ref={dialog}
       className="mm-first-visit"
+      lang={locale}
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
@@ -76,11 +79,11 @@ export function FirstVisitPromotionDialog() {
       }}
     >
       <div className="mm-first-visit-header">
-        <h2 id={titleId}>Ưu đãi trải nghiệm lần đầu</h2>
+        <h2 id={titleId}>{t("promo.title")}</h2>
         <button
           ref={closeButton}
           type="button"
-          aria-label="Đóng ưu đãi"
+          aria-label={t("promo.close")}
           onClick={() => setOpen(false)}
         >
           <X size={22} aria-hidden="true" />
@@ -98,11 +101,12 @@ export function FirstVisitPromotionDialog() {
           height={768}
           loading="eager"
           decoding="async"
-          alt="Mộc Maria: chăm sóc chuyên sâu cổ vai gáy, lưng eo, ưu đãi trải nghiệm lần đầu 99K. Ngâm chân thảo dược và tặng một bát chè dưỡng sinh. Đặt lịch 0367 655 183."
+          alt={t("promo.poster")}
         />
       </picture>
+      {locale !== "vi" && <p className="mm-first-visit-summary">{t("promo.poster")}</p>}
       <a className="mm-first-visit-book" href="/dat-lich" onClick={() => setOpen(false)}>
-        <CalendarDays size={20} aria-hidden="true" /> Đặt lịch ngay
+        <CalendarDays size={20} aria-hidden="true" /> {t("nav.bookNow")}
       </a>
     </dialog>
   );

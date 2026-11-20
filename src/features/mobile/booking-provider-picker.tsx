@@ -30,26 +30,26 @@ export function BookingProviderPicker({
       {showSearch && (
         <>
           <div className="mm-care-picker-caption">
-            <span>Chọn người đồng hành cùng bạn</span>
-            <strong>{total} KTV</strong>
+            <span>{t("rq.picker")}</span>
+            <strong>{t("rq.count", { n: total })}</strong>
           </div>
           <div className="mm-care-picker-search">
             <Search size={19} aria-hidden="true" />
             <input
               value={query}
               onChange={(event) => onQuery(event.target.value)}
-              placeholder="Tìm tên KTV, dịch vụ..."
-              aria-label="Tìm kỹ thuật viên"
+              placeholder={t("rq.search")}
+              aria-label={t("rq.searchKtv")}
             />
             {query && (
-              <button type="button" aria-label="Xóa tìm kiếm KTV" onClick={() => onQuery("")}>
+              <button type="button" aria-label={t("rq.clear")} onClick={() => onQuery("")}>
                 <X size={17} />
               </button>
             )}
           </div>
         </>
       )}
-      <div className="mm-care-picker-grid" role="group" aria-label="Danh sách kỹ thuật viên">
+      <div className="mm-care-picker-grid" role="group" aria-label={t("rq.list")}>
         {providers.map((provider) => {
           const selected = selectedId === provider.id;
           return (
@@ -79,9 +79,14 @@ export function BookingProviderPicker({
                   {providerTitle(locale, provider.title) || t("home.role")}
                 </span>
                 <span className="mm-care-picker-area">
-                  <MapPin size={12} aria-hidden="true" /> {provider.serviceArea || "Hà Nội"}
+                  <MapPin size={12} aria-hidden="true" />{" "}
+                  {!provider.serviceArea || provider.serviceArea === "Hà Nội"
+                    ? t("rq.city")
+                    : provider.serviceArea}
                 </span>
-                <span className="mm-care-picker-choice">{selected ? "Đã chọn" : "Chọn KTV"}</span>
+                <span className="mm-care-picker-choice">
+                  {selected ? t("rq.picked") : t("rq.pick")}
+                </span>
               </span>
               <span className="mm-care-picker-check" aria-hidden="true">
                 {selected && <Check size={14} />}
@@ -93,19 +98,16 @@ export function BookingProviderPicker({
       {showSearch && providers.length === 0 && (
         <div className="mm-care-picker-empty" role="status">
           <Search size={24} />
-          <strong>Chưa tìm thấy KTV</strong>
-          <p>Thử tên khác hoặc xóa từ khóa để xem danh sách.</p>
+          <strong>{t("rq.empty")}</strong>
+          <p>{t("rq.emptyHint")}</p>
           {query && (
             <button type="button" onClick={() => onQuery("")}>
-              Xem tất cả KTV
+              {t("rq.all")}
             </button>
           )}
         </div>
       )}
-      <p className="mm-care-picker-note">
-        Chọn KTV bạn muốn gửi yêu cầu. KTV sẽ trao đổi và xác nhận dịch vụ, thời gian phù hợp với
-        bạn.
-      </p>
+      <p className="mm-care-picker-note">{t("rq.pickerHint")}</p>
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { ArrowRight, Check, Eye, EyeOff, Leaf, LockKeyhole, X } from "lucide-rea
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { AuthResponse } from "@/features/auth/auth.types";
 import { registerSchema } from "@/features/auth/register-schema";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import { promotionMessageKeys, promotionMessage } from "@/shared/i18n/promotion-messages";
 import { PendingLabel } from "@/shared/loading/loading-state";
 
 export function BookingAccountDialog({
@@ -30,6 +32,13 @@ export function BookingAccountDialog({
   onDismiss: () => void;
 }) {
   const { register, login } = useAuth();
+  const { t, locale } = useLocale();
+  const localError = (value: string) => {
+    const key = promotionMessageKeys.find(
+      (k) => k.startsWith("ba.") && (k === value || promotionMessage("vi", k) === value),
+    );
+    return key ? t(key) : locale === "vi" ? value : t("ba.error");
+  };
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const alive = useRef(false);
@@ -109,7 +118,7 @@ export function BookingAccountDialog({
       return;
     }
     if (mode === "register" && contactType === "phone" && !/^\+?[\d ()-]{8,32}$/.test(contact)) {
-      setErrors({ contact: "Số điện thoại chưa đúng định dạng." });
+      setErrors({ contact: "ba.phoneError" });
       return;
     }
     inFlight.current = true;
@@ -144,6 +153,7 @@ export function BookingAccountDialog({
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       aria-busy={busy}
+      lang={locale}
       onCancel={(event) => {
         event.preventDefault();
         if (!inFlight.current) onDismiss();
@@ -168,7 +178,7 @@ export function BookingAccountDialog({
           <button
             type="button"
             className="mm-booking-account-close"
-            aria-label={gift ? "Đóng đăng ký mở quà" : "Đóng đăng ký nhanh"}
+            aria-label={gift ? t("ba.closeGift") : t("ba.close")}
             disabled={busy}
             onClick={onDismiss}
           >
@@ -179,22 +189,18 @@ export function BookingAccountDialog({
           <span className="mm-booking-account-flower" aria-hidden="true">
             <Leaf size={27} />
           </span>
-          <span className="mm-booking-account-eyebrow">MỘT CHÚT THẢNH THƠI ĐANG CHỜ BẠN</span>
+          <span className="mm-booking-account-eyebrow">{t("ba.eyebrow")}</span>
           <h2 ref={heading} id={titleId} tabIndex={-1}>
             {gift
               ? mode === "register"
-                ? "Mở quà, đón an lành"
-                : "Quà đang chờ bạn"
+                ? t("ba.giftTitle")
+                : t("ba.giftLogin")
               : mode === "register"
-                ? "Chỉ còn một bước nhỏ"
-                : "Mừng bạn trở lại"}
+                ? t("ba.title")
+                : t("ba.welcome")}
           </h2>
           <p id={descriptionId}>
-            {gift
-              ? "Đăng ký hoặc đăng nhập ngay tại đây. Mộc sẽ kiểm tra lượt tham gia rồi mở hộp bạn đã chọn khi đủ điều kiện."
-              : mode === "register"
-                ? "Tạo tài khoản nhanh để gửi yêu cầu và nhận phản hồi từ KTV. Lựa chọn của bạn đã được giữ nguyên."
-                : "Đăng nhập ngay tại đây. Chúng mình sẽ tự gửi yêu cầu bạn vừa chọn."}
+            {gift ? t("ba.giftIntro") : mode === "register" ? t("ba.intro") : t("ba.loginIntro")}
           </p>
         </header>
         <div className="mm-booking-account-selection">
@@ -225,18 +231,18 @@ export function BookingAccountDialog({
         <form onSubmit={submit} className="mm-booking-account-form">
           <fieldset disabled={busy}>
             <legend className="sr-only">
-              {mode === "register" ? "Đăng ký nhanh" : "Đăng nhập"}
+              {mode === "register" ? t("ba.register") : t("ba.login")}
             </legend>
             {mode === "register" && (
               <label htmlFor="booking-account-name">
-                Họ và tên
+                {t("ba.name")}
                 <input
                   id="booking-account-name"
                   autoComplete="name"
                   required
                   minLength={2}
                   maxLength={160}
-                  placeholder={gift ? "Tên để Mộc gửi lời chúc" : "Tên để KTV xưng hô với bạn"}
+                  placeholder={gift ? t("ba.nameGift") : t("ba.nameHint")}
                   value={values.displayName}
                   onChange={(event) =>
                     setValues((old) => ({ ...old, displayName: event.target.value }))
@@ -246,7 +252,7 @@ export function BookingAccountDialog({
                 />
                 {errors.displayName && (
                   <small id="booking-name-error" className="mm-booking-account-field-error">
-                    {errors.displayName}
+                    {localError(errors.displayName)}
                   </small>
                 )}
               </label>
@@ -254,10 +260,10 @@ export function BookingAccountDialog({
             <div className="mm-booking-account-contact-label">
               <label htmlFor="booking-account-contact">
                 {mode === "login"
-                  ? "Số điện thoại hoặc email"
+                  ? t("ba.contact")
                   : contactType === "phone"
-                    ? "Số điện thoại"
-                    : "Email"}
+                    ? t("ba.phone")
+                    : t("ba.email")}
               </label>
               {mode === "register" && (
                 <button
@@ -268,7 +274,7 @@ export function BookingAccountDialog({
                     setErrors({});
                   }}
                 >
-                  {contactType === "phone" ? "Dùng email" : "Dùng số điện thoại"}
+                  {contactType === "phone" ? t("ba.useEmail") : t("ba.usePhone")}
                 </button>
               )}
             </div>
@@ -284,7 +290,7 @@ export function BookingAccountDialog({
               placeholder={
                 mode === "register" && contactType === "phone"
                   ? "09xx xxx xxx"
-                  : "Email hoặc số điện thoại của bạn"
+                  : t("ba.contactHint")
               }
               value={values.contact}
               onChange={(event) => setValues((old) => ({ ...old, contact: event.target.value }))}
@@ -293,10 +299,10 @@ export function BookingAccountDialog({
             />
             {errors.contact && (
               <small id="booking-contact-error" className="mm-booking-account-field-error">
-                {errors.contact}
+                {localError(errors.contact)}
               </small>
             )}
-            <label htmlFor="booking-account-password">Mật khẩu</label>
+            <label htmlFor="booking-account-password">{t("ba.password")}</label>
             <div className="mm-booking-account-password">
               <input
                 id="booking-account-password"
@@ -312,7 +318,7 @@ export function BookingAccountDialog({
               />
               <button
                 type="button"
-                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                aria-label={showPassword ? t("ba.hide") : t("ba.show")}
                 aria-pressed={showPassword}
                 onClick={() => setShowPassword((old) => !old)}
               >
@@ -325,15 +331,13 @@ export function BookingAccountDialog({
                 errors.password ? "mm-booking-account-field-error" : "mm-booking-account-help"
               }
             >
-              {errors.password ||
-                (mode === "register"
-                  ? "Từ 10 ký tự, có chữ hoa, chữ thường và số."
-                  : "Dùng mật khẩu tài khoản Mộc Maria của bạn.")}
+              {(errors.password && localError(errors.password)) ||
+                (mode === "register" ? t("ba.passwordHint") : t("ba.loginPassword"))}
             </small>
             {gift && (
               <div className="mm-booking-account-terms">
                 <details>
-                  <summary>Xem thể lệ · phiên bản {gift.termsVersion}</summary>
+                  <summary>{t("ba.terms", { version: gift.termsVersion })}</summary>
                   <p>{gift.termsText}</p>
                 </details>
                 <label className="mm-booking-account-agreement">
@@ -342,14 +346,14 @@ export function BookingAccountDialog({
                     checked={gift.accepted}
                     onChange={(event) => gift.onAcceptedChange(event.target.checked)}
                   />
-                  <span>Tôi đã đọc và đồng ý thể lệ sự kiện trước khi mở quà.</span>
+                  <span>{t("ba.agree")}</span>
                 </label>
               </div>
             )}
           </fieldset>
           {error && (
             <p role="alert" className="mm-booking-account-error">
-              {error}
+              {localError(error)}
             </p>
           )}
           <div className="mm-booking-account-footer">
@@ -374,25 +378,22 @@ export function BookingAccountDialog({
                 <>
                   {gift
                     ? mode === "register"
-                      ? "Đăng ký & mở hộp quà"
-                      : "Đăng nhập & mở hộp quà"
+                      ? t("ba.registerGift")
+                      : t("ba.loginGift")
                     : mode === "register"
-                      ? "Đăng ký nhanh & gửi yêu cầu"
-                      : "Đăng nhập & gửi yêu cầu"}
+                      ? t("ba.registerSend")
+                      : t("ba.loginSend")}
                   <ArrowRight size={18} />
                 </>
               )}
             </button>
             <small>
-              <LockKeyhole size={12} />{" "}
-              {gift
-                ? "Quà lưu trong ví · Một lượt mỗi sự kiện"
-                : "Gửi yêu cầu tự động · Chờ KTV xác nhận"}
+              <LockKeyhole size={12} /> {gift ? t("ba.giftFoot") : t("ba.foot")}
             </small>
             <p>
-              {mode === "register" ? "Bạn đã có tài khoản?" : "Bạn chưa có tài khoản?"}{" "}
+              {mode === "register" ? t("ba.hasAccount") : t("ba.noAccount")}{" "}
               <button type="button" disabled={busy} onClick={changeMode}>
-                {mode === "register" ? "Đăng nhập" : "Đăng ký nhanh"}
+                {mode === "register" ? t("ba.login") : t("ba.register")}
               </button>
             </p>
           </div>

@@ -10,6 +10,7 @@ import { loadingMessage, type LoadingKey } from "./loading-messages";
 import { customerProfileMessage, type CustomerProfileKey } from "./customer-profile-messages";
 import { customerActivityMessage, type CustomerActivityKey } from "./customer-activity-messages";
 import { monitorMessage, type MonitorKey } from "./monitor-messages";
+import { promotionMessage, type PromotionKey } from "./promotion-messages";
 
 const vi = {
   "language.label": "Ngôn ngữ",
@@ -33,7 +34,8 @@ export type MessageKey =
   | LoadingKey
   | CustomerProfileKey
   | CustomerActivityKey
-  | MonitorKey;
+  | MonitorKey
+  | PromotionKey;
 export const messages: Record<Locale, Record<CommonKey, string>> = {
   vi,
   en: {
@@ -84,6 +86,7 @@ export const messages: Record<Locale, Record<CommonKey, string>> = {
 };
 export function translate(locale: Locale, key: MessageKey): string {
   return (
+    promotionMessage(locale, key as PromotionKey) ??
     monitorMessage(locale, key as MonitorKey) ??
     customerActivityMessage(locale, key as CustomerActivityKey) ??
     customerProfileMessage(locale, key as CustomerProfileKey) ??
