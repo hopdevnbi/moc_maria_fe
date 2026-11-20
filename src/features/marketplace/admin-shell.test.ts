@@ -14,6 +14,7 @@ describe("Admin sidebar RBAC navigation", () => {
     expect(items.filter((item) => item.href).map((item) => item.href)).toEqual([
       "/quan-tri",
       "/quan-tri/lich-hen",
+      "/quan-tri/giam-sat-chat",
       "/quan-tri/ktv",
       "/quan-tri/danh-gia-ktv",
       "/quan-tri/dich-vu",

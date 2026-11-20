@@ -41,6 +41,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useLocale } from "@/shared/i18n/locale-provider";
 import { LoadingState, PendingLabel } from "@/shared/loading/loading-state";
 import type { ChatProvider } from "@/features/marketplace/types";
 import { chatHref } from "./links";
@@ -289,6 +290,7 @@ export function KtvChatPage({
   threadId?: string;
 }) {
   const { status, user, authFetch } = useAuth();
+  const { t } = useLocale();
   const client = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
@@ -1080,7 +1082,7 @@ export function KtvChatPage({
             </p>
           </div>
           <span className="ktv-chat-private">
-            <ShieldCheck size={16} /> Hội thoại riêng tư
+            <ShieldCheck size={16} /> {t("monitor.notice")}
           </span>
         </div>
         {status === "loading" ? (
@@ -1305,7 +1307,7 @@ export function KtvChatPage({
                 )}
               </div>
               <p className="ktv-chat-sidebar-footer">
-                <ShieldCheck size={15} /> Chỉ hai người trong hội thoại được xem tin nhắn.
+                <ShieldCheck size={15} /> {t("monitor.notice")}
               </p>
             </aside>
             <section className="ktv-chat-dialog" aria-label="Nội dung hội thoại">
@@ -1742,10 +1744,7 @@ export function KtvChatPage({
                         >
                           <Send size={21} />
                         </button>
-                        <small>
-                          Ảnh JPG, PNG, WebP, HEIC tối đa 20 MB (tự thu nhỏ trước khi gửi). Không
-                          chia sẻ mật khẩu hoặc thông tin thanh toán.
-                        </small>
+                        <small>{t("monitor.composerNotice")}</small>
                       </form>
                     </>
                   )}
@@ -1772,7 +1771,7 @@ export function KtvChatPage({
                     </button>
                   )}
                   <span className="ktv-chat-private">
-                    <ShieldCheck size={16} /> Chỉ bạn và người nhận xem được tin nhắn
+                    <ShieldCheck size={16} /> {t("monitor.notice")}
                   </span>
                 </div>
               )}
