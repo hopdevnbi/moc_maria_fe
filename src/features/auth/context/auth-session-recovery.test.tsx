@@ -51,14 +51,28 @@ function renderProtectedPage() {
 }
 
 function ManualLogin() {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   return (
-    <button
-      type="button"
-      onClick={() => void login({ identifier: "test@example.com", password: "test-password" })}
-    >
-      Đăng nhập thử
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => void login({ identifier: "test@example.com", password: "test-password" })}
+      >
+        Đăng nhập thử
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          void register({
+            displayName: "New test member",
+            email: "new@example.invalid",
+            password: "Test-only-password",
+          })
+        }
+      >
+        Đăng ký thử
+      </button>
+    </>
   );
 }
 
@@ -71,6 +85,32 @@ beforeEach(() => {
 });
 
 describe("session bootstrap on a new iPhone/Safari", () => {
+  it("offers the configured community link only after a successful signup without blocking registration", async () => {
+    mocks.apiRequest.mockImplementation((path: string) =>
+      Promise.resolve({ status: path === "/auth/refresh" ? 401 : 200, path }),
+    );
+    mocks.parseApiResponse.mockImplementation((response: { path: string }) =>
+      Promise.resolve(
+        response.path === "/referrals/community"
+          ? { url: "https://zalo.me/g/IsolatedQA" }
+          : loggedIn,
+      ),
+    );
+    renderProtectedPage();
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+    expect(mocks.apiRequest.mock.calls.some(([path]) => path === "/referrals/community")).toBe(
+      false,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Đăng ký thử" }));
+    expect(await screen.findByText("Trang của KTV")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Tham gia nhóm Zalo" })).toHaveAttribute(
+      "href",
+      "https://zalo.me/g/IsolatedQA",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Để sau" }));
+    expect(screen.queryByRole("link", { name: "Tham gia nhóm Zalo" })).not.toBeInTheDocument();
+    expect(screen.getByText("Trang của KTV")).toBeInTheDocument();
+  });
   it("opens the protected page when refreshing the session succeeds", async () => {
     mocks.apiRequest.mockResolvedValue({ status: 200 });
     mocks.parseApiResponse.mockResolvedValue(loggedIn);

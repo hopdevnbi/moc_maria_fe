@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest, parseApiResponse, withAuthRequestDeadline } from "../auth-api";
 import { registrationReferral, clearReferralCookie } from "@/features/referrals/referral-cookie";
+import { ReferralCommunity } from "@/features/referrals/referral-community";
 import type { AuthResponse, AuthStatus, AuthUser } from "../auth.types";
 import {
   AuthContext,
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [newMemberId, setNewMemberId] = useState<string | null>(null);
   const refreshPromise = useRef<Promise<AuthResponse | null> | null>(null);
 
   useEffect(() => {
@@ -41,7 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (auth: AuthResponse | null) => {
       authRevision.current += 1;
       const nextId = auth?.user.id ?? null;
-      if (authenticatedId.current !== nextId) queryClient.clear();
+      if (authenticatedId.current !== nextId) {
+        queryClient.clear();
+        setNewMemberId(null);
+      }
       authenticatedId.current = nextId;
       setAccessToken(auth?.accessToken ?? null);
       setUser(auth?.user ?? null);
@@ -112,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }, 20_000);
       applyAuth(auth);
       clearReferralCookie();
+      setNewMemberId(auth.user.id);
       return auth;
     },
     [applyAuth],
@@ -189,5 +195,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {newMemberId && user?.id === newMemberId && (
+        <ReferralCommunity key={newMemberId} onDismiss={() => setNewMemberId(null)} />
+      )}
+    </AuthContext.Provider>
+  );
 }

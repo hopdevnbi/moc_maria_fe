@@ -27,6 +27,61 @@
   padding: 14px;
   background: #eff7ee;
 }
+.mm-referral-community {
+  display: grid;
+  gap: 9px;
+  background: #eff6ff;
+  border: 1px solid #d5e5ff;
+  border-radius: 14px;
+  padding: 14px;
+  color: #184678;
+  overflow-wrap: anywhere;
+}
+.mm-referral-community-heading {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.mm-referral-community-heading > svg {
+  flex-shrink: 0;
+}
+.mm-referral-community-heading strong {
+  flex: 1;
+}
+.mm-referral-community p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.mm-referral-community a,
+.mm-referral-community button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.mm-referral-community a {
+  background: #1761c5;
+  color: white;
+}
+.mm-referral-community button {
+  background: transparent;
+  color: #184678;
+}
+.mm-referral-community-welcome {
+  position: fixed;
+  right: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  z-index: 45;
+  width: min(350px, calc(100vw - 32px));
+  box-shadow: 0 6px 30px #213d6440;
+}
 .mm-referral-receipt > svg {
   flex-shrink: 0;
 }

@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import type { MessageKey } from "@/shared/i18n/messages";
+import { CommunitySettings, ReferralCommunity } from "./referral-community";
 import "./referrals.css";
 
 type Mine = {
@@ -277,6 +278,7 @@ export function ReferralCard() {
             <p>{t(statuses[m.verificationStatus] ?? "ref.pending")}</p>
           )}
           {m.registered > 0 && user?.id && <ReferralHistory key={user.id} />}
+          <ReferralCommunity />
         </>
       )}
       {notice && <p role="status">{t(notice)}</p>}
@@ -496,6 +498,7 @@ function AdminFeed() {
           </button>
         </div>
       )}
+      <CommunitySettings />
       {settings.isError || rows.isError ? (
         <p role="alert">
           {t("ref.error")}{" "}
