@@ -80,6 +80,64 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("private KTV chat interactions", () => {
+  it.each(["CUSTOMER", "THERAPIST", "ADMIN", "RECEPTIONIST"])(
+    "does not show the supervisor group for %s",
+    async (role) => {
+      state.user = {
+        id: "customer",
+        roles: [role],
+        permissions: ["customer.portal", "admin.portal", "customers.manage"],
+      };
+      mount();
+      await screen.findByRole("button", { name: /Ngọc Mai/ });
+      expect(
+        screen.queryByRole("button", { name: /Giám sát chat hệ thống/ }),
+      ).not.toBeInTheDocument();
+      expect(state.fetch.mock.calls.some(([path]) => path.startsWith("/admin/chat-monitor"))).toBe(
+        false,
+      );
+    },
+  );
+  it("opens the pinned read-only monitor only for an authorized Super Admin", async () => {
+    state.user = {
+      id: "admin",
+      roles: ["SUPER_ADMIN"],
+      permissions: ["admin.portal", "customers.manage"],
+    };
+    const original = state.fetch.getMockImplementation()!;
+    state.fetch.mockImplementation((path: string, init?: RequestInit) =>
+      path === "/admin/chat-monitor"
+        ? Promise.resolve({
+            items: [
+              {
+                id: "a1",
+                seq: "1",
+                threadId: "t1",
+                customerName: "Client QA",
+                providerName: "Therapist QA",
+                senderName: "Client QA",
+                senderRole: "customer",
+                body: "Activity QA",
+                createdAt: "2026-11-20T02:00:00Z",
+                protected: false,
+                imageUrl: null,
+              },
+            ],
+            nextBefore: null,
+          })
+        : original(path, init),
+    );
+    mount();
+    const group = await screen.findByRole("button", { name: /Giám sát chat hệ thống/ });
+    expect(state.fetch.mock.calls.some(([path]) => path.startsWith("/admin/chat-monitor"))).toBe(
+      false,
+    );
+    fireEvent.click(group);
+    expect(await screen.findByText("Activity QA")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Nội dung tin nhắn" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Về danh sách hội thoại" }));
+    expect(screen.queryByText("Activity QA")).not.toBeInTheDocument();
+  });
   it.each([false, true])(
     "labels support messages honestly for participants and supporting admins (%s)",
     async (support) => {

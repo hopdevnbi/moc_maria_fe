@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLocale } from "@/shared/i18n/locale-provider";
+import { ChatMonitor, canViewChatMonitor } from "@/features/marketplace/chat-monitor";
 import { LoadingState, PendingLabel } from "@/shared/loading/loading-state";
 import type { ChatProvider } from "@/features/marketplace/types";
 import { chatHref } from "./links";
@@ -293,6 +294,7 @@ export function KtvChatPage({
   const { t } = useLocale();
   const client = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [monitorOpen, setMonitorOpen] = useState(false);
   const [choosing, setChoosing] = useState(false);
   const [search, setSearch] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -323,6 +325,8 @@ export function KtvChatPage({
   const inFlight = useRef(new Set<string>());
   const previewUrls = useRef(new Set<string>());
   const enabled = status === "authenticated" && !!user;
+  const monitorAllowed = enabled && canViewChatMonitor(user);
+  const monitoring = monitorAllowed && monitorOpen;
   const canStartChat = canUsePersonalBooking(user);
   const key = ["ktv-chat", user?.id];
   const threads = useQuery({
@@ -356,6 +360,7 @@ export function KtvChatPage({
     if (!threadId || !threads.data?.some((thread) => thread.id === threadId)) return;
     if (openedThread.current === threadId) return;
     openedThread.current = threadId;
+    setMonitorOpen(false);
     setSelectedId(threadId);
     setChoosing(false);
     nearBottom.current = true;
@@ -634,6 +639,7 @@ export function KtvChatPage({
     },
     onMutate: (request) => {
       if (selectionVersion.current !== request.version) return;
+      setMonitorOpen(false);
       failedOpening.current = null;
       setSelectedId(null);
       setChoosing(false);
@@ -1022,6 +1028,7 @@ export function KtvChatPage({
           ? chatError(history.error)
           : "");
   const select = (thread: Thread) => {
+    setMonitorOpen(false);
     ++selectionVersion.current;
     failedOpening.current = null;
     setOpeningProvider(null);
@@ -1038,6 +1045,7 @@ export function KtvChatPage({
     nearBottom.current = true;
   };
   const pick = () => {
+    setMonitorOpen(false);
     ++selectionVersion.current;
     failedOpening.current = null;
     setOpeningProvider(null);
@@ -1057,11 +1065,25 @@ export function KtvChatPage({
     if (failed) openThread({ ...failed, version: ++selectionVersion.current });
     else if (provider && !selectedId) setDeepLinkAttempt((old) => old + 1);
   };
+  const openMonitor = () => {
+    if (!monitorAllowed) return;
+    ++selectionVersion.current;
+    failedOpening.current = null;
+    leaving();
+    setSelectedId(null);
+    setOpeningProvider(null);
+    setAttachment(null);
+    setAttachmentError("");
+    setChoosing(false);
+    setSearch("");
+    setActionError("");
+    setMonitorOpen(true);
+  };
 
   return (
     <div
       ref={shellRef}
-      className={`mobile-experience ktv-chat-shell${(current && !choosing) || openingProvider ? " is-conversation" : ""}`}
+      className={`mobile-experience ktv-chat-shell${monitoring || (current && !choosing) || openingProvider ? " is-conversation" : ""}`}
     >
       <MobileHeader />
       <main className="mm-container ktv-chat-main">
@@ -1175,6 +1197,25 @@ export function KtvChatPage({
                   {(canStartChat || !provider) && <button onClick={retry}>Thử kết nối lại</button>}
                 </div>
               )}
+              {monitorAllowed && (
+                <div className="ktv-chat-monitor-pin">
+                  <button
+                    type="button"
+                    className={`ktv-chat-contact ktv-chat-monitor-entry${monitoring ? " active" : ""}`}
+                    onClick={openMonitor}
+                    aria-current={monitoring ? "true" : undefined}
+                  >
+                    <span className="ktv-chat-avatar">
+                      <ShieldCheck size={23} />
+                    </span>
+                    <span className="ktv-chat-contact-text">
+                      <b>{t("monitor.group")}</b>
+                      <small>{t("monitor.groupHint")}</small>
+                    </span>
+                    <ChevronRight size={17} />
+                  </button>
+                </div>
+              )}
               <div className="ktv-chat-contacts">
                 {threads.isPending ? (
                   <LoadingState
@@ -1215,6 +1256,7 @@ export function KtvChatPage({
                             );
                             if (existing) select(existing);
                             else {
+                              setMonitorOpen(false);
                               leaving();
                               const version = ++selectionVersion.current;
                               setSelectedId(null);
@@ -1311,7 +1353,9 @@ export function KtvChatPage({
               </p>
             </aside>
             <section className="ktv-chat-dialog" aria-label="Nội dung hội thoại">
-              {openingProvider ? (
+              {monitoring ? (
+                <ChatMonitor embedded onBack={() => setMonitorOpen(false)} />
+              ) : openingProvider ? (
                 <div className="ktv-chat-opening" role="status">
                   <button
                     type="button"

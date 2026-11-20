@@ -43,7 +43,12 @@
   background: #e8eee3;
   padding: 10px 14px;
   border-radius: 30px;
-  white-space: nowrap;
+  max-width: 45%;
+  white-space: normal;
+  line-height: 1.5;
+}
+.ktv-chat-private > svg {
+  flex-shrink: 0;
 }
 .ktv-chat-layout {
   display: grid;
@@ -140,6 +145,26 @@
   min-height: 0;
   overflow-y: auto;
   padding: 10px;
+}
+.ktv-chat-monitor-pin {
+  padding: 8px 10px 4px;
+  flex-shrink: 0;
+}
+.ktv-chat-monitor-entry {
+  border: 1px solid #d9e7d7;
+  background: #f1f7ee;
+}
+.ktv-chat-monitor-entry.active {
+  border-color: #91b699;
+  background: #e1efdf;
+}
+.ktv-chat-monitor-entry .ktv-chat-avatar {
+  background: #dcebdc;
+  color: #34684c;
+}
+.ktv-chat-monitor-entry > svg {
+  flex-shrink: 0;
+  color: #67866b;
 }
 .ktv-chat-list-note {
   padding: 12px 10px;

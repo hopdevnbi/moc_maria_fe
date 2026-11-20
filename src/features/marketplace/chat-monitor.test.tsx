@@ -70,3 +70,33 @@ it("shows both directions, refreshes new messages, opens history and masks prote
   expect(screen.queryByText("First message")).not.toBeInTheDocument();
   expect(screen.queryByRole("link", { name: "Mở hỗ trợ" })).not.toBeInTheDocument();
 });
+it("loads a bounded older window only on demand, keeps existing items, and advances by cursor", async () => {
+  const latest = { ...item, id: "latest", seq: "120", body: "Latest message" };
+  const older = { ...item, id: "older", seq: "60", body: "Older message" };
+  const oldest = { ...item, id: "oldest", seq: "10", body: "Oldest message" };
+  mock.fetch.mockImplementation((path: string) => {
+    if (path.endsWith("before=120")) return Promise.resolve({ items: [older], nextBefore: "60" });
+    if (path.endsWith("before=121")) return Promise.resolve({ items: [latest], nextBefore: "120" });
+    if (path.endsWith("before=60")) return Promise.resolve({ items: [oldest], nextBefore: null });
+    return Promise.resolve({ items: [latest], nextBefore: "120" });
+  });
+  render(<ChatMonitor />);
+  expect(await screen.findByText("Latest message")).toBeInTheDocument();
+  expect(mock.fetch).toHaveBeenCalledTimes(1);
+  expect(screen.queryByText("Older message")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Tải thêm tin nhắn" }));
+  expect(await screen.findByText("Older message")).toBeInTheDocument();
+  expect(screen.getByText("Latest message")).toBeInTheDocument();
+  expect(mock.fetch.mock.calls.map((x) => x[0])).toEqual([
+    "/admin/chat-monitor",
+    "/admin/chat-monitor?before=121",
+    "/admin/chat-monitor?before=120",
+  ]);
+  fireEvent.click(screen.getByRole("button", { name: "Xem đợt tin cũ hơn" }));
+  expect(await screen.findByText("Oldest message")).toBeInTheDocument();
+  expect(screen.queryByText("Latest message")).not.toBeInTheDocument();
+  expect(mock.fetch).toHaveBeenLastCalledWith(
+    "/admin/chat-monitor?before=60",
+    expect.objectContaining({ cache: "no-store" }),
+  );
+});
