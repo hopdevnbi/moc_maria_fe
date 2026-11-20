@@ -10,6 +10,24 @@
   gap: 14px;
   overflow-wrap: anywhere;
 }
+.mm-referral-qr {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  padding: 14px;
+  border: 1px solid #d9e7da;
+  border-radius: 14px;
+}
+.mm-referral-qr img {
+  max-width: 100%;
+  height: auto;
+}
+.mm-referral-qr a {
+  font-size: 14px;
+  color: #255f40;
+  text-decoration: underline;
+  padding: 8px 14px;
+}
 .mm-referral header {
   display: flex;
   align-items: center;

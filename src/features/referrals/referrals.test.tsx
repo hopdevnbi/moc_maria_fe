@@ -5,6 +5,8 @@ import { ReferralAdmin, ReferralCard } from "./referrals";
 import { LocaleProvider } from "@/shared/i18n/locale-provider";
 import { LOCALES } from "@/shared/i18n/locale";
 import { translate } from "@/shared/i18n/messages";
+import { toDataURL } from "qrcode";
+vi.mock("qrcode", () => ({ toDataURL: vi.fn().mockResolvedValue("data:image/png;base64,AA==") }));
 const mock = vi.hoisted(() => ({
   user: { id: "user", isActive: true, roles: ["CUSTOMER"], permissions: ["customer.portal"] },
   fetch: vi.fn(),
@@ -53,6 +55,19 @@ it.each(["ADMIN", "THERAPIST", "CUSTOMER"])("never loads the admin risk list for
   mount(<ReferralAdmin />);
   expect(screen.getByRole("alert")).toBeInTheDocument();
   expect(mock.fetch).not.toHaveBeenCalled();
+});
+it("generates referral QR locally with the exact public link and allows hiding it", async () => {
+  mock.fetch.mockResolvedValue(data);
+  mount(<ReferralCard />);
+  fireEvent.click(await screen.findByRole("button", { name: translate("vi", "ref.qrShow") }));
+  expect(await screen.findByRole("img", { name: translate("vi", "ref.qr") })).toBeInTheDocument();
+  expect(toDataURL).toHaveBeenCalledWith("https://mocmaria.com/r/" + data.code, expect.any(Object));
+  expect(screen.getByRole("link", { name: translate("vi", "ref.qrDownload") })).toHaveAttribute(
+    "download",
+    "moc-maria-referral.png",
+  );
+  fireEvent.click(screen.getByRole("button", { name: translate("vi", "ref.qrHide") }));
+  expect(screen.queryByRole("img", { name: translate("vi", "ref.qr") })).not.toBeInTheDocument();
 });
 it("admin review is only an acknowledgement; no rejection or award command", async () => {
   mock.user.roles = ["SUPER_ADMIN"];

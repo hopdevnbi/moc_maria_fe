@@ -11,6 +11,7 @@ const STATIC_PATHS = new Set([
   "/dat-lich",
   "/dich-vu",
   "/event",
+  "/gioi-thieu",
   "/hoi-vien",
   "/lich-hen",
   "/nhan-qua",
@@ -32,6 +33,7 @@ const STATIC_PATHS = new Set([
   "/quan-tri/dich-vu",
   "/quan-tri/ho-so",
   "/quan-tri/giam-sat-chat",
+  "/quan-tri/gioi-thieu",
   "/quan-tri/hoi-vien-vip",
   "/quan-tri/khach-hang",
   "/quan-tri/ktv",
@@ -56,6 +58,7 @@ export function analyticsPath(value: string): string {
   const path = value.split(/[?#]/, 1)[0].replace(/\/+$/, "") || "/";
   if (STATIC_PATHS.has(path)) return path;
   if (/^\/chuyen-vien\/[^/]+$/.test(path)) return "/chuyen-vien/:id";
+  if (/^\/r\/[^/]+$/.test(path)) return "/r/:code";
   if (/^\/dich-vu\/[^/]+$/.test(path)) return "/dich-vu/:slug";
   if (/^\/quan-tri\/ktv\/[^/]+$/.test(path)) return "/quan-tri/ktv/:id";
   return "/other";
@@ -98,7 +101,7 @@ export function trackAnalyticsPage(pathname: string, measurementId: string | und
         ? "admin"
         : path.startsWith("/ktv/")
           ? "ktv"
-          : ["/tai-khoan", "/tin-nhan", "/lich-hen", "/check-in"].includes(path)
+          : ["/tai-khoan", "/tin-nhan", "/lich-hen", "/check-in", "/gioi-thieu"].includes(path)
             ? "account"
             : "public";
   const parameters = {

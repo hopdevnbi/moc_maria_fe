@@ -78,6 +78,7 @@ describe("Mộc Maria all-page analytics", () => {
     expect(analytics.analyticsPath("/dich-vu/massage-body")).toBe("/dich-vu/:slug");
     expect(analytics.analyticsPath("/chuyen-vien/provider-record-id")).toBe("/chuyen-vien/:id");
     expect(analytics.analyticsPath("/unknown/private-record")).toBe("/other");
+    expect(analytics.analyticsPath("/r/0123456789ABCDEFABCD?ref=private")).toBe("/r/:code");
   });
   it("reports event and main pages with the same property, while separating areas", async () => {
     const analytics = await setup("event.mocmaria.com");

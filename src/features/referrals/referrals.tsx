@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Gift, Copy, Share2, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { Gift, Copy, Share2, ShieldCheck, ChevronLeft, ChevronRight, QrCode } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import type { MessageKey } from "@/shared/i18n/messages";
@@ -57,6 +57,8 @@ export function ReferralCard() {
     [busy, setBusy] = useState(false),
     [otp, setOtp] = useState(""),
     [sent, setSent] = useState(false);
+  const [qr, setQr] = useState<{ link: string; image: string } | null>(null);
+  const [qrBusy, setQrBusy] = useState(false);
   const key = ["referrals", "me", user?.id];
   const query = useQuery({
     queryKey: key,
@@ -67,6 +69,23 @@ export function ReferralCard() {
   });
   const m = query.data;
   const link = m ? "https://mocmaria.com/r/" + m.code : "";
+  async function toggleQr() {
+    if (qr?.link === link) {
+      setQr(null);
+      return;
+    }
+    if (!m?.enabled || qrBusy) return;
+    setQrBusy(true);
+    try {
+      const { toDataURL } = await import("qrcode");
+      const image = await toDataURL(link, { errorCorrectionLevel: "M", margin: 4, width: 320 });
+      setQr({ link, image });
+    } catch {
+      setNotice("ref.error");
+    } finally {
+      setQrBusy(false);
+    }
+  }
   async function share(copy: boolean) {
     try {
       if (!copy && navigator.share) await navigator.share({ title: t("ref.title"), url: link });
@@ -162,6 +181,22 @@ export function ReferralCard() {
               <button type="button" onClick={() => void share(false)} aria-label={t("ref.title")}>
                 <Share2 size={18} />
               </button>
+              <button type="button" disabled={qrBusy} onClick={() => void toggleQr()}>
+                <QrCode size={18} />
+                {t(qr?.link === link ? "ref.qrHide" : "ref.qrShow")}
+              </button>
+            </div>
+          )}
+          {m.enabled && !m.verificationAvailable && <p>{t("ref.payoutPending")}</p>}
+          {m.enabled && qr?.link === link && (
+            <div className="mm-referral-qr">
+              {/* QR is generated locally; no external image service receives the link. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={qr.image} alt={t("ref.qr")} width={240} height={240} />
+              <p>{t("ref.qrHint")}</p>
+              <a href={qr.image} download="moc-maria-referral.png">
+                {t("ref.qrDownload")}
+              </a>
             </div>
           )}
           {m.verificationStatus === "PENDING_VERIFICATION" && (
