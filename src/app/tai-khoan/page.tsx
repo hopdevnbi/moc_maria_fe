@@ -23,6 +23,7 @@ import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordFor
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useLocale } from "@/shared/i18n/locale-provider";
+import { ReferralShortcut } from "@/features/referrals/referrals";
 import { MobileHeader, MobileNavigation } from "@/features/mobile/experience";
 import { OwnProviderPlanning } from "@/features/marketplace/provider-planning";
 import "@/features/marketplace/marketplace.css";
@@ -174,6 +175,7 @@ function AccountContent() {
         <StaffAttendanceCard />
       )}
       {customer && <CustomerAccountProfile />}
+      <ReferralShortcut />
       <AccountShortcuts technician={technician} signingOut={busy} onSignOut={signOut} />
       {notice && (
         <p role="alert" className="mm-account-shortcut-notice">

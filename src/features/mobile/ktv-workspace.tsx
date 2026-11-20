@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { StaffAttendanceCard } from "@/features/staff-attendance/staff-attendance-card";
+import { ReferralShortcut } from "@/features/referrals/referrals";
 import { OwnProviderPlanning } from "@/features/marketplace/provider-planning";
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { ProviderDescriptionEditor } from "./profile-editor";
@@ -326,6 +327,7 @@ export function TechnicianWorkspace() {
         </div>
       </header>
       <StaffAttendanceCard />
+      <ReferralShortcut />
       <section className="ktvw-stats" aria-label="Tổng quan công việc">
         {counts.map(({ label, value, Icon }, i) => (
           <article key={label}>

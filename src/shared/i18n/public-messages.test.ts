@@ -13,6 +13,7 @@ import { customerProfileMessageKeys } from "./customer-profile-messages";
 import { customerActivityMessageKeys } from "./customer-activity-messages";
 import { monitorMessageKeys } from "./monitor-messages";
 import { promotionMessageKeys } from "./promotion-messages";
+import { referralMessageKeys } from "./referral-messages";
 
 describe("public message completeness", () => {
   it("provides all six translations with matching interpolation parameters", () => {
@@ -30,6 +31,7 @@ describe("public message completeness", () => {
       ...customerActivityMessageKeys,
       ...monitorMessageKeys,
       ...promotionMessageKeys,
+      ...referralMessageKeys,
     ]) {
       const source = translate("vi", key);
       for (const locale of LOCALES) {

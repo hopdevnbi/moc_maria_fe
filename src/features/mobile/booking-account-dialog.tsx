@@ -234,6 +234,9 @@ export function BookingAccountDialog({
               {mode === "register" ? t("ba.register") : t("ba.login")}
             </legend>
             {mode === "register" && (
+              <p className="mm-booking-account-field-hint">{t("ref.hint")}</p>
+            )}
+            {mode === "register" && (
               <label htmlFor="booking-account-name">
                 {t("ba.name")}
                 <input

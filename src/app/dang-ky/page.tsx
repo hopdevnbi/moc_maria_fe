@@ -1,17 +1,17 @@
-import Link from "next/link";
 import { Suspense } from "react";
-import { AuthShell } from "@/features/auth/components/AuthShell";
-import { RegisterForm } from "@/features/auth/components/RegisterForm";
+import { LocalizedRegistration } from "@/features/auth/components/LocalizedRegistration";
 import { safeReturnTo } from "@/features/auth/return-to";
+import { LocalizedText } from "@/shared/i18n/localized-text";
+import { normalizeReferralCode } from "@/features/referrals/referral-cookie";
 
-type RegisterPageProps = { searchParams: Promise<{ returnTo?: string }> };
+type RegisterPageProps = { searchParams: Promise<{ returnTo?: string; ref?: string }> };
 
 export default function RegisterPage(props: RegisterPageProps) {
   return (
     <Suspense
       fallback={
         <div className="mx-auto max-w-xl px-6 py-20" role="status">
-          Đang mở trang đăng ký…
+          <LocalizedText message="common.loading" />
         </div>
       }
     >
@@ -21,25 +21,7 @@ export default function RegisterPage(props: RegisterPageProps) {
 }
 
 async function RegisterContent({ searchParams }: RegisterPageProps) {
-  const returnTo = safeReturnTo((await searchParams).returnTo, "/chuyen-vien");
-  return (
-    <AuthShell
-      eyebrow="Khách hàng mới"
-      title="Tạo tài khoản Mộc Maria"
-      description="Tài khoản giúp bạn đặt lịch nhanh hơn, lưu lịch sử chăm sóc và kết nối với chuyên viên."
-      footer={
-        <>
-          Đã có tài khoản?{" "}
-          <Link
-            href={"/dang-nhap?returnTo=" + encodeURIComponent(returnTo)}
-            className="font-semibold text-[var(--moc-green)]"
-          >
-            Đăng nhập
-          </Link>
-        </>
-      }
-    >
-      <RegisterForm returnTo={returnTo} />
-    </AuthShell>
-  );
+  const params = await searchParams;
+  const returnTo = safeReturnTo(params.returnTo, "/chuyen-vien");
+  return <LocalizedRegistration returnTo={returnTo} code={normalizeReferralCode(params.ref)} />;
 }

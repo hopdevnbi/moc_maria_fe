@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest, parseApiResponse, withAuthRequestDeadline } from "../auth-api";
+import { registrationReferral, clearReferralCookie } from "@/features/referrals/referral-cookie";
 import type { AuthResponse, AuthStatus, AuthUser } from "../auth.types";
 import {
   AuthContext,
@@ -101,11 +102,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (input: RegisterInput): Promise<AuthResponse> => {
+      const { referralCode, ...account } = input;
       const auth = await withAuthRequestDeadline(async (signal) => {
-        const response = await apiRequest("/auth/register", { ...jsonInit("POST", input), signal });
+        const response = await apiRequest("/auth/register", {
+          ...jsonInit("POST", { ...account, ...registrationReferral(referralCode) }),
+          signal,
+        });
         return parseApiResponse<AuthResponse>(response);
       }, 20_000);
       applyAuth(auth);
+      clearReferralCookie();
       return auth;
     },
     [applyAuth],

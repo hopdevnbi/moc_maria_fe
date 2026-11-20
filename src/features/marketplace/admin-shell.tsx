@@ -58,6 +58,7 @@ const adminLabels: Record<string, MessageKey> = {
   "Dịch vụ & bảng giá": "admin.catalog",
   "Quản lý bản dịch": "editor.title",
   "Giám sát chat": "monitor.title",
+  "Quản lý giới thiệu": "ref.admin",
   "Sự kiện & mở hộp quà": "admin.events",
   "Cơ sở & vận hành": "admin.branches",
   "Chấm công & Coin": "admin.attendance",
@@ -143,6 +144,13 @@ export const adminNavGroups: AdminNavGroup[] = [
   {
     label: "KHÁCH HÀNG & HỘI VIÊN",
     items: [
+      {
+        label: "Quản lý giới thiệu",
+        icon: Gift,
+        href: "/quan-tri/gioi-thieu",
+        permission: "admin.portal",
+        superOnly: true,
+      },
       {
         label: "Khách hàng",
         icon: UsersRound,

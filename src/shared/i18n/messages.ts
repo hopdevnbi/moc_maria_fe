@@ -11,6 +11,7 @@ import { customerProfileMessage, type CustomerProfileKey } from "./customer-prof
 import { customerActivityMessage, type CustomerActivityKey } from "./customer-activity-messages";
 import { monitorMessage, type MonitorKey } from "./monitor-messages";
 import { promotionMessage, type PromotionKey } from "./promotion-messages";
+import { referralMessage, type ReferralKey } from "./referral-messages";
 
 const vi = {
   "language.label": "Ngôn ngữ",
@@ -35,7 +36,8 @@ export type MessageKey =
   | CustomerProfileKey
   | CustomerActivityKey
   | MonitorKey
-  | PromotionKey;
+  | PromotionKey
+  | ReferralKey;
 export const messages: Record<Locale, Record<CommonKey, string>> = {
   vi,
   en: {
@@ -86,6 +88,7 @@ export const messages: Record<Locale, Record<CommonKey, string>> = {
 };
 export function translate(locale: Locale, key: MessageKey): string {
   return (
+    referralMessage(locale, key as ReferralKey) ??
     promotionMessage(locale, key as PromotionKey) ??
     monitorMessage(locale, key as MonitorKey) ??
     customerActivityMessage(locale, key as CustomerActivityKey) ??
