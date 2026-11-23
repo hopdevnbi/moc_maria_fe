@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { ReferralAdmin, ReferralCard } from "./referrals";
+import { ApiError } from "@/features/auth/auth-api";
 import { LocaleProvider } from "@/shared/i18n/locale-provider";
 import { LOCALES } from "@/shared/i18n/locale";
 import { translate } from "@/shared/i18n/messages";
@@ -100,6 +101,33 @@ it.each(LOCALES)("email OTP is first and SMS remains disabled for Trial in %s", 
     ),
   );
   expect(mock.fetch).not.toHaveBeenCalledWith("/referrals/verify/start", expect.anything());
+});
+it("guides actual email verification, enforces six digits and handles invalid code", async () => {
+  mock.fetch.mockImplementation((path: string) =>
+    path === "/referrals/me"
+      ? Promise.resolve({
+          ...data,
+          verificationAvailable: true,
+          verificationStatus: "PENDING_VERIFICATION",
+          verificationChannels: { email: true, sms: false },
+          hasEmail: true,
+        })
+      : path === "/referrals/verify/email/start"
+        ? Promise.resolve({ sent: true, channel: "email" })
+        : Promise.reject(new ApiError(400, "REFERRAL_OTP_INVALID", null)),
+  );
+  mount(<ReferralCard />);
+  expect(await screen.findByText(translate("vi", "ref.otpInstructions"))).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: translate("vi", "ref.sendOtp") }));
+  expect(await screen.findByText(translate("vi", "ref.otpInboxHint"))).toBeInTheDocument();
+  const code = screen.getByRole("textbox", { name: translate("vi", "ref.otp") });
+  expect(code).toHaveAttribute("maxLength", "6");
+  fireEvent.change(code, { target: { value: "12345" } });
+  expect(screen.getByRole("button", { name: translate("vi", "ref.confirm") })).toBeDisabled();
+  fireEvent.change(code, { target: { value: "123456" } });
+  fireEvent.click(screen.getByRole("button", { name: translate("vi", "ref.confirm") }));
+  expect(await screen.findByText(translate("vi", "ref.otpInvalid"))).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: translate("vi", "ref.otpRetry") })).toBeEnabled();
 });
 it("shows exact committed reward, pages own history and never exposes risk", async () => {
   const awardedAt = "2026-11-20T03:00:00Z";

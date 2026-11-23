@@ -14,6 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { ApiError } from "@/features/auth/auth-api";
 import { useLocale } from "@/shared/i18n/locale-provider";
 import type { MessageKey } from "@/shared/i18n/messages";
 import { CommunitySettings, ReferralCommunity } from "./referral-community";
@@ -144,6 +145,7 @@ export function ReferralCard() {
               : "ref.pending",
         );
         setOtp("");
+        setSent(false);
         await qc.invalidateQueries({ queryKey: key });
       } else {
         await authFetch(
@@ -157,10 +159,18 @@ export function ReferralCard() {
             : { method: "POST" },
         );
         setSent(true);
+        setOtp("");
         setNotice("ref.sent");
       }
-    } catch {
-      setNotice("ref.error");
+    } catch (error) {
+      setNotice(
+        error instanceof ApiError && error.message === "REFERRAL_OTP_INVALID"
+          ? "ref.otpInvalid"
+          : error instanceof ApiError &&
+              (error.message === "REFERRAL_OTP_RATE_LIMIT" || error.status === 429)
+            ? "ref.otpRateLimit"
+            : "ref.error",
+      );
     } finally {
       setBusy(false);
     }
@@ -256,6 +266,7 @@ export function ReferralCard() {
                 <ShieldCheck size={18} />
                 {t("ref.verify")}
               </strong>
+              <p>{t("ref.otpInstructions")}</p>
               {!m.verificationAvailable ? (
                 <p>{t("ref.otpUnavailable")}</p>
               ) : (
@@ -293,6 +304,7 @@ export function ReferralCard() {
                   {channel === "email" && !m.hasEmail && <p>{t("ref.emailRequired")}</p>}
                   {channel === "sms" && !m.hasPhone && <p>{t("ref.phoneRequired")}</p>}
                   <button
+                    type="button"
                     disabled={
                       busy ||
                       !(channel === "email"
@@ -301,25 +313,34 @@ export function ReferralCard() {
                     }
                     onClick={() => void verify(false)}
                   >
-                    {t("ref.sendOtp")}
+                    {t(sent ? "ref.otpRetry" : "ref.sendOtp")}
                   </button>
                   {sent && (
-                    <label>
-                      {t("ref.otp")}
-                      <input
-                        maxLength={10}
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                      />
+                    <div className="mm-referral-otp-entry">
+                      <p role="status">{t("ref.otpInboxHint")}</p>
+                      <label>
+                        {t("ref.otp")}
+                        <input
+                          type="text"
+                          maxLength={channel === "email" ? 6 : 10}
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          pattern={channel === "email" ? "[0-9]{6}" : "[0-9]{4,10}"}
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                        />
+                      </label>
                       <button
-                        disabled={busy || !/^\d{4,10}$/.test(otp)}
+                        type="button"
+                        disabled={
+                          busy ||
+                          !(channel === "email" ? /^\d{6}$/.test(otp) : /^\d{4,10}$/.test(otp))
+                        }
                         onClick={() => void verify(true)}
                       >
                         {t("ref.confirm")}
                       </button>
-                    </label>
+                    </div>
                   )}
                 </>
               )}
