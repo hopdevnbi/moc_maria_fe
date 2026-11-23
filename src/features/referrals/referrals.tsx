@@ -32,7 +32,13 @@ type Mine = {
   verificationStatus: string | null;
   hasEmail?: boolean;
   hasPhone: boolean;
-  latestReward?: { id: string; amount: number; awardedAt: string } | null;
+  latestReward?: {
+    id: string;
+    amount: number;
+    awardedAt: string;
+    verifiedChannel?: "email" | "sms" | null;
+    maskedVerifiedContact?: string | null;
+  } | null;
 };
 type HistoryRow = {
   id: string;
@@ -41,6 +47,8 @@ type HistoryRow = {
   createdAt: string;
   awardedAt: string | null;
   earnedCoins: number;
+  verifiedChannel?: "email" | "sms" | null;
+  maskedVerifiedContact?: string | null;
 };
 type Settings = {
   enabled: boolean;
@@ -237,6 +245,18 @@ export function ReferralCard() {
               <CheckCircle2 size={24} aria-hidden="true" />
               <div>
                 <strong>{t("ref.receipt", { n: m.latestReward.amount })}</strong>
+                {m.latestReward.verifiedChannel && (
+                  <small>
+                    {t(
+                      m.latestReward.verifiedChannel === "email"
+                        ? "ref.verifiedEmail"
+                        : "ref.verifiedPhone",
+                    )}
+                    {m.latestReward.maskedVerifiedContact
+                      ? `: ${m.latestReward.maskedVerifiedContact}`
+                      : ""}
+                  </small>
+                )}
                 <small>
                   {t("ref.awardedAt", {
                     date: new Intl.DateTimeFormat(locale, {
@@ -405,6 +425,12 @@ function ReferralHistory() {
               {r.awardedAt ? (
                 <>
                   <b>{t("ref.earned", { n: r.earnedCoins })}</b>
+                  {r.verifiedChannel && (
+                    <small>
+                      {t(r.verifiedChannel === "email" ? "ref.verifiedEmail" : "ref.verifiedPhone")}
+                      {r.maskedVerifiedContact ? `: ${r.maskedVerifiedContact}` : ""}
+                    </small>
+                  )}
                   <small>{t("ref.awardedAt", { date: date(r.awardedAt) })}</small>
                 </>
               ) : r.status === "PENDING_VERIFICATION" ? (

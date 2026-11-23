@@ -1,6 +1,24 @@
 import type { Locale } from "./locale";
 const rows = [
   [
+    "ref.verifiedEmail",
+    "Đã xác minh email",
+    "Verified email",
+    "이메일 인증 완료",
+    "メール認証済み",
+    "邮箱已验证",
+    "Email подтверждён",
+  ],
+  [
+    "ref.verifiedPhone",
+    "Đã xác minh số điện thoại",
+    "Verified phone",
+    "전화번호 인증 완료",
+    "電話番号認証済み",
+    "手机号已验证",
+    "Телефон подтверждён",
+  ],
+  [
     "ref.otpInstructions",
     "Gửi mã tới email đăng ký của tài khoản này. Sau đó nhập mã 6 số để hoàn tất xác minh và thưởng cho người giới thiệu.",
     "Send a code to this account's registered email. Enter the six digits to verify and reward your referrer.",

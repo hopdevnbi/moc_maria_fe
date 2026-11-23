@@ -182,6 +182,55 @@ it("shows exact committed reward, pages own history and never exposes risk", asy
   );
   expect(screen.queryByText(translate("vi", "ref.risk"))).not.toBeInTheDocument();
 });
+it.each(LOCALES)(
+  "shows masked verification proof in own rewarded history in %s",
+  async (locale) => {
+    document.cookie = "moc_locale=" + locale + "; Path=/";
+    mock.fetch.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/referrals/me"
+          ? { ...data, registered: 1 }
+          : {
+              items: [
+                {
+                  id: "verified",
+                  status: "REWARDED",
+                  rewardCoins: 100,
+                  createdAt: "2026-11-23T04:38:00Z",
+                  awardedAt: "2026-11-23T04:57:00Z",
+                  earnedCoins: 100,
+                  verifiedChannel: "email",
+                  maskedVerifiedContact: "p***@gmail.com",
+                },
+              ],
+              hasMore: false,
+            },
+      ),
+    );
+    mount(<ReferralCard />);
+    expect(
+      await screen.findByText(`${translate(locale, "ref.verifiedEmail")}: p***@gmail.com`),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("person@gmail.com")).not.toBeInTheDocument();
+  },
+);
+it.each(LOCALES)("shows masked verified email in latest reward receipt in %s", async (locale) => {
+  document.cookie = "moc_locale=" + locale + "; Path=/";
+  mock.fetch.mockResolvedValue({
+    ...data,
+    latestReward: {
+      id: "latest",
+      amount: 100,
+      awardedAt: "2026-11-23T04:57:00Z",
+      verifiedChannel: "email",
+      maskedVerifiedContact: "p***@gmail.com",
+    },
+  });
+  mount(<ReferralCard />);
+  expect(
+    await screen.findByText(`${translate(locale, "ref.verifiedEmail")}: p***@gmail.com`),
+  ).toBeInTheDocument();
+});
 it("admin review is only an acknowledgement; no rejection or award command", async () => {
   mock.user.roles = ["SUPER_ADMIN"];
   mock.user.permissions = ["admin.portal"];

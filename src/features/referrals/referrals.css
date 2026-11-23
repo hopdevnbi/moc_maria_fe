@@ -85,6 +85,10 @@
 .mm-referral-receipt > svg {
   flex-shrink: 0;
 }
+.mm-referral-receipt small {
+  display: block;
+  margin-top: 4px;
+}
 .mm-referral-history {
   display: grid;
   gap: 10px;
