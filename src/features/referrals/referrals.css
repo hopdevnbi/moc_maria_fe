@@ -210,6 +210,27 @@
   align-items: center;
   gap: 8px;
 }
+.mm-referral-channel-select {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mm-referral-channel-select button {
+  min-height: 42px;
+  border: 1px solid #d1dfd2;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px 14px;
+}
+.mm-referral-channel-select button[aria-pressed="true"] {
+  background: #236341;
+  color: #fff;
+  border-color: #236341;
+}
+.mm-referral-channel-select button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
 .mm-referral-settings label:has(input[type="checkbox"]) {
   display: flex;
   align-items: center;

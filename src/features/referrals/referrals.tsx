@@ -27,7 +27,9 @@ type Mine = {
   rewarded: number;
   coins: number;
   verificationAvailable: boolean;
+  verificationChannels?: { email: boolean; sms: boolean };
   verificationStatus: string | null;
+  hasEmail?: boolean;
   hasPhone: boolean;
   latestReward?: { id: string; amount: number; awardedAt: string } | null;
 };
@@ -65,6 +67,7 @@ const statuses: Record<string, MessageKey> = {
 };
 const flags: Record<string, MessageKey> = {
   VERIFIED_PHONE_PREVIOUSLY_USED: "ref.phoneSeen",
+  VERIFIED_EMAIL_PREVIOUSLY_USED: "ref.emailSeen",
   SHARED_BROWSER: "ref.shared",
   HIGH_REFERRAL_VELOCITY: "ref.velocity",
   SHARED_NETWORK: "ref.ip",
@@ -79,6 +82,7 @@ export function ReferralCard() {
     [sent, setSent] = useState(false);
   const [qr, setQr] = useState<{ link: string; image: string } | null>(null);
   const [qrBusy, setQrBusy] = useState(false);
+  const [channel, setChannel] = useState<"email" | "sms">("email");
   const key = ["referrals", "me", user?.id];
   const query = useQuery({
     queryKey: key,
@@ -125,7 +129,7 @@ export function ReferralCard() {
     try {
       if (confirm) {
         const r = await authFetch<{ rewarded: boolean; status: string }>(
-          "/referrals/verify/confirm",
+          channel === "email" ? "/referrals/verify/email/confirm" : "/referrals/verify/confirm",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -142,7 +146,16 @@ export function ReferralCard() {
         setOtp("");
         await qc.invalidateQueries({ queryKey: key });
       } else {
-        await authFetch("/referrals/verify/start", { method: "POST" });
+        await authFetch(
+          channel === "email" ? "/referrals/verify/email/start" : "/referrals/verify/start",
+          channel === "email"
+            ? {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ locale }),
+              }
+            : { method: "POST" },
+        );
         setSent(true);
         setNotice("ref.sent");
       }
@@ -243,13 +256,51 @@ export function ReferralCard() {
                 <ShieldCheck size={18} />
                 {t("ref.verify")}
               </strong>
-              {!m.hasPhone ? (
-                <p>{t("ref.phoneRequired")}</p>
-              ) : !m.verificationAvailable ? (
+              {!m.verificationAvailable ? (
                 <p>{t("ref.otpUnavailable")}</p>
               ) : (
                 <>
-                  <button disabled={busy} onClick={() => void verify(false)}>
+                  <div
+                    className="mm-referral-channel-select"
+                    role="group"
+                    aria-label={t("ref.channel")}
+                  >
+                    <button
+                      type="button"
+                      aria-pressed={channel === "email"}
+                      disabled={!m.verificationChannels?.email || busy}
+                      onClick={() => {
+                        setChannel("email");
+                        setSent(false);
+                        setOtp("");
+                      }}
+                    >
+                      {t("ref.emailChannel")}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={channel === "sms"}
+                      disabled={!m.verificationChannels?.sms || busy}
+                      onClick={() => {
+                        setChannel("sms");
+                        setSent(false);
+                        setOtp("");
+                      }}
+                    >
+                      {t("ref.smsChannel")}
+                    </button>
+                  </div>
+                  {channel === "email" && !m.hasEmail && <p>{t("ref.emailRequired")}</p>}
+                  {channel === "sms" && !m.hasPhone && <p>{t("ref.phoneRequired")}</p>}
+                  <button
+                    disabled={
+                      busy ||
+                      !(channel === "email"
+                        ? m.verificationChannels?.email
+                        : m.verificationChannels?.sms)
+                    }
+                    onClick={() => void verify(false)}
+                  >
                     {t("ref.sendOtp")}
                   </button>
                   {sent && (

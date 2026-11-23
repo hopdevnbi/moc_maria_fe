@@ -69,6 +69,38 @@ it("generates referral QR locally with the exact public link and allows hiding i
   fireEvent.click(screen.getByRole("button", { name: translate("vi", "ref.qrHide") }));
   expect(screen.queryByRole("img", { name: translate("vi", "ref.qr") })).not.toBeInTheDocument();
 });
+it.each(LOCALES)("email OTP is first and SMS remains disabled for Trial in %s", async (locale) => {
+  document.cookie = "moc_locale=" + locale + "; Path=/";
+  mock.fetch.mockImplementation((path: string) =>
+    Promise.resolve(
+      path === "/referrals/me"
+        ? {
+            ...data,
+            verificationAvailable: true,
+            verificationStatus: "PENDING_VERIFICATION",
+            verificationChannels: { email: true, sms: false },
+            hasEmail: true,
+          }
+        : { sent: true, channel: "email" },
+    ),
+  );
+  mount(<ReferralCard />);
+  expect(
+    await screen.findByRole("button", { name: translate(locale, "ref.emailChannel") }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: translate(locale, "ref.smsChannel") })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: translate(locale, "ref.sendOtp") }));
+  await waitFor(() =>
+    expect(mock.fetch).toHaveBeenCalledWith(
+      "/referrals/verify/email/start",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ locale }),
+      }),
+    ),
+  );
+  expect(mock.fetch).not.toHaveBeenCalledWith("/referrals/verify/start", expect.anything());
+});
 it("shows exact committed reward, pages own history and never exposes risk", async () => {
   const awardedAt = "2026-11-20T03:00:00Z";
   mock.fetch.mockImplementation((path: string) =>
