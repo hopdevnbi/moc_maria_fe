@@ -126,6 +126,21 @@
   background: #e7f0e6;
   color: #8b6b29;
 }
+.is-referral {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  min-height: 55px;
+  gap: 12px;
+  border: 1px solid #d8e7d6;
+  background: #f0f6ee;
+  font-size: 12px;
+}
+.is-referral .mm-contact-icon {
+  width: 36px;
+  height: 36px;
+  background: #dcebdd;
+  color: #245d42;
+}
 .mm-global-contact :is(button, a):focus-visible {
   outline: 3px solid #b99c54;
   outline-offset: 3px;

@@ -2,11 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleDot, Gamepad2, Headset, MapPinCheck, X } from "lucide-react";
+import { CircleDot, Gamepad2, Gift, Headset, MapPinCheck, X } from "lucide-react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { EventSupport } from "@/features/gift-events/event-support";
+import { useLocale } from "@/shared/i18n/locale-provider";
+import type { Locale } from "@/shared/i18n/locale";
 import "./global-contact-actions.css";
+
+const referralShortcut: Record<Locale, string> = {
+  vi: "Giới thiệu bạn bè",
+  en: "Refer friends",
+  ko: "친구 추천",
+  ja: "友達を紹介",
+  "zh-CN": "邀请好友",
+  ru: "Пригласить друзей",
+};
 
 export function GlobalContactActions() {
   return (
@@ -25,6 +36,7 @@ function ContactActions() {
 
 function ContactMenu() {
   const { status, user, authFetch } = useAuth();
+  const { locale } = useLocale();
   const [panel, setPanel] = useState<"actions" | "support" | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
@@ -112,6 +124,16 @@ function ContactMenu() {
               </span>
               <span>Vòng xoay may mắn</span>
             </Link>
+            <Link
+              className="mm-contact-item is-referral"
+              href="/gioi-thieu"
+              onClick={() => setPanel(null)}
+            >
+              <span className="mm-contact-icon">
+                <Gift size={22} aria-hidden="true" />
+              </span>
+              <span>{referralShortcut[locale]}</span>
+            </Link>
           </div>
         </nav>
       )}
@@ -137,7 +159,7 @@ function ContactMenu() {
               ? "mm-event-support-content"
               : undefined
         }
-        title="Support · Facebook · Check-in · Trò chơi"
+        title="Support · Facebook · Check-in · Trò chơi · Giới thiệu"
         onClick={() => setPanel((value) => (value ? null : "actions"))}
       >
         {panel ? (
@@ -145,7 +167,7 @@ function ContactMenu() {
         ) : (
           <CircleDot size={32} strokeWidth={1.5} aria-hidden="true" />
         )}
-        <span className="sr-only">Support, Facebook, Check-in và Trò chơi</span>
+        <span className="sr-only">Support, Facebook, Check-in, Trò chơi và Giới thiệu</span>
       </button>
     </div>
   );

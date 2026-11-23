@@ -44,6 +44,10 @@ describe("Assistive Mộc Maria menu", () => {
     expect(fb).toHaveAttribute("href", "https://www.facebook.com/mocmariads");
     expect(fb).toHaveAttribute("rel", "noopener noreferrer");
     expect(screen.getByRole("link", { name: "Check-in" })).toHaveAttribute("href", "/check-in");
+    expect(screen.getByRole("link", { name: "Giới thiệu bạn bè" })).toHaveAttribute(
+      "href",
+      "/gioi-thieu",
+    );
   });
   it("keeps all actions available on chat and check-in routes for signed-in users", () => {
     mocks.loggedIn = true;
